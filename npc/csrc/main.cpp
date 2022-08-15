@@ -22,7 +22,7 @@ static void sim_init()
 	top      = new Vtop;
 	contextp->traceEverOn(true);
 	top->trace(tfp, 0);
-	tfp->open("dump.vcd");
+	tfp->open("logs/dump.vcd");
 };
 
 static void sim_exit()
@@ -31,8 +31,12 @@ static void sim_exit()
 	tfp->close();
 };
 
-int main() 
+int main(int argc, char** argv, char** env) 
 {
+	if (false && argc && argv && env)
+	{
+
+	}
 	int i;
 	sim_init();
 	for(i=100;i>0;i--)
@@ -40,7 +44,6 @@ int main()
 		top->s1 = rand() & 1;
 		top->s2 = rand() & 1;
 		step_and_dump_wave();
-//		printf("%d",i);
 	}
 	sim_exit();
 	return 0;
