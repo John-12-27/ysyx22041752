@@ -3,7 +3,7 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h> 
 #include <Vtop.h>
-//#define SIM
+#define SIM
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC*    tfp      = NULL;
@@ -36,7 +36,7 @@ static void sim_exit()
 	tfp->close();
 };
 
-static void single_cycle()
+/*static void single_cycle()
 {
 	top->clk = 0; top->eval();	
 	step_and_dump_wave();
@@ -53,7 +53,7 @@ static void reset(int n)
 		step_and_dump_wave();
 	}
 	top->rst = 0;
-}
+}*/
 
 int main(int argc, char** argv, char** env) 
 {
@@ -62,30 +62,32 @@ int main(int argc, char** argv, char** env)
 
 	}
 	sim_init(argc,argv);
-	nvboard_bind_all_pins(top);	
-	nvboard_init();	
-	reset(10);
-	int i = 100;
-	
+	//reset(10);
 	#ifdef SIM
-		while(i--)
-		{
-			nvboard_update();
-			single_cycle();
-			if(i>0)
-			{
-				step_and_dump_wave();
-			}
-			else
-			{
-				sim_exit();
-			}
-		}
+			top->s0 = 0b00; top->s2 = 0b00; step_and_dump_wave();
+											top->s2 = 0b01; step_and_dump_wave();
+											top->s2 = 0b10; step_and_dump_wave();
+                      top->s2 = 0b11; step_and_dump_wave();
+			top->s0 = 0b01; top->s4 = 0b00; step_and_dump_wave();
+											top->s4 = 0b01; step_and_dump_wave();
+											top->s4 = 0b10; step_and_dump_wave();
+                      top->s4 = 0b11; step_and_dump_wave();
+			top->s0 = 0b10; top->s6 = 0b00; step_and_dump_wave();
+											top->s6 = 0b01; step_and_dump_wave();
+											top->s6 = 0b10; step_and_dump_wave();
+                      top->s6 = 0b11; step_and_dump_wave();
+			top->s0 = 0b11; top->s8 = 0b00; step_and_dump_wave();
+											top->s8 = 0b01; step_and_dump_wave();
+											top->s8 = 0b10; step_and_dump_wave();
+                      top->s8 = 0b11; step_and_dump_wave();
+			sim_exit();
 	#else
+		nvboard_bind_all_pins(top);	
+		nvboard_init();	
 		while(1)
 		{
 			nvboard_update();
-			single_cycle();
+			//single_cycle();
 			step_and_dump_wave();
 			if(0)	
 			{
