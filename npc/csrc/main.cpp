@@ -3,29 +3,13 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h> 
 #include <Vtop.h>
-
+#define DEBUG_WITH_NVBOARD 0
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC*    tfp      = NULL;
 static Vtop* top;
 
 void nvboard_bind_all_pins(Vtop* top);
-
-static void single_cycle()
-{
-	top->clk = 0; top->eval();
-	top->clk = 1; top->eval();
-}
-
-static void reset(int n)
-{
-	top->rst = 1;
-	while(n-- > 0)
-	{
-		single_cycle();
-	}
-	top->rst = 0;
-}
 
 static void step_and_dump_wave()
 {
@@ -52,6 +36,25 @@ static void sim_exit()
 	tfp->close();
 };
 
+static void single_cycle()
+{
+	top->clk = 0; top->eval();	
+	step_and_dump_wave();
+	top->clk = 1; top->eval();
+	step_and_dump_wave();
+}
+
+static void reset(int n)
+{
+	top->rst = 1;
+	while(n-- > 0)
+	{
+		single_cycle();
+		step_and_dump_wave();
+	}
+	top->rst = 0;
+}
+
 int main(int argc, char** argv, char** env) 
 {
 	if (false && argc && argv && env)
@@ -67,6 +70,7 @@ int main(int argc, char** argv, char** env)
 	{
 		nvboard_update();
 		single_cycle();
+#if(!DEBUG_WITH_NVBOARD)
 		if(i>0)
 		{
 			top->s1 = rand() & 1;
@@ -78,6 +82,12 @@ int main(int argc, char** argv, char** env)
 		{
 			sim_exit();
 		}
+#else
+		step_and_dump_wave();
+#endif
 	}
+#if(DEBUG_WITH_NVBOARD)
+	sim_exit();
+#endif
 	return 0;
 }

@@ -29,17 +29,13 @@ BIN = $(BUILD_DIR)/$(TOPNAME)
 
 sim: default 
 	@echo
+	@echo "---- COMMIT ----"	
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo
 	@echo "---- RUN ----"
 	@rm -rf logs
 	@mkdir -p logs
 	$(BUILD_DIR)/top +trace
-#	@echo
-#	@echo "---- COVERAGE ----"
-#	@rm -rf logs/annotated
-#	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
-	@echo
-	@echo "---- COMMIT ----"	
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
 include ../Makefile
 
