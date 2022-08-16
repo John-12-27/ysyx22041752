@@ -18,7 +18,6 @@ VERILATOR_FLAGS += -Wall
 VERILATOR_FLAGS += --trace
 VERILATOR_FLAGS += --build
 VERILATOR_FLAGS += -MMD
-VERILATOR_INPUT = ./vsrc/top.v ./vsrc/switch.v ./csrc/*.cpp 
 
 TOPNAME = top
 NXDC_FILES = constr/top.nxdc
@@ -27,15 +26,22 @@ BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
+#nvboard: default 
+#	@echo
+#	@echo "---- RUN ----"
+#	@rm -rf logs
+#	@mkdir -p logs
+#	$(BUILD_DIR)/top +trace
+
 sim: default 
-	@echo
-	@echo "---- COMMIT ----"	
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo
 	@echo "---- RUN ----"
 	@rm -rf logs
 	@mkdir -p logs
 	$(BUILD_DIR)/top +trace
+	@echo
+	@echo "---- COMMIT ----"	
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
 include ../Makefile
 
@@ -60,7 +66,7 @@ LDFLAGS += -lSDL2 -lSDL2_image
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	@echo "---- VERILATE & BUILD ----"
-	$(VERILATOR) $(VERILATOR_FLAGS) \
+	$(VERILATOR) +define+SIM $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))

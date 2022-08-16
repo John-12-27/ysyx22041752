@@ -3,7 +3,7 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h> 
 #include <Vtop.h>
-#define DEBUG_WITH_NVBOARD 0
+#define SIM
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC*    tfp      = NULL;
@@ -66,28 +66,34 @@ int main(int argc, char** argv, char** env)
 	nvboard_init();	
 	reset(10);
 	int i = 100;
-	while(1)
-	{
-		nvboard_update();
-		single_cycle();
-#if(!DEBUG_WITH_NVBOARD)
-		if(i>0)
+	
+	#ifdef SIM
+		while(i--)
 		{
-			top->s1 = rand() & 1;
-			top->s2 = rand() & 1;
+			nvboard_update();
+			single_cycle();
+			if(i>0)
+			{
+				top->s1 = rand() & 1;
+				top->s2 = rand() & 1;
+				step_and_dump_wave();
+			}
+			else
+			{
+				sim_exit();
+			}
+		}
+	#else
+		while(1)
+		{
+			nvboard_update();
+			single_cycle();
 			step_and_dump_wave();
-			i--;
+			if(0)	
+			{
+				sim_exit();
+			}
 		}
-		else
-		{
-			sim_exit();
-		}
-#else
-		step_and_dump_wave();
-#endif
-	}
-#if(DEBUG_WITH_NVBOARD)
-	sim_exit();
-#endif
+	#endif
 	return 0;
 }
