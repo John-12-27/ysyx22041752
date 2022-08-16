@@ -74,8 +74,6 @@ int main(int argc, char** argv, char** env)
 			single_cycle();
 			if(i>0)
 			{
-				top->s1 = rand() & 1;
-				top->s2 = rand() & 1;
 				step_and_dump_wave();
 			}
 			else
