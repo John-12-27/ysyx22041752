@@ -1,12 +1,31 @@
-#include <stdio.h>
+#include <memory>
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "Vtop.h"
+#include <nvboard.h> 
+#include <Vtop.h>
+
 
 VerilatedContext* contextp = NULL;
-VerilatedVcdC*		tfp			 = NULL;
-
+VerilatedVcdC*    tfp      = NULL;
 static Vtop* top;
+
+void nvboard_bind_all_pins(Vtop* top);
+
+static void single_cycle()
+{
+	top->clk = 0; top->eval();
+	top->clk = 1; top->eval();
+}
+
+static void reset(int n)
+{
+	top->rst = 1;
+	while(n-- > 0)
+	{
+		single_cycle();
+	}
+	top->rst = 0;
+}
 
 static void step_and_dump_wave()
 {
@@ -15,12 +34,14 @@ static void step_and_dump_wave()
 	tfp->dump(contextp->time());
 };
 
-static void sim_init()
+static void sim_init(int argc, char** argv)
 {
-	contextp = new VerilatedContext;
-	tfp      = new VerilatedVcdC;
-	top      = new Vtop;
+  contextp = new VerilatedContext;
+  tfp			 = new VerilatedVcdC;
+  top 		 = new Vtop;
+	contextp->debug(0);
 	contextp->traceEverOn(true);
+	contextp->commandArgs(argc, argv);
 	top->trace(tfp, 0);
 	tfp->open("logs/dump.vcd");
 };
@@ -37,14 +58,26 @@ int main(int argc, char** argv, char** env)
 	{
 
 	}
-	int i;
-	sim_init();
-	for(i=100;i>0;i--)
+	sim_init(argc,argv);
+	nvboard_bind_all_pins(top);	
+	nvboard_init();	
+	reset(10);
+	int i = 100;
+	while(1)
 	{
-		top->s1 = rand() & 1;
-		top->s2 = rand() & 1;
-		step_and_dump_wave();
+		nvboard_update();
+		single_cycle();
+		if(i>0)
+		{
+			top->s1 = rand() & 1;
+			top->s2 = rand() & 1;
+			step_and_dump_wave();
+			i--;
+		}
+		else
+		{
+			sim_exit();
+		}
 	}
-	sim_exit();
 	return 0;
 }
