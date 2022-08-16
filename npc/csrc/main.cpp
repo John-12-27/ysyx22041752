@@ -3,7 +3,7 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h> 
 #include <Vtop.h>
-#define SIM
+//#define SIM
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC*    tfp      = NULL;
