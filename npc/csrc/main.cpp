@@ -20,9 +20,9 @@ static void step_and_dump_wave()
 
 static void sim_init(int argc, char** argv)
 {
-  contextp = new VerilatedContext;
-  tfp			 = new VerilatedVcdC;
-  top 		 = new Vtop;
+    contextp = new VerilatedContext;
+    tfp      = new VerilatedVcdC;
+    top      = new Vtop;
 	contextp->debug(0);
 	contextp->traceEverOn(true);
 	contextp->commandArgs(argc, argv);
@@ -64,22 +64,19 @@ int main(int argc, char** argv, char** env)
 	sim_init(argc,argv);
 	//reset(10);
 	#ifdef SIM
-			top->s0 = 0b00; top->s2 = 0b00; step_and_dump_wave();
-											top->s2 = 0b01; step_and_dump_wave();
-											top->s2 = 0b10; step_and_dump_wave();
-                      top->s2 = 0b11; step_and_dump_wave();
-			top->s0 = 0b01; top->s4 = 0b00; step_and_dump_wave();
-											top->s4 = 0b01; step_and_dump_wave();
-											top->s4 = 0b10; step_and_dump_wave();
-                      top->s4 = 0b11; step_and_dump_wave();
-			top->s0 = 0b10; top->s6 = 0b00; step_and_dump_wave();
-											top->s6 = 0b01; step_and_dump_wave();
-											top->s6 = 0b10; step_and_dump_wave();
-                      top->s6 = 0b11; step_and_dump_wave();
-			top->s0 = 0b11; top->s8 = 0b00; step_and_dump_wave();
-											top->s8 = 0b01; step_and_dump_wave();
-											top->s8 = 0b10; step_and_dump_wave();
-                      top->s8 = 0b11; step_and_dump_wave();
+			top->s_en = 0b0;
+            for (int i = 0; i < 0b11111111; i++) 
+            {
+                top->s_i = i;
+                step_and_dump_wave();
+            }
+
+			top->s_en = 0b1;
+            for (int i = 0; i < 0b11111111; i++) 
+            {
+                top->s_i = i;
+                step_and_dump_wave();
+            }
 			sim_exit();
 	#else
 		nvboard_bind_all_pins(top);	

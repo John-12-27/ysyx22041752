@@ -1,8 +1,8 @@
 module MuxKeyInternal #(NR_KEY = 2, KEY_LEN = 1, DATA_LEN = 1, HAS_DEFAULT = 0)
 (
-	input	wire [KEY_LEN-1 :0] key				 ,
+	input wire [KEY_LEN-1 :0] key				 ,
 	input wire [DATA_LEN-1:0] default_out,
-	input	wire [NR_KEY*(KEY_LEN+DATA_LEN)-1:0] lut,
+	input wire [NR_KEY*(KEY_LEN+DATA_LEN)-1:0] lut,
 	output reg [DATA_LEN-1:0] out				 
 );
 	localparam PAIR_LEN = KEY_LEN + DATA_LEN;
