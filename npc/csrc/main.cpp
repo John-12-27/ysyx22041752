@@ -64,19 +64,22 @@ int main(int argc, char** argv, char** env)
 	sim_init(argc,argv);
 	//reset(10);
 	#ifdef SIM
-			top->s_en = 0b0;
+            top->cin = 0b0; 
             for (int i = 0; i < 0b11111111; i++) 
             {
-                top->s_i = i;
+                top->a = rand()&0b11111111;
+                top->b = rand()&0b11111111;
                 step_and_dump_wave();
             }
 
-			top->s_en = 0b1;
+            top->cin = 0b1; 
             for (int i = 0; i < 0b11111111; i++) 
             {
-                top->s_i = i;
+                top->a = rand()&0b11111111;
+                top->b = rand()&0b11111111;
                 step_and_dump_wave();
             }
+
 			sim_exit();
 	#else
 		nvboard_bind_all_pins(top);	
