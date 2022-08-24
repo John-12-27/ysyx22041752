@@ -1,22 +1,22 @@
 `default_nettype none
 
 module top(
-    input  wire [7:0] a        ,
-    input  wire [7:0] b        ,
-    input  wire       cin      ,
-    output reg  [7:0] s        ,
-    output reg        overflow ,
-    output reg        cout      
+    input  wire [31:0] a        ,
+    input  wire [31:0] b        ,
+    input  wire        sub      ,
+    output wire [31:0] result   ,
+    output wire        zero     ,
+    output wire        overflow ,
+    output wire        cout      
 );
 
-adder_p #(
-    .DATA_LEN                       ( 8                             ))
-u_adder_p_0(
+AdderSuber32 u_addersuber32_0(
     .a                              ( a                             ),
     .b                              ( b                             ),
-    .cin                            ( cin                           ),
+    .sub                            ( sub                           ),
     .cout                           ( cout                          ),
-    .sum                            ( s                             ),
+    .result                         ( result                        ),
+    .zero                           ( zero                          ),
     .overflow                       ( overflow                      )
 );
 

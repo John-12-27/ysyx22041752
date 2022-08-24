@@ -64,22 +64,44 @@ int main(int argc, char** argv, char** env)
 	sim_init(argc,argv);
 	//reset(10);
 	#ifdef SIM
-            top->cin = 0b0; 
-            for (int i = 0; i < 0b11111111; i++) 
+            top->sub = 0b0; 
+            for (int i = 0; i <= 1000; i++) 
             {
-                top->a = rand()&0b11111111;
-                top->b = rand()&0b11111111;
+                int a = rand()&0xffffffff;
+                int b = rand()&0xffffffff;
+                top->a = a;
+                top->b = b;
                 step_and_dump_wave();
+
+                if(top->result != a + b && !top->overflow)
+                {
+                    printf("=== addition err! ===\n");
+                    printf("a=%d, b=%d, r=%d\n",a,b,a+b);
+                    printf("a=%d, b=%d, r=%d, ov=%d\n",top->a,top->b,top->result,top->overflow);
+                    break;
+                }
+                    
+            }
+            printf("=== addition verified! ===\n");
+
+            top->sub = 0b1; 
+            for (int i = 0; i <= 1000; i++) 
+            {
+                int a = rand()&0xffffffff;
+                int b = rand()&0xffffffff;
+                top->a = a;
+                top->b = b;
+                step_and_dump_wave();
+                if(top->result != a - b && !top->overflow)
+                {
+                    printf("=== subtraction err! ===\n");
+                    printf("a=%d, b=%d, r=%d\n",a,b,a-b);
+                    printf("a=%d, b=%d, r=%d, ov=%d\n",top->a,top->b,top->result,top->overflow);
+                    break;
+                }
             }
 
-            top->cin = 0b1; 
-            for (int i = 0; i < 0b11111111; i++) 
-            {
-                top->a = rand()&0b11111111;
-                top->b = rand()&0b11111111;
-                step_and_dump_wave();
-            }
-
+            printf("=== subtraction verified! ===\n");
 			sim_exit();
 	#else
 		nvboard_bind_all_pins(top);	

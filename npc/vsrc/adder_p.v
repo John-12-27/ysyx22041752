@@ -5,7 +5,7 @@
 // Filename      : adder_p.v
 // Author        : Rongye
 // Created On    : 2022-08-22 23:10
-// Last Modified : 2022-08-23 00:12
+// Last Modified : 2022-08-24 13:10
 // ---------------------------------------------------------------------------------
 // Description   : 8-bit carry lookahead adder
 //
@@ -17,8 +17,9 @@ module adder_p #(DATA_LEN = 8)
     input  wire [DATA_LEN-1:0] b        , 
     input  wire                cin      , 
     output reg                 cout     ,
-    output reg [DATA_LEN-1:0]  sum      ,
-    output reg                 overflow
+    output reg  [DATA_LEN-1:0] sum      ,
+    output reg                 zero     , 
+    output reg                 overflow  
 );
   
 wire [DATA_LEN-1:0] pn;
@@ -76,5 +77,8 @@ always @(a or b or cin) begin
 end
 always @(a or b or cin) begin
    overflow = (a[DATA_LEN-1]==b[DATA_LEN-1])&&(sum[DATA_LEN-1]!=a[DATA_LEN-1]);
+end
+always @(a or b or cin) begin
+   zero = sum == {DATA_LEN{1'b0}};
 end
 endmodule
