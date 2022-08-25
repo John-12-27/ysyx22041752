@@ -64,45 +64,137 @@ int main(int argc, char** argv, char** env)
 	sim_init(argc,argv);
 	//reset(10);
 	#ifdef SIM
-            top->sub = 0b0; 
-            for (int i = 0; i <= 1000; i++) 
+        top->op = 0b111;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a+b))
             {
-                int a = rand()&0xffffffff;
-                int b = rand()&0xffffffff;
-                top->a = a;
-                top->b = b;
-                step_and_dump_wave();
-
-                if(top->result != a + b && !top->overflow)
-                {
-                    printf("=== addition err! ===\n");
-                    printf("a=%d, b=%d, r=%d\n",a,b,a+b);
-                    printf("a=%d, b=%d, r=%d, ov=%d\n",top->a,top->b,top->result,top->overflow);
-                    break;
-                }
-                    
+                printf("add err\n");
+                printf("x=%d, y=%d, res=%d\n",a,b,a+b);
+                printf("top->x=%d, top->y=%d, top->res=%d\n",top->x,top->y,top->res);
+                break;
             }
-            printf("=== addition verified! ===\n");
-
-            top->sub = 0b1; 
-            for (int i = 0; i <= 1000; i++) 
+        }
+            
+        top->op = 0b110;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a-b))
             {
-                int a = rand()&0xffffffff;
-                int b = rand()&0xffffffff;
-                top->a = a;
-                top->b = b;
-                step_and_dump_wave();
-                if(top->result != a - b && !top->overflow)
-                {
-                    printf("=== subtraction err! ===\n");
-                    printf("a=%d, b=%d, r=%d\n",a,b,a-b);
-                    printf("a=%d, b=%d, r=%d, ov=%d\n",top->a,top->b,top->result,top->overflow);
-                    break;
-                }
+                printf("sub err\n");
+                printf("x=%d, y=%d, res=%d\n",a,b,a-b);
+                printf("top->x=%d, top->y=%d, top->res=%d\n",top->x,top->y,top->res);
+                break;
             }
-
-            printf("=== subtraction verified! ===\n");
-			sim_exit();
+        }
+        
+        top->op = 0b101;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (~a))
+            {
+                printf("not err\n");
+                printf("x=%x, y=%x, res=%x\n",a,b,~a);
+                printf("top->x=%x, top->y=%x, top->res=%x\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        top->op = 0b100;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a&b))
+            {
+                printf("and err\n");
+                printf("x=%x, y=%x, res=%x\n",a,b,a&b);
+                printf("top->x=%x, top->y=%x, top->res=%x\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        top->op = 0b011;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a|b))
+            {
+                printf("or err\n");
+                printf("x=%x, y=%x, res=%x\n",a,b,a|b);
+                printf("top->x=%x, top->y=%x, top->res=%x\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        top->op = 0b010;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a^b))
+            {
+                printf("xor err\n");
+                printf("x=%x, y=%x, res=%x\n",a,b,a^b);
+                printf("top->x=%x, top->y=%x, top->res=%x\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        top->op = 0b001;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a<b))
+            {
+                printf("less err\n");
+                printf("x=%d, y=%d, res=%d\n",a,b,a<b);
+                printf("top->x=%d, top->y=%d, top->res=%d\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        top->op = 0b000;
+        for (int j = 0; j < 500; ++j) 
+        {
+            int a = rand()&0xffffffff;
+            int b = rand()&0xffffffff;
+            top->x = a;
+            top->y = b;
+            step_and_dump_wave();
+            if(top->res != (a==b))
+            {
+                printf("equ err\n");
+                printf("x=%d, y=%d, res=%d\n",a,b,a==b);
+                printf("top->x=%d, top->y=%d, top->res=%d\n",top->x,top->y,top->res);
+                break;
+            }
+        }
+        sim_exit();
 	#else
 		nvboard_bind_all_pins(top);	
 		nvboard_init();	

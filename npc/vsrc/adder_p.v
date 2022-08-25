@@ -3,9 +3,9 @@
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
 // Filename      : adder_p.v
-// Author        : Rongye
+// Author        : Cw
 // Created On    : 2022-08-22 23:10
-// Last Modified : 2022-08-24 13:10
+// Last Modified : 2022-08-25 18:23
 // ---------------------------------------------------------------------------------
 // Description   : 8-bit carry lookahead adder
 //
@@ -48,7 +48,7 @@ end
 // 3 bit
 always @(a or b or cin) begin
    sum[3] = pn[3] ^ (gn[2] | pn[2] & (gn[1] | pn[1] & (gn[0] | pn[0] & cin)));
-end 
+end
 // 4 bit
 always @(a or b or cin) begin
    sum[4] = pn[4] ^ (gn[3] | pn[3] & (gn[2] | pn[2] & 
@@ -71,9 +71,10 @@ always @(a or b or cin) begin
                     (gn[2] | pn[2] & (gn[1] | pn[1] & (gn[0] | pn[0] &                  
                                                             cin)))))));                 
 end 
+
 always @(a or b or cin) begin
    cout =  (gn[7] | pn[7] & (gn[6] | pn[6] & (gn[5] | pn[5] & (gn[4] | pn[4] &
-           (gn[3] | pn[3] & (gn[2] | pn[2] & (gn[1] | pn[1] & (gn[0] | pn[0] &                                                                                   cin))))))));                
+           (gn[3] | pn[3] & (gn[2] | pn[2] & (gn[1] | pn[1] & (gn[0] | pn[0] &                                                                                   cin))))))));
 end
 always @(a or b or cin) begin
    overflow = (a[DATA_LEN-1]==b[DATA_LEN-1])&&(sum[DATA_LEN-1]!=a[DATA_LEN-1]);

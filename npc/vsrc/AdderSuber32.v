@@ -3,9 +3,9 @@
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
 // Filename      : adder32.v
-// Author        : Rongye
+// Author        : Cw
 // Created On    : 2022-08-24 09:46
-// Last Modified : 2022-08-24 18:30
+// Last Modified : 2022-08-25 15:55
 // ---------------------------------------------------------------------------------
 // Description   : 32-bit adder with 4 8-bit carry lookahead adder
 //
