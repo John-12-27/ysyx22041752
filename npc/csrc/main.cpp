@@ -65,10 +65,28 @@ int main(int argc, char** argv, char** env)
 	//reset(10);
 	#ifdef SIM
         top->op = 0b111;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -82,10 +100,28 @@ int main(int argc, char** argv, char** env)
         }
             
         top->op = 0b110;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -99,10 +135,28 @@ int main(int argc, char** argv, char** env)
         }
         
         top->op = 0b101;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -115,10 +169,28 @@ int main(int argc, char** argv, char** env)
             }
         }
         top->op = 0b100;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -131,10 +203,28 @@ int main(int argc, char** argv, char** env)
             }
         }
         top->op = 0b011;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -147,10 +237,28 @@ int main(int argc, char** argv, char** env)
             }
         }
         top->op = 0b010;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -163,10 +271,28 @@ int main(int argc, char** argv, char** env)
             }
         }
         top->op = 0b001;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
@@ -179,10 +305,28 @@ int main(int argc, char** argv, char** env)
             }
         }
         top->op = 0b000;
-        for (int j = 0; j < 500; ++j) 
+        for (int j = 0; j < 100; ++j) 
         {
-            int a = rand()&0xffffffff;
-            int b = rand()&0xffffffff;
+            int s_a = rand()%2;
+            int s_b = rand()%2;
+            int a;
+            int b;
+            if(s_a)
+            {
+                a = rand();
+            }
+            else
+            {
+                a = -rand();
+            }
+            if(s_b)
+            {
+                b = rand();
+            }
+            else
+            {
+                b = -rand();
+            }
             top->x = a;
             top->y = b;
             step_and_dump_wave();
