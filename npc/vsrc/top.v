@@ -1,34 +1,38 @@
 `default_nettype none
 
 module top(
-    input  wire [31:0] x,       
-    input  wire [31:0] y,       
-    input  wire [2 :0] op,      
-    output wire        overflow,
-    output wire [31:0] res      
+    input  wire       clk,
+    input  wire       rst,
+    output wire [7:0] q1 ,
+    output wire [7:0] q2
 );
 
-alu #(
-    .DATA_LEN                       ( 32                           ))
-u_alu_0(
-    .a                              ( x                             ),
-    .b                              ( y                             ),
-    .op                             ( op                            ),
-    .overflow                       ( overflow                      ),
-    .res                            ( res                           )
-);
-
-//seg u_seg_0(
-    //.num                            ( num                           ),
-    //.seg_en                         ( seg_en                        ),
-    //.o_seg0                         ( o_seg0                        ),
-    //.o_seg1                         ( o_seg1                        ),
-    //.o_seg2                         ( o_seg2                        ),
-    //.o_seg3                         ( o_seg3                        ),
-    //.o_seg4                         ( o_seg4                        ),
-    //.o_seg5                         ( o_seg5                        ),
-    //.o_seg6                         ( o_seg6                        ),
-    //.o_seg7                         ( o_seg7                        )
+//alu #(
+    //.DATA_LEN                       ( 32                           ))
+//u_alu_0(
+    //.a                              ( x                             ),
+    //.b                              ( y                             ),
+    //.op                             ( op                            ),
+    //.overflow                       ( overflow                      ),
+    //.res                            ( res                           )
 //);
+
+count #(
+    .MAX_COUNT                      ( 256                           ),
+    .UP_COUNT                       ( 1                            ))
+u_count_0(
+    .rst                            ( rst                           ),
+    .clk                            ( clk                           ),
+    .q                              ( q1                            )
+);
+
+count #(
+    .MAX_COUNT                      ( 256                           ),
+    .UP_COUNT                       ( 0                            ))
+u_count_1(
+    .rst                            ( rst                           ),
+    .clk                            ( clk                           ),
+    .q                              ( q2                            )
+);
 
 endmodule
