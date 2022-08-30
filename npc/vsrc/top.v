@@ -1,38 +1,22 @@
 `default_nettype none
 
 module top(
-    input  wire       clk,
-    input  wire       rst,
-    output wire [7:0] q1 ,
-    output wire [7:0] q2
+    input  wire [7:0] din       ,
+    input  wire [2:0] shamt     ,
+    input  wire       left      ,
+    input  wire       arithmetic,
+    output wire [7:0] dout      
 );
 
-//alu #(
-    //.DATA_LEN                       ( 32                           ))
-//u_alu_0(
-    //.a                              ( x                             ),
-    //.b                              ( y                             ),
-    //.op                             ( op                            ),
-    //.overflow                       ( overflow                      ),
-    //.res                            ( res                           )
-//);
-
-count #(
-    .MAX_COUNT                      ( 256                           ),
-    .UP_COUNT                       ( 1                            ))
-u_count_0(
-    .rst                            ( rst                           ),
-    .clk                            ( clk                           ),
-    .q                              ( q1                            )
+barrel_shifter #(
+    .DATA_LEN                       ( 8                             ))
+u_barrel_shifter_0(
+    .din                            ( din                           ),
+    .shamt                          ( shamt                         ),
+    .left                           ( left                          ),
+    .arithmetic                     ( arithmetic                    ),
+    .dout                           ( dout                          )
 );
 
-count #(
-    .MAX_COUNT                      ( 256                           ),
-    .UP_COUNT                       ( 0                            ))
-u_count_1(
-    .rst                            ( rst                           ),
-    .clk                            ( clk                           ),
-    .q                              ( q2                            )
-);
 
 endmodule
