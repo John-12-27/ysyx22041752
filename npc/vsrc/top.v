@@ -1,22 +1,25 @@
 `default_nettype none
 
 module top(
-    input  wire [7:0] din       ,
-    input  wire [2:0] shamt     ,
-    input  wire       left      ,
-    input  wire       arithmetic,
-    output wire [7:0] dout      
+    input  wire       clk,
+    input  wire       rst,
+    input  wire w  ,
+    output wire z_moore,
+    output wire z_melay
 );
 
-barrel_shifter #(
-    .DATA_LEN                       ( 8                             ))
-u_barrel_shifter_0(
-    .din                            ( din                           ),
-    .shamt                          ( shamt                         ),
-    .left                           ( left                          ),
-    .arithmetic                     ( arithmetic                    ),
-    .dout                           ( dout                          )
+melay u_melay_0(
+    .clk                            ( clk                           ),
+    .rst                            ( rst                           ),
+    .w                              ( w                             ),
+    .z                              ( z_melay                             )
 );
 
+moore u_moore_0(
+    .clk                            ( clk                           ),
+    .rst                            ( rst                           ),
+    .w                              ( w                             ),
+    .z                              ( z_moore                             )
+);
 
 endmodule
