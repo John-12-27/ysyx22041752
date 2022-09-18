@@ -5,7 +5,7 @@
 // Filename      : count.v
 // Author        : Cw
 // Created On    : 2022-08-25 21:07
-// Last Modified : 2022-08-26 00:06
+// Last Modified : 2022-09-02 12:19
 // ---------------------------------------------------------------------------------
 // Description   : a sync counter with T flip-flop
 //
@@ -15,6 +15,7 @@ module count #(MAX_COUNT=8, UP_COUNT=1)
 (
     input  wire                         rst,
     input  wire                         clk,
+    input  wire                         en ,
     output wire [$clog2(MAX_COUNT)-1:0] q
 );
 
@@ -28,7 +29,7 @@ generate
             u_tff_0(
                 .rst                            ( rst                           ),
                 .clk                            ( clk                           ),
-                .t                              ( &q[i-1:0]                     ),
+                .t                              ( &q[i-1:0]&&en                     ),
                 .q                              ( q[i]                          )
             );
         end
@@ -53,7 +54,7 @@ tff #(
 u_tff_0(
     .rst                            ( rst                           ),
     .clk                            ( clk                           ),
-    .t                              ( 1'b1                          ),
+    .t                              ( en                            ),
     .q                              ( q[0]                          )
 );
 
