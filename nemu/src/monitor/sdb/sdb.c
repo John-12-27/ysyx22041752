@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
@@ -54,6 +55,8 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 static int cmd_si(char *args);
+static int cmd_info(char *args);
+static int cmd_x(char *args);
 
 static struct {
   const char *name;
@@ -64,6 +67,8 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "The number of instructions to execute specified by the parameter, and the default value of the parameter is 1", cmd_si },
+  { "info", "Print all registers(r) or watchpoints(w)", cmd_info },
+  { "x", "Print the specfical memory", cmd_x },
 
   /* TODO: Add more commands */
 
@@ -94,17 +99,89 @@ static int cmd_help(char *args) {
   return 0;
 }
 
-static int cmd_si(char *args){
+static int cmd_si(char *args)
+{
+  /* extract the first argument */
+  char *arg    = strtok(NULL, " ");
+  uint64_t siCnt;
+  if(arg != NULL)
+  {
+    char *argEnd = arg + strlen(arg);
+    siCnt = strtol(arg, &argEnd, 10);
+  }
+  else
+  {
+    siCnt = 1;
+  }
+
+  cpu_exec(siCnt);
+  return 0;
+}
+
+static int cmd_info(char *args)
+{
   /* extract the first argument */
   char *arg = strtok(NULL, " ");
-  uint64_t i;
-  if(arg == NULL)
-    i = 1;
+  if(*arg == 'r')
+  {
+    isa_reg_display();        
+  }
+  else if(*args == 'w')
+  {
+  /* TODO: print watchpoints messages*/
+  }
   else
-    i = (uint64_t)*arg;
+  {
+    printf("Input parameters error.\n");
+  }
 
-  cpu_exec(i);
   return 0;
+}
+
+static int cmd_x(char *args)
+{
+    char *len = strtok(NULL, " ");
+
+    uint64_t scanLen  = 1;
+    paddr_t  pmemAddr = CONFIG_MBASE;
+    if(len == NULL)
+    {
+        printf("Input parameters error.\n");
+        return 0;
+    }
+    char *lenEnd = len + strlen(len);
+   
+    for(char *p = len; p < lenEnd; p++)
+    {
+        if(*p > '9' || *p < '0')
+        {
+            printf("The first parameter must be a number\n");
+            return 0;
+        }
+    }
+    char *baseAddr = lenEnd + 1;
+    char *baseEnd  = baseAddr + strlen(baseAddr);
+    for(char *p = baseAddr; p < baseEnd; p++)
+    {
+        if(!((*p>='A'&&*p<='F') || (*p>='a'&&*p<='f') || (*p>='0'&&*p<='9')))
+        {
+            printf("The second parameter must be a hexadecimal number\n");
+            
+            return 0;
+        }
+    }
+
+    scanLen = (uint64_t)strtol(len, &lenEnd, 10);
+    pmemAddr = strtol(baseAddr, &baseEnd, 16);
+
+    printf("===========================================\n");
+    printf("mem_addr\t\tdata\n");
+    for(uint64_t i = 0; i < scanLen; i++)
+    {
+        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)paddr_read(pmemAddr+i*8,8));
+    }
+    printf("===========================================\n");
+    return 0;
 }
 
 void sdb_set_batch_mode() {
