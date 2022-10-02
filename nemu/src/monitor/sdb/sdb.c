@@ -57,6 +57,7 @@ static int cmd_help(char *args);
 static int cmd_si(char *args);
 static int cmd_info(char *args);
 static int cmd_x(char *args);
+static int cmd_p(char *args);
 
 static struct {
   const char *name;
@@ -69,7 +70,7 @@ static struct {
   { "si", "The number of instructions to execute specified by the parameter, and the default value of the parameter is 1", cmd_si },
   { "info", "Print all registers(r) or watchpoints(w)", cmd_info },
   { "x", "Print the specfical memory", cmd_x },
-
+  { "p", "Expression evaluation", cmd_p },
   /* TODO: Add more commands */
 
 };
@@ -182,6 +183,30 @@ static int cmd_x(char *args)
     }
     printf("===========================================\n");
     return 0;
+}
+
+static int cmd_p(char *args)
+{
+  bool   status = true;
+  /*word_t res;*/
+  /* extract the first argument */
+  if(args == NULL)
+  {
+      printf("Please input a expression.\n");
+      return 0;
+  }
+  expr(args, &status);
+  if(!status)
+  {
+      printf("The expression is wrong.\n");
+      return 0;
+  }
+  else
+  {
+      
+  }
+
+  return 0;
 }
 
 void sdb_set_batch_mode() {
