@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <assert.h>
 #include <string.h>
@@ -26,14 +27,30 @@ static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
-"  unsigned result = %s; "
+"  unsigned int result = (unsigned int) %s; "
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
 
-uint16_t genNum(char *p)
+uint16_t genNum(char *p, bool *divFlag)
 {
-    uint32_t num = rand();
+    static uint32_t num;
+    if(!(*divFlag))
+    {
+        num = rand();
+    }
+    else
+    {
+        num = 1;
+
+        /*uint32_t i = 0;*/
+        /*while((i > num) || (i == 0))*/
+        /*{*/
+            /*i = rand();*/
+        /*}*/
+
+        *divFlag = false;
+    }
     sprintf(p, "%u", num);
     return strlen(buf);
 }
@@ -50,7 +67,13 @@ uint16_t genRPar(char *p)
     return strlen(buf);
 }
 
-uint16_t genOp(char *p)
+uint16_t genSpace(char *p)
+{
+    *p = ' ';
+    return strlen(buf);
+}
+
+uint16_t genOp(char *p, bool *divFlag)
 {
     uint8_t op = rand() & 3;
     switch(op)
@@ -70,36 +93,127 @@ uint16_t genOp(char *p)
         case 3:
         {
             *p = '/';
+            *divFlag = true;
         } break;
     }
 
     return strlen(buf);
 }
 
+static char *p_buf = buf;
+static bool divFlag    = false;
+static bool allowNum   = true;
+static bool allowLPar  = true;
+static bool allowRPar  = false;
+static bool allowOp    = false;
+static bool allowSpace = true;
+static uint32_t parCnt = 0;
+
+static void gen_init()
+{
+    p_buf = buf;
+    for(int i = 0; i < 65536; i++)
+    {
+        buf[i] = '\0';
+    }
+    divFlag    = false;
+    allowNum   = true;
+    allowLPar  = true;
+    allowRPar  = false;
+    allowOp    = false;
+    allowSpace = true;
+    parCnt     = 0;
+}
+
 static void gen_rand_expr() 
 {
-    static char *p = buf;
-
     switch(rand() & 3)
     {
         case 0:
         {
-            p = buf + genNum(p); 
+            if(allowNum)
+            {
+                p_buf = buf + genNum(p_buf, &divFlag); 
+                allowNum   = false;
+                allowLPar  = false;
+                allowRPar  = true;
+                allowOp    = true;
+                allowSpace = false;
+                while(parCnt)
+                {
+                    gen_rand_expr();
+                }
+            }
+            else
+            {
+                gen_rand_expr();
+            }
+
         } break;
         case 1:
         {
-            p = buf + genLPar(p);
-            gen_rand_expr();
-            p = buf + genRPar(p);
+            if(allowLPar)
+            {
+                p_buf = buf + genLPar(p_buf);
+                parCnt++;
+                allowNum   = true;
+                allowLPar  = true;
+                allowRPar  = false;
+                allowOp    = false;
+                allowSpace = true;
 
+                gen_rand_expr();
+            }
+            else if(allowRPar && parCnt)
+            {
+                p_buf = buf + genRPar(p_buf);
+                parCnt--;
+                allowNum   = false;
+                allowLPar  = false;
+                allowRPar  = true;
+                allowOp    = true;
+                allowSpace = true;
+            }
+            else
+            {
+                gen_rand_expr();
+            }
         } break;
+        case 2:
+        {
+            if(allowOp)
+            {
+                p_buf = buf + genOp(p_buf, &divFlag);
+                allowNum   = true;
+                allowLPar  = true;
+                allowRPar  = false;
+                allowOp    = false;
+                allowSpace = true;
+                
+                gen_rand_expr();
+            }
+            else
+            {
+                gen_rand_expr();
+            }
+        } break;
+
         default:
         {
-            gen_rand_expr();
-            p = buf + genOp(p);
-            gen_rand_expr();
-        } break;
+            if(allowSpace)
+            {
+                p_buf = buf + genSpace(p_buf);
+                
+                gen_rand_expr();
+            }
+            else
+            {
+                gen_rand_expr();
+            }
+        }
+        
     }
+
 }
 
 int main(int argc, char *argv[]) {
@@ -110,7 +224,9 @@ int main(int argc, char *argv[]) {
     sscanf(argv[1], "%d", &loop);
   }
   int i;
-  for (i = 0; i < loop; i ++) {
+  for (i = 0; i < loop; i ++) 
+  {
+    gen_init();
     gen_rand_expr();
 
     sprintf(code_buf, code_format, buf);
@@ -127,10 +243,12 @@ int main(int argc, char *argv[]) {
     assert(fp != NULL);
 
     int result;
-    fscanf(fp, "%d", &result);
-    pclose(fp);
+    if(fscanf(fp, "%d", &result))
+    {
+        pclose(fp);
+        printf("%u %s\n", result, buf);
+    }
 
-    printf("%u %s\n", result, buf);
   }
   return 0;
 }
