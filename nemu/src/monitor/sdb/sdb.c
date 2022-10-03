@@ -188,6 +188,7 @@ static int cmd_x(char *args)
 static int cmd_p(char *args)
 {
   bool   status = true;
+  word_t res    = 0;
   /*word_t res;*/
   /* extract the first argument */
   if(args == NULL)
@@ -195,7 +196,7 @@ static int cmd_p(char *args)
       printf("Please input a expression.\n");
       return 0;
   }
-  expr(args, &status);
+  res = expr(args, &status);
   if(!status)
   {
       printf("The expression is wrong.\n");
@@ -203,7 +204,7 @@ static int cmd_p(char *args)
   }
   else
   {
-      
+      printf("The result is %ld\n", res);
   }
 
   return 0;

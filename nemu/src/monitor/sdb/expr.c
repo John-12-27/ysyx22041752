@@ -74,7 +74,7 @@ void init_regex() {
 typedef struct token {
   int type;
   /*char str[STR_LEN];*/  //目前感觉纯数字可以直接记录数值
-  uint64_t val;
+  word_t val;
 } Token;
 
 static Token tokens[NUM_TOKENS] __attribute__((used)) = {};
@@ -108,7 +108,7 @@ static bool make_token(char *e) {
         if(nr_token == NUM_TOKENS)
         {
             printf("Too many tokens!");
-            return 0;
+            return false;
         }
 
         switch (rules[i].token_type) 
@@ -118,12 +118,12 @@ static bool make_token(char *e) {
                 tokens[nr_token].type = TK_NUM;
                 if(substr_len < STR_LEN)
                 {
-                    tokens[nr_token].val = strtol(substr_start, &substr_end, 10);
+                    tokens[nr_token].val = (word_t)strtol(substr_start, &substr_end, 10);
                 }
                 else
                 {
                     printf("The number must be less than 32!");
-                    return 0;
+                    return false;
                 }
             } break;
             case '+':
@@ -152,7 +152,7 @@ static bool make_token(char *e) {
             } break;
             case TK_NOTYPE:
             {
-
+                nr_token--;
             } break;
 
             default: TODO();
@@ -172,46 +172,45 @@ static bool make_token(char *e) {
 }
 
 // 用“堆栈”保存'('，遇到')'就出栈
-static uint8_t rParArray[NUM_TOKENS] = {0}; 
-static uint8_t rParCnt = 0;
-static uint8_t lParArray[NUM_TOKENS] = {0};
-bool check_parentheses(Token *p, Token *q)
+bool check_parentheses(Token *p, Token *q, bool *success)
 {
-    /*char stack[NUM_TOKENS] = {'\0'};*/
     int8_t top = 0;
-    uint8_t cnt = 0;
-    uint8_t lParCnt = 0;
-    uint8_t lParTag[NUM_TOKENS] = {0};
-    for(Token *i = p; i <= q; i++)
+    if((p->type == '(') && (q->type == ')'))
     {
-        switch(p->type)
+        for(; p <= q; p++)
         {
-            case '(':
+            switch(p->type)
             {
-                /*stack[top] = '(';*/
-                lParTag[lParCnt] = (uint8_t)(i-p);
-                lParCnt++;
-                top++;
-            } break;
-            case ')':
-            {
-                if((p-1)->type == '(')
+                case '(':
                 {
-                    return false;
-                }
-                rParArray[cnt] = (uint8_t)(i-p);
-                rParCnt++;
-                lParArray[cnt] = lParTag[lParCnt-1];
-                cnt++;
-                /*stack[top] = ')';*/
-                top--;
-            } break;
+                    top++;
+                } break;
+                case ')':
+                {
+
+                    /*if(((p-1)->type != TK_NUM) && (p-1)->type != ')')*/
+                    /*{*/
+                        /**success = false;*/
+                        /*return false;*/
+                    /*}*/
+
+                    top--;
+                } break;
+            }
+            if(!top && (p<q))
+            {
+                return false;
+            }
         }
-    }
-    rParCnt--;
-    if(!top)
-    {
-        return true;
+        if(!top)
+        {
+            return true;
+        }
+        else
+        {
+            *success = false;
+            return false;
+        }
     }
     else
     {
@@ -219,72 +218,92 @@ bool check_parentheses(Token *p, Token *q)
     }
 }
 
-bool check_operator(Token *p, Token *q)
+Token *check_operator(Token *p, Token *q, bool *success)
 {
-    for(Token *i = p+1; i<=q; i++)
+    char    stack[NUM_TOKENS] = {'\0'};
+    uint8_t mainOp = 0;
+    uint8_t parCnt = 0;
+    Token   *tag   = NULL;
+    for(Token *i = p; i <= q; i++)
     {
-        if((i->type == '+') || (i->type == '-') ||
-           (i->type == '*') || (i->type == '/'))
+        if(i->type == '(')
         {
-            if(((i-1)->type != TK_NUM) || ((i+1)->type != TK_NUM))
+            parCnt++;
+        }
+        else if(i->type == ')')
+        {
+            parCnt--;
+        }
+        if(!parCnt)
+        {
+            if((i->type == '+') || (i->type == '-'))
             {
-                return false;
+                stack[mainOp] = i->type;
+                tag = i;
+                mainOp++;
+            }
+            else if((i->type == '*') || (i->type == '/'))
+            {
+                if((stack[mainOp-1] != '+') && (stack[mainOp-1] != '-'))
+                {
+                    stack[mainOp] = i->type;
+                    tag = i;
+                    mainOp++;
+                }
             }
         }
     }
-    return true;
+    return tag;
 }
 
-void arraysSort(uint8_t arrA[], uint8_t arrB[], uint8_tlen)
+word_t eval(Token *p, Token *q, bool *success)
 {
-    for(uint8_t i = 0; i < len; i++)
+    if(p == q)
     {
-        for(uint8_t j = 0; j < len - i; j++)
-        {
-            if(arrA[j] > arrB[j+1])
-            {
-                uint8_t tmp = arrA[j];
-                arrA[j]     = arrA[j+1];
-                arrA[j+1]   = tmp;
-
-                tmp       = arrB[j];
-                arrB[j]   = arrB[j+1];
-                arrB[j+1] = tmp;
-            }
-        }
+        return p->val;
     }
-}
-
-word_t eval(Token *p, Token *q)
-{
-    static i = 0;
-    uint8_t main_op = '\0';
-    word_t res;
-    if((lParArray[0] == i) && (rParArray[0] == q - i))
+    else if(check_parentheses(p, q, success))
     {
-        i++;
-        return eval(p+1, q-1);
+        return eval(p+1, q-1, success);
     }
     else
     {
-        Token *tmp = p;
-        while(tmp)
+        Token *op = check_operator(p, q, success);
+        word_t val1 = eval(p, op-1, success);
+        word_t val2 = eval(op+1, q, success);
+
+        switch(op->type)
+        {
+            case '+': 
+            {
+                return val1 + val2;
+            } break;
+            case '-': 
+            {
+                return val1 - val2;
+            } break;
+            case '*': 
+            {
+                return val1 * val2;
+            } break;
+            case '/': 
+            {
+                return val1 / val2;
+            } break;
+            default : panic("err!!!");
+        }
     }
 
-
-    return res;
+    return 0;
 }
 
-word_t expr(char *e, bool *success) {
-    if (!make_token(e) || !check_parentheses(&tokens[0],&tokens[nr_token-1]) || !check_operator(&tokens[0],&tokens[nr_token-1])) 
+word_t expr(char *e, bool *success) 
+{
+    if (!make_token(e)) 
     {
         *success = false;
         return 0;
     }
 
-    arraysSort(lParArray, rParArray, rParCnt);
-
-
-
-  return 1; 
+    return eval(&tokens[0], &tokens[nr_token-1], success); 
 }
