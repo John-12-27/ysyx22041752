@@ -188,7 +188,7 @@ bool check_parentheses(Token *p, Token *q, bool *success)
                 case ')':
                 {
 
-                    /*if(((p-1)->type != TK_NUM) && (p-1)->type != ')')*/
+                    /*if(((p-1)->type != TK_NUM) && (p-1)->type != ')' && (p < q))*/
                     /*{*/
                         /**success = false;*/
                         /*return false;*/
@@ -258,7 +258,12 @@ Token *check_operator(Token *p, Token *q, bool *success)
 
 word_t eval(Token *p, Token *q, bool *success)
 {
-    if(p == q)
+    if(p > q)
+    {
+        *success = false;
+        return 0;
+    }
+    else if(p == q)
     {
         return p->val;
     }
@@ -266,7 +271,7 @@ word_t eval(Token *p, Token *q, bool *success)
     {
         return eval(p+1, q-1, success);
     }
-    else
+    else if(*success)
     {
         Token *op = check_operator(p, q, success);
         word_t val1 = eval(p, op-1, success);
