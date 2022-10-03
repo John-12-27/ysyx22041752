@@ -10,7 +10,7 @@
 * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 *
-* See the Mulan PSL v2 for more details.
+* See the Mulan PSL v3 for more details.
 ***************************************************************************************/
 
 #include <stdint.h>
@@ -21,7 +21,7 @@
 #include <string.h>
 
 // this should be enough
-static char buf[65536] = {0};
+static char buf[65536] = {'\0',};
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
@@ -31,20 +31,73 @@ static char *code_format =
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
+uint16_t genNum(char *p)
+{
+    uint32_t num = rand();
+    sprintf(p, "%u", num);
+    return strlen(buf);
+}
+
+uint16_t genLPar(char *p)
+{
+    *p = '(';
+    return strlen(buf);
+}
+
+uint16_t genRPar(char *p)
+{
+    *p = ')';
+    return strlen(buf);
+}
+
+uint16_t genOp(char *p)
+{
+    uint8_t op = rand() & 3;
+    switch(op)
+    {
+        case 0:
+        {
+            *p = '+';
+        } break;
+        case 1:
+        {
+            *p = '-';
+        } break;
+        case 2:
+        {
+            *p = '*';
+        } break;
+        case 3:
+        {
+            *p = '/';
+        } break;
+    }
+
+    return strlen(buf);
+}
+
+static void gen_rand_expr() 
+{
+    static char *p = buf;
+
     switch(rand() & 3)
     {
         case 0:
         {
-            rand(); 
+            p = buf + genNum(p); 
         } break;
         case 1:
         {
-            
+            p = buf + genLPar(p);
+            gen_rand_expr();
+            p = buf + genRPar(p);
+
         } break;
         default:
         {
-            
+            gen_rand_expr();
+            p = buf + genOp(p);
+            gen_rand_expr();
         } break;
     }
 }
