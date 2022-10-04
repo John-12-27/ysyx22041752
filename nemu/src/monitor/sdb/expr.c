@@ -85,6 +85,7 @@ static bool make_token(char *e) {
   int i;
   regmatch_t pmatch;
 
+  bool negTag = false;
   nr_token = 0;
 
   while (e[position] != '\0') {
@@ -125,6 +126,12 @@ static bool make_token(char *e) {
                     printf("The number must be less than 32!");
                     return false;
                 }
+                if(negTag)
+                {
+                    nr_token++;
+                    tokens[nr_token].type = ')';
+                    negTag = false;
+                }
             } break;
             case '+':
             {
@@ -132,6 +139,17 @@ static bool make_token(char *e) {
             } break;
             case '-':
             {
+                if(((tokens[nr_token-1].type != TK_NUM) && 
+                   (tokens[nr_token-1].type != ')') && (nr_token > 0))
+                || (nr_token == 0))
+                {
+                    tokens[nr_token].type = '(';
+                    nr_token++;
+                    tokens[nr_token].type = TK_NUM;
+                    tokens[nr_token].val  = 0;
+                    nr_token++;
+                    negTag = true;
+                }
                 tokens[nr_token].type = '-';
             } break;
             case '*':
@@ -175,46 +193,47 @@ static bool make_token(char *e) {
 bool check_parentheses(Token *p, Token *q, bool *success)
 {
     int8_t top = 0;
-    if((p->type == '(') && (q->type == ')'))
+    bool parClear = false;
+    for(Token *i = p; i <= q; i++)
     {
-        for(; p <= q; p++)
+        if(i->type == '(')
         {
-            switch(p->type)
+            if((((i-1)->type == ')') || ((i-1)->type == TK_NUM)) && (i > p))
             {
-                case '(':
-                {
-                    top++;
-                } break;
-                case ')':
-                {
-
-                    /*if(((p-1)->type != TK_NUM) && (p-1)->type != ')' && (p < q))*/
-                    /*{*/
-                        /**success = false;*/
-                        /*return false;*/
-                    /*}*/
-
-                    top--;
-                } break;
-            }
-            if(!top && (p<q))
-            {
+                *success = false;
                 return false;
             }
+            top++;
         }
-        if(!top)
+        else if(i->type == ')')
+        {
+            if((((i-1)->type != ')') && ((i-1)->type != TK_NUM) && (i > p)) || (i == p))
+            {
+                *success = false;
+                return false;
+            }
+            top--;
+        }
+        if(!top && (i < q) && p->type == '(')
+        {
+            parClear = true;
+        }
+    }
+    if(top)
+    {
+        *success = false;
+        return false;
+    }
+    else
+    {
+        if(!parClear && (p->type == '(') && (q->type == ')'))
         {
             return true;
         }
         else
         {
-            *success = false;
             return false;
         }
-    }
-    else
-    {
-        return false;
     }
 }
 
@@ -293,9 +312,16 @@ word_t eval(Token *p, Token *q, bool *success)
             } break;
             case '/': 
             {
-                return val1 / val2;
+                if(val2)
+                {
+                    return val1 / val2;
+                }
+                else
+                {
+                    *success = false;
+                }
             } break;
-            default : panic("err!!!");
+            default : panic("Operator err!!!");
         }
     }
 
