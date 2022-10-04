@@ -193,18 +193,25 @@ static int cmd_p(char *args)
   /* extract the first argument */
   if(args == NULL)
   {
+      printf("=========================================\n");
       printf("Please input a expression.\n");
+      printf("=========================================\n");
       return 0;
   }
   res = expr(args, &status);
   if(!status)
   {
+      printf("=========================================\n");
       printf("The expression is wrong.\n");
+      printf("=========================================\n");
       return 0;
   }
   else
   {
-      printf("The result is %ld\n", res);
+      printf("=========================================\n");
+      printf("The result is   %ld\n", res);
+      printf("The result is 0x%lx\n", res);
+      printf("=========================================\n");
   }
 
   return 0;

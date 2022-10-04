@@ -19,11 +19,16 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-
+#include <memory/paddr.h>
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM
-
-  /* TODO: Add more token types */
+  TK_NOTYPE = 256, 
+  TK_EQ, 
+  TK_NEQ, 
+  TK_NUM, 
+  TK_HEX, 
+  TK_AND, 
+  TK_REG,
+  TK_POINTER,
 
 };
 
@@ -36,15 +41,19 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[0-9]+"  , TK_NUM},      // num 
+  {"0x[0-9]+", TK_HEX},      // hexadecimal num 
+  {"[0-9]+"  , TK_NUM},      // decimal num 
   {" +"      , TK_NOTYPE},   // spaces
   {"\\+"     , '+'},         // plus
   {"\\-"     , '-'},         // sub
-  {"\\*"     , '*'},         // mult 
+  {"\\*"     , '*'},         // mult or pointers dereference 
   {"/"       , '/'},         // div 
   {"\\("     , '('},         // (
   {"\\)"     , ')'},         // )
   {"=="      , TK_EQ},       // equal
+  {"!="      , TK_NEQ},      // not equal
+  {"&&"      , TK_AND},      // logic and
+  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1| a0| a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6)",TK_REG}, // reg name
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -80,98 +89,141 @@ typedef struct token {
 static Token tokens[NUM_TOKENS] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
-static bool make_token(char *e) {
-  int position = 0;
-  int i;
-  regmatch_t pmatch;
+static bool make_token(char *e, bool *success)
+{
+    int position = 0;
+    int i;
+    regmatch_t pmatch;
+    bool negTag = false;
+    nr_token = 0;
 
-  bool negTag = false;
-  nr_token = 0;
-
-  while (e[position] != '\0') {
-    /* Try all rules one by one. */
-    for (i = 0; i < NR_REGEX; i++) {
-      if (regexec(&re[i], e + position, 1, &pmatch, 1) == 0 && pmatch.rm_so == 0) {
-        char *substr_start = e + position;
-        int substr_len = pmatch.rm_eo;
-        char *substr_end = substr_start + substr_len;
-
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
-
-        position += substr_len;
-
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
-         * to record the token in the array `tokens'. For certain types
-         * of tokens, some extra actions should be performed.
-         */
-
-        if(nr_token == NUM_TOKENS)
+    while (e[position] != '\0') 
+    {
+        /* Try all rules one by one. */
+        for (i = 0; i < NR_REGEX; i++) 
         {
-            printf("Too many tokens!");
-            return false;
-        }
-
-        switch (rules[i].token_type) 
-        {
-            case TK_NUM: 
+            if (regexec(&re[i], e + position, 1, &pmatch, 1) == 0 && pmatch.rm_so == 0) 
             {
-                tokens[nr_token].type = TK_NUM;
-                if(substr_len < STR_LEN)
+                char *substr_start = e + position;
+                int substr_len = pmatch.rm_eo;
+                char *substr_end = substr_start + substr_len;
+
+                Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",i, rules[i].regex, position, substr_len, substr_len, substr_start);
+
+                position += substr_len;
+
+
+                if(nr_token == NUM_TOKENS)
                 {
-                    tokens[nr_token].val = (word_t)strtol(substr_start, &substr_end, 10);
-                }
-                else
-                {
-                    printf("The number must be less than 32!");
+                    printf("Too many tokens!");
                     return false;
                 }
-                if(negTag)
+
+                switch (rules[i].token_type) 
                 {
-                    nr_token++;
-                    tokens[nr_token].type = ')';
-                    negTag = false;
-                }
-            } break;
-            case '+':
-            {
-                tokens[nr_token].type = '+';
-            } break;
-            case '-':
-            {
-                if(((tokens[nr_token-1].type != TK_NUM) && 
-                   (tokens[nr_token-1].type != ')') && (nr_token > 0))
-                || (nr_token == 0))
-                {
-                    tokens[nr_token].type = '(';
-                    nr_token++;
-                    tokens[nr_token].type = TK_NUM;
-                    tokens[nr_token].val  = 0;
-                    nr_token++;
-                    negTag = true;
-                }
-                tokens[nr_token].type = '-';
-            } break;
-            case '*':
-            {
-                tokens[nr_token].type = '*';
-            } break;
-            case '/':
-            {
-                tokens[nr_token].type = '/';
-            } break;
-            case '(':
-            {
-                tokens[nr_token].type = '(';
-            } break;
-            case ')':
-            {
-                tokens[nr_token].type = ')';
-            } break;
-            case TK_NOTYPE:
-            {
-                nr_token--;
-            } break;
+                    case TK_NUM: 
+                    {
+                        tokens[nr_token].type = TK_NUM;
+                        if(substr_len < STR_LEN)
+                        {
+                            tokens[nr_token].val = (word_t)strtol(substr_start, &substr_end, 10);
+                        }
+                        else
+                        {
+                            printf("The number must be less than 32!");
+                            return false;
+                        }
+                        if(negTag)
+                        {
+                            nr_token++;
+                            tokens[nr_token].type = ')';
+                            negTag = false;
+                        }
+                    } break;
+                    case TK_HEX:
+                    {
+                        tokens[nr_token].type = TK_HEX;
+                        if(substr_len < STR_LEN)
+                        {
+                            tokens[nr_token].val = (word_t)strtol(substr_start, &substr_end, 16);
+                        }
+                        else
+                        {
+                            printf("The number must be less than 32!");
+                            return false;
+                        }
+                        if(negTag)
+                        {
+                            nr_token++;
+                            tokens[nr_token].type = ')';
+                            negTag = false;
+                        }
+                    } break;
+                    case '+':
+                    {
+                        tokens[nr_token].type = '+';
+                    } break;
+                    case '-':
+                    {
+                        if(((tokens[nr_token-1].type != TK_NUM) && 
+                           (tokens[nr_token-1].type != ')') && (nr_token > 0))
+                        || (nr_token == 0))
+                        {
+                            tokens[nr_token].type = '(';
+                            nr_token++;
+                            tokens[nr_token].type = TK_NUM;
+                            tokens[nr_token].val  = 0;
+                            nr_token++;
+                            negTag = true;
+                        }
+                        tokens[nr_token].type = '-';
+                    } break;
+                    case '*':
+                    {
+                        if(((tokens[nr_token-1].type != TK_NUM) && 
+                           (tokens[nr_token-1].type != ')') && (nr_token > 0))
+                        || (nr_token == 0))
+                        {
+                            tokens[nr_token].type = TK_POINTER;
+                        }
+                        else
+                        {
+                            tokens[nr_token].type = '*';
+                        }
+                    } break;
+                    case TK_REG:
+                    {
+                        tokens[nr_token].type = TK_REG;
+                        tokens[nr_token].val  = isa_reg_str2val(substr_start, success);
+                    } break;
+                    case '/':
+                    {
+                        tokens[nr_token].type = '/';
+                    } break;
+                    case '(':
+                    {
+                        tokens[nr_token].type = '(';
+                    } break;
+                    case ')':
+                    {
+                        tokens[nr_token].type = ')';
+                    } break;
+                    case TK_EQ:
+                    {
+                        tokens[nr_token].type = TK_EQ;
+                    } break;
+                    case TK_NEQ:
+                    {
+                        tokens[nr_token].type = TK_NEQ;
+                    } break;
+                    case TK_AND:
+                    {
+                        tokens[nr_token].type = TK_AND;
+                    } break;
+                    case TK_NOTYPE:
+                    {
+                        nr_token--;
+                    } break;
 
             default: TODO();
         }
@@ -255,15 +307,52 @@ Token *check_operator(Token *p, Token *q, bool *success)
         }
         if(!parCnt)
         {
-            if((i->type == '+') || (i->type == '-'))
+            if(i->type == TK_AND)
             {
                 stack[mainOp] = i->type;
                 tag = i;
                 mainOp++;
             }
+            else if((i->type == TK_EQ) || (i->type == TK_NEQ))
+            {
+                if(stack[mainOp-1] != TK_AND)
+                {
+                    stack[mainOp] = i->type;
+                    tag = i;
+                    mainOp++;
+                }
+            }
+            else if((i->type == '+') || (i->type == '-'))
+            {
+                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ))
+                {
+                    stack[mainOp] = i->type;
+                    tag = i;
+                    mainOp++;
+                }
+            }
             else if((i->type == '*') || (i->type == '/'))
             {
-                if((stack[mainOp-1] != '+') && (stack[mainOp-1] != '-'))
+                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-'))
+                {
+                    stack[mainOp] = i->type;
+                    tag = i;
+                    mainOp++;
+                }
+            }
+            else if(i->type == TK_POINTER)
+            {
+                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/'))
+                {
+                    stack[mainOp] = i->type;
+                    tag = i;
+                    mainOp++;
+                }
+                
+            }
+            else if(i->type == TK_REG)
+            {
+                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/') && (stack[mainOp-1] != TK_POINTER))
                 {
                     stack[mainOp] = i->type;
                     tag = i;
@@ -293,11 +382,35 @@ word_t eval(Token *p, Token *q, bool *success)
     else if(*success)
     {
         Token *op = check_operator(p, q, success);
-        word_t val1 = eval(p, op-1, success);
+        word_t val1 = 0;
+        if((op->type != TK_POINTER) && (op->type != TK_REG))
+        {
+            val1 = eval(p, op-1, success);
+        }
         word_t val2 = eval(op+1, q, success);
 
         switch(op->type)
         {
+            case TK_REG:
+            {
+                return op->val;
+            }
+            case TK_POINTER:
+            {
+                return paddr_read((paddr_t)val2, 8);
+            } break;
+            case TK_EQ: 
+            {
+                return val1 == val2;
+            } break;
+            case TK_NEQ:
+            {
+                return val1 != val2;
+            } break;
+            case TK_AND:
+            {
+                return val1 && val2;
+            } break;
             case '+': 
             {
                 return val1 + val2;
@@ -330,7 +443,7 @@ word_t eval(Token *p, Token *q, bool *success)
 
 word_t expr(char *e, bool *success) 
 {
-    if (!make_token(e)) 
+    if (!make_token(e, success)) 
     {
         *success = false;
         return 0;
