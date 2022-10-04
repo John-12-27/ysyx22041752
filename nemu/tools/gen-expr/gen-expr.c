@@ -35,23 +35,13 @@ static char *code_format =
 uint16_t genNum(char *p, bool *divFlag)
 {
     static uint32_t num;
-    if(!(*divFlag))
+    num = rand();
+    if(*divFlag)
     {
-        num = rand();
-    }
-    else
-    {
-        num = 1;
-
-        /*uint32_t i = 0;*/
-        /*while((i > num) || (i == 0))*/
-        /*{*/
-            /*i = rand();*/
-        /*}*/
-
+        num++;
         *divFlag = false;
     }
-    sprintf(p, "%u", num);
+    sprintf(p, "%uu", num);
     return strlen(buf);
 }
 
