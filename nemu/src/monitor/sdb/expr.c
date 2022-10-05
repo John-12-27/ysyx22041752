@@ -115,7 +115,9 @@ static bool make_token(char *e, bool *success)
 
                 if(nr_token == NUM_TOKENS)
                 {
-                    printf("Too many tokens!");
+                    printf(ANSI_BG_RED "=========================================\n");
+                    printf("Too many tokens!\n");
+                    printf("=========================================" ANSI_NONE "\n");
                     return false;
                 }
 
@@ -130,7 +132,9 @@ static bool make_token(char *e, bool *success)
                         }
                         else
                         {
-                            printf("The number must be less than 32!");
+                            printf(ANSI_BG_RED "=========================================\n");
+                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
                         if(negTag)
@@ -149,7 +153,9 @@ static bool make_token(char *e, bool *success)
                         }
                         else
                         {
-                            printf("The number must be less than 32!");
+                            printf(ANSI_BG_RED "=========================================\n");
+                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
                         if(negTag)
@@ -234,8 +240,11 @@ static bool make_token(char *e, bool *success)
       }
     }
 
-    if (i == NR_REGEX) {
-      printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+    if (i == NR_REGEX) 
+    {
+       printf(ANSI_BG_RED "=========================================\n");
+       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+       printf("=========================================" ANSI_NONE "\n");
       return false;
     }
   }
@@ -255,6 +264,9 @@ bool check_parentheses(Token *p, Token *q, bool *success)
             if((((i-1)->type == ')') || ((i-1)->type == TK_NUM)) && (i > p))
             {
                 *success = false;
+                printf(ANSI_BG_RED "=========================================\n");
+                printf("There is an error near '('.\n");
+                printf("=========================================" ANSI_NONE "\n");
                 return false;
             }
             top++;
@@ -264,6 +276,9 @@ bool check_parentheses(Token *p, Token *q, bool *success)
             if((((i-1)->type != ')') && ((i-1)->type != TK_NUM) && (i > p)) || (i == p))
             {
                 *success = false;
+                printf(ANSI_BG_RED "=========================================\n");
+                printf("There is an error near ')'.\n");
+                printf("=========================================" ANSI_NONE "\n");
                 return false;
             }
             top--;
@@ -291,7 +306,7 @@ bool check_parentheses(Token *p, Token *q, bool *success)
     }
 }
 
-Token *check_operator(Token *p, Token *q, bool *success)
+Token *check_operator(Token *p, Token *q)
 {
     char    stack[NUM_TOKENS] = {'\0'};
     uint8_t mainOp = 0;
@@ -375,6 +390,10 @@ word_t eval(Token *p, Token *q, bool *success)
     }
     else if(p == q)
     {
+        if((p->type != TK_NUM) && (p->type != TK_HEX) && (p->type != TK_REG))
+        {
+            *success = false;
+        }
         return p->val;
     }
     else if(check_parentheses(p, q, success))
@@ -383,7 +402,7 @@ word_t eval(Token *p, Token *q, bool *success)
     }
     else if(*success)
     {
-        Token *op = check_operator(p, q, success);
+        Token *op = check_operator(p, q);
         word_t val1 = 0;
         if((op->type != TK_POINTER) && (op->type != TK_REG))
         {
@@ -433,6 +452,9 @@ word_t eval(Token *p, Token *q, bool *success)
                 }
                 else
                 {
+                    printf(ANSI_BG_RED "=========================================\n");
+                    printf("The dividend is 0.\n");
+                    printf("=========================================" ANSI_NONE "\n");
                     *success = false;
                 }
             } break;

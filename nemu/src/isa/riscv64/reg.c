@@ -45,5 +45,9 @@ word_t isa_reg_str2val(const char *s, bool *success)
         }
     }
     *success = false;
+    printf(ANSI_BG_RED "=========================================\n");
+    printf("Unknown register !\n");
+    printf("=========================================" ANSI_NONE "\n");
+
     return 0;
 }

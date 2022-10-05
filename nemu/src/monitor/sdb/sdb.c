@@ -19,6 +19,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/paddr.h>
+#include <utils.h>
 
 static int is_batch_mode = false;
 
@@ -95,7 +96,9 @@ static int cmd_help(char *args) {
         return 0;
       }
     }
-    printf("Unknown command '%s'\n", arg);
+        printf(ANSI_BG_RED "=========================================\n");
+        printf("Unknown command '%s'\n", arg);
+        printf("=========================================" ANSI_NONE "\n");
   }
   return 0;
 }
@@ -193,17 +196,17 @@ static int cmd_p(char *args)
   /* extract the first argument */
   if(args == NULL)
   {
-      printf("=========================================\n");
+      printf(ANSI_BG_RED "=========================================\n");
       printf("Please input a expression.\n");
-      printf("=========================================\n");
+      printf("=========================================" ANSI_NONE "\n");
       return 0;
   }
   res = expr(args, &status);
   if(!status)
   {
-      printf("=========================================\n");
+      printf(ANSI_BG_RED "=========================================\n");
       printf("The expression is wrong.\n");
-      printf("=========================================\n");
+      printf("=========================================" ANSI_NONE "\n");
       return 0;
   }
   else
@@ -259,7 +262,12 @@ void sdb_mainloop() {
       }
     }
 
-    if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
+    if (i == NR_CMD) 
+    { 
+        printf(ANSI_BG_RED "=========================================\n");
+        printf("Unknown command '%s'\n", cmd); 
+        printf("=========================================" ANSI_NONE "\n");
+    }
   }
 }
 
