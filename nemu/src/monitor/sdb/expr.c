@@ -165,8 +165,7 @@ static bool make_token(char *e, bool *success)
                     } break;
                     case '-':
                     {
-                        if(((tokens[nr_token-1].type != TK_NUM) && 
-                           (tokens[nr_token-1].type != ')') && (nr_token > 0))
+                        if(((tokens[nr_token-1].type != TK_NUM) && (tokens[nr_token-1].type != ')') && (tokens[nr_token-1].type != TK_REG) && (tokens[nr_token-1].type != TK_HEX) && (nr_token > 0))
                         || (nr_token == 0))
                         {
                             tokens[nr_token].type = '(';
@@ -180,8 +179,7 @@ static bool make_token(char *e, bool *success)
                     } break;
                     case '*':
                     {
-                        if(((tokens[nr_token-1].type != TK_NUM) && 
-                           (tokens[nr_token-1].type != ')') && (nr_token > 0))
+                        if(((tokens[nr_token-1].type != TK_NUM) && (tokens[nr_token-1].type != ')') && (tokens[nr_token-1].type != TK_REG) && (tokens[nr_token-1].type != TK_HEX) && (nr_token > 0))
                         || (nr_token == 0))
                         {
                             tokens[nr_token].type = TK_POINTER;
@@ -193,8 +191,12 @@ static bool make_token(char *e, bool *success)
                     } break;
                     case TK_REG:
                     {
+                        char regstr[4] = {0};
+                        strncpy(regstr, substr_start, substr_len);
+                        
                         tokens[nr_token].type = TK_REG;
-                        tokens[nr_token].val  = isa_reg_str2val(substr_start, success);
+                        /*Assert(regstr != NULL, "Please check the *regstr");*/
+                        tokens[nr_token].val  = isa_reg_str2val(regstr, success);
                     } break;
                     case '/':
                     {
