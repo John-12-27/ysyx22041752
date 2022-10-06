@@ -41,7 +41,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"0x[0-9]+", TK_HEX},      // hexadecimal num 
+  {"0x\(([0-9]|[a-f]|[A-F])+)", TK_HEX},      // hexadecimal num 
   {"[0-9]+"  , TK_NUM},      // decimal num 
   {" +"      , TK_NOTYPE},   // spaces
   {"\\+"     , '+'},         // plus
@@ -53,7 +53,7 @@ static struct rule {
   {"=="      , TK_EQ},       // equal
   {"!="      , TK_NEQ},      // not equal
   {"&&"      , TK_AND},      // logic and
-  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1| a0| a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6)",TK_REG}, // reg name
+  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1| a0| a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
 };
 
 #define NR_REGEX ARRLEN(rules)
