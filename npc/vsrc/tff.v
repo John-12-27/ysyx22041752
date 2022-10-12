@@ -5,7 +5,7 @@
 // Filename      : tff.v
 // Author        : Cw
 // Created On    : 2022-08-25 22:38
-// Last Modified : 2022-08-25 23:26
+// Last Modified : 2022-10-10 21:17
 // ---------------------------------------------------------------------------------
 // Description   : T flip-flop
 //
@@ -18,10 +18,12 @@ module tff #(RST_VALUE=0)
     input  wire t  ,
     output reg  q
 );
+
 always @(posedge clk) begin
     if(rst)
         q <= RST_VALUE;
     else
         q <= t^q;
-end    
+end
+
 endmodule
