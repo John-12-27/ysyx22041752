@@ -261,19 +261,33 @@ bool check_parentheses(Token *p, Token *q, bool *success)
     {
         if(i->type == '(')
         {
-            if((((i-1)->type == ')') || ((i-1)->type == TK_NUM)) && (i > p))
+            if(i > p)
             {
-                *success = false;
-                printf(ANSI_BG_RED "=========================================\n");
-                printf("There is an error near '('.\n");
-                printf("=========================================" ANSI_NONE "\n");
-                return false;
+                if((((i-1)->type == ')') || ((i-1)->type == TK_NUM) || ((i-1)->type == TK_HEX) || ((i-1)->type == TK_REG)))
+                {
+                    *success = false;
+                    printf(ANSI_BG_RED "=========================================\n");
+                    printf("There is an error near '('.\n");
+                    printf("=========================================" ANSI_NONE "\n");
+                    return false;
+                }
             }
             top++;
         }
         else if(i->type == ')')
         {
-            if((((i-1)->type != ')') && ((i-1)->type != TK_NUM) && (i > p)) || (i == p))
+            if(i > p)
+            {
+                if((((i-1)->type != ')') && ((i-1)->type != TK_HEX) && ((i-1)->type != TK_NUM) && ((i-1)->type != TK_REG)))
+                {
+                    *success = false;
+                    printf(ANSI_BG_RED "=========================================\n");
+                    printf("There is an error near ')'.\n");
+                    printf("=========================================" ANSI_NONE "\n");
+                    return false;
+                }
+            }
+            else if(i == p)
             {
                 *success = false;
                 printf(ANSI_BG_RED "=========================================\n");
@@ -281,6 +295,7 @@ bool check_parentheses(Token *p, Token *q, bool *success)
                 printf("=========================================" ANSI_NONE "\n");
                 return false;
             }
+        
             top--;
         }
         if(!top && (i < q) && p->type == '(')
@@ -332,7 +347,16 @@ Token *check_operator(Token *p, Token *q)
             }
             else if((i->type == TK_EQ) || (i->type == TK_NEQ))
             {
-                if(stack[mainOp-1] != TK_AND)
+                if(mainOp > 0)
+                {
+                    if(stack[mainOp-1] != TK_AND)
+                    {
+                        stack[mainOp] = i->type;
+                        tag = i;
+                        mainOp++;
+                    }
+                }
+                else
                 {
                     stack[mainOp] = i->type;
                     tag = i;
@@ -341,7 +365,16 @@ Token *check_operator(Token *p, Token *q)
             }
             else if((i->type == '+') || (i->type == '-'))
             {
-                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ))
+                if(mainOp > 0)
+                {
+                    if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ))
+                    {
+                        stack[mainOp] = i->type;
+                        tag = i;
+                        mainOp++;
+                    }
+                }
+                else
                 {
                     stack[mainOp] = i->type;
                     tag = i;
@@ -350,7 +383,16 @@ Token *check_operator(Token *p, Token *q)
             }
             else if((i->type == '*') || (i->type == '/'))
             {
-                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-'))
+                if(mainOp > 0)
+                {
+                    if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-'))
+                    {
+                        stack[mainOp] = i->type;
+                        tag = i;
+                        mainOp++;
+                    }
+                }
+                else
                 {
                     stack[mainOp] = i->type;
                     tag = i;
@@ -359,7 +401,16 @@ Token *check_operator(Token *p, Token *q)
             }
             else if(i->type == TK_POINTER)
             {
-                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/'))
+                if(mainOp > 0)
+                {
+                    if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/'))
+                    {
+                        stack[mainOp] = i->type;
+                        tag = i;
+                        mainOp++;
+                    }
+                }
+                else
                 {
                     stack[mainOp] = i->type;
                     tag = i;
@@ -369,7 +420,16 @@ Token *check_operator(Token *p, Token *q)
             }
             else if(i->type == TK_REG)
             {
-                if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/') && (stack[mainOp-1] != TK_POINTER))
+                if(mainOp > 0)
+                {
+                    if((stack[mainOp-1] != TK_AND) && (stack[mainOp-1] != TK_EQ) && (stack[mainOp-1] != TK_NEQ) && (stack[mainOp-1] != '+') && (stack[mainOp-1] != '-') && (stack[mainOp-1] != '*') && (stack[mainOp-1] != '/') && (stack[mainOp-1] != TK_POINTER))
+                    {
+                        stack[mainOp] = i->type;
+                        tag = i;
+                        mainOp++;
+                    }
+                }
+                else
                 {
                     stack[mainOp] = i->type;
                     tag = i;
