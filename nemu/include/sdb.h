@@ -18,6 +18,22 @@
 
 #include <common.h>
 
+typedef struct watchpoints
+{
+    int NO;
+    word_t OldVal;
+    word_t NewVal;
+    char *expr;
+    struct watchpoints *next;
+} WP;
+
 word_t expr(char *e, bool *success);
+
+extern void init_wp_pool();
+extern WP *new_wp(bool *success);
+extern void free_wp(WP *wp);
+extern void displayWp();
+extern WP *num2wp(uint8_t n);//监视点数很大时要修改参数数据类型
+extern bool checkChange();
 
 #endif

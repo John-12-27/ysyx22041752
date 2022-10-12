@@ -13,6 +13,14 @@ config ISA_riscv64
   bool "riscv64"
 endchoice
 
+choice
+  prompt "Enable watchpoints"
+config ENABLE_WATCHPOINT
+  bool "Enable"
+config DISABLE_WATCHPOINT
+  bool "Disable"
+endchoice
+
 config ISA
   string
   default "x86" if ISA_x86
