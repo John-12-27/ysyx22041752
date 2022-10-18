@@ -2,26 +2,23 @@
 //                 Copyright (c) 2022 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : tff.v
+// Filename      : ysyx_22041752_ADDU.v
 // Author        : Cw
-// Created On    : 2022-08-25 22:38
-// Last Modified : 2022-08-25 23:26
+// Created On    : 2022-10-17 21:36
+// Last Modified : 2022-10-18 19:43
 // ---------------------------------------------------------------------------------
-// Description   : T flip-flop
+// Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-module tff #(RST_VALUE=0)
-(
-    input  wire rst,
-    input  wire clk,
-    input  wire t  ,
-    output reg  q
+module ysyx_22041752_ADDU (
+    input  wire [63: 0] src1,
+    input  wire [63: 0] src2,
+    output reg  [63: 0] result
 );
-always @(posedge clk) begin
-    if(rst)
-        q <= RST_VALUE;
-    else
-        q <= t^q;
-end    
+   
+always @(*) begin
+    result = src1 + src2;
+end
+
 endmodule
