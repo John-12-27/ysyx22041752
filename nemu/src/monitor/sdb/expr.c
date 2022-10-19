@@ -53,7 +53,7 @@ static struct rule {
   {"=="      , TK_EQ},       // equal
   {"!="      , TK_NEQ},      // not equal
   {"&&"      , TK_AND},      // logic and
-  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1| a0| a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
+  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1|a0|a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -82,7 +82,6 @@ void init_regex() {
 
 typedef struct token {
   int type;
-  /*char str[STR_LEN];*/  //目前感觉纯数字可以直接记录数值
   word_t val;
 } Token;
 
@@ -133,7 +132,7 @@ static bool make_token(char *e, bool *success)
                         else
                         {
                             printf(ANSI_BG_RED "=========================================\n");
-                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("The number must be smaller than 10^32-1 !\n");
                             printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
@@ -154,7 +153,7 @@ static bool make_token(char *e, bool *success)
                         else
                         {
                             printf(ANSI_BG_RED "=========================================\n");
-                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("The number must be smaller than 16^32-1 !\n");
                             printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
