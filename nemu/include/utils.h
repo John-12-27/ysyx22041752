@@ -61,10 +61,8 @@ uint64_t get_time();
   do { \
     extern FILE* log_fp; \
     extern bool log_enable(); \
-    if (log_enable()) { \
       fprintf(log_fp, __VA_ARGS__); \
       fflush(log_fp); \
-    } \
   } while (0) \
 )
 

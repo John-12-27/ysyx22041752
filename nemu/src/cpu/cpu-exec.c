@@ -50,18 +50,6 @@ static void iRingBufLoad(char logbuf[])
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) 
 {
-#ifdef CONFIG_ITRACE_COND
-    if (ITRACE_COND) 
-    { 
-        if(log_enable())
-        {
-            for(int i = 0; i < IRINGBUF_DEPTH; i++)
-            {
-                log_write("%s\n", iRingBuf[i]); 
-            }
-        }
-    }
-#endif
     if (g_print_step) 
     { 
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); 
@@ -165,6 +153,14 @@ void cpu_exec(uint64_t n)
         case NEMU_END: 
         case NEMU_ABORT:
             Log("nemu: %s at pc = " FMT_WORD, (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), nemu_state.halt_pc);
+
+#ifdef CONFIG_ITRACE_COND
+            for(int i = 0; i < IRINGBUF_DEPTH; i++)
+            {
+                log_write("%s\n", iRingBuf[i]); 
+            }
+#endif
+
       // fall through
         case NEMU_QUIT: 
             statistic();
