@@ -24,6 +24,7 @@
  * You can modify this value as you want.
  */
 #define MAX_INST_TO_PRINT 10
+#define IRINGBUF_DEPTH    10
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
@@ -31,13 +32,34 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
+extern bool log_enable();
+static char iRingBuf[IRINGBUF_DEPTH][128];
+static void iRingBufLoad(char logbuf[])
+{
+    static int i = 0;
+    if(i == IRINGBUF_DEPTH)
+    {
+        i = 0;
+    }
+    for(int j = 0; j < 128; j++)
+    {
+        iRingBuf[i][j] = logbuf[j];
+    }
+    i++;
+}
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) 
 {
 #ifdef CONFIG_ITRACE_COND
     if (ITRACE_COND) 
     { 
-        log_write("%s\n", _this->logbuf); 
+        if(log_enable())
+        {
+            for(int i = 0; i < IRINGBUF_DEPTH; i++)
+            {
+                log_write("%s\n", iRingBuf[i]); 
+            }
+        }
     }
 #endif
     if (g_print_step) 
@@ -79,9 +101,10 @@ static void exec_once(Decode *s, vaddr_t pc)
     memset(p, ' ', space_len);
     p += space_len;
 
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+    disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
+        MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+    iRingBufLoad(s->logbuf);
 #endif
 }
 
