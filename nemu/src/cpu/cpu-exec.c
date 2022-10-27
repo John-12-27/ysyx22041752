@@ -18,13 +18,13 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <sdb.h>
+#include <log.h>
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
 #define MAX_INST_TO_PRINT 10
-#define IRINGBUF_DEPTH    10
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
@@ -32,28 +32,10 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
-extern bool log_enable();
-static char iRingBuf[IRINGBUF_DEPTH][128];
-static void iRingBufLoad(char logbuf[])
-{
-    static int i = 0;
-    if(i == IRINGBUF_DEPTH)
-    {
-        i = 0;
-    }
-    for(int j = 0; j < 128; j++)
-    {
-        iRingBuf[i][j] = logbuf[j];
-    }
-    i++;
-}
 
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) 
+
+static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc) 
 {
-    if (g_print_step) 
-    { 
-        IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); 
-    }
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_ENABLE_WATCHPOINT 
     if(checkChange())
@@ -103,7 +85,11 @@ static void execute(uint64_t n)
     {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst ++;
-        trace_and_difftest(&s, cpu.pc);
+        if (g_print_step) 
+        { 
+            IFDEF(CONFIG_ITRACE, puts(s.logbuf)); 
+        }
+        difftest_and_watchpoint(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) 
         {
             break;
@@ -155,12 +141,11 @@ void cpu_exec(uint64_t n)
             Log("nemu: %s at pc = " FMT_WORD, (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), nemu_state.halt_pc);
 
 #ifdef CONFIG_ITRACE_COND
-            for(int i = 0; i < IRINGBUF_DEPTH; i++)
+            if(nemu_state.halt_ret != 0)
             {
-                log_write("%s\n", iRingBuf[i]); 
+                output_iRingBuf(); 
             }
 #endif
-
       // fall through
         case NEMU_QUIT: 
             statistic();

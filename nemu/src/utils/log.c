@@ -14,9 +14,64 @@
 ***************************************************************************************/
 
 #include <common.h>
+#include <log.h>
 
 extern uint64_t g_nr_guest_inst;
 FILE *log_fp = NULL;
+
+static iRingBuf iringbuf[IRINGBUF_DEPTH] = {};
+static iRingBuf *head = NULL;
+static iRingBuf *tail = NULL;
+
+static void init_iRingBuf()
+{
+    for(int i = 0; i < IRINGBUF_DEPTH; i++)
+    {
+        for(int j = 0; j < 128; j++)
+        {
+            iringbuf[i].buf[j] = '\0';
+        }
+        if(i != IRINGBUF_DEPTH - 1)
+        {
+            iringbuf[i].next = &iringbuf[i+1];
+        }
+        else
+        {
+            iringbuf[i].next = &iringbuf[0];
+        }
+    }
+    head = &iringbuf[0];
+    tail = &iringbuf[0];
+}
+
+void iRingBufLoad(char logbuf[])
+{
+    static bool full = false;
+    static int i = 0;
+    if(!full && i == 10)
+    {
+        full = true;
+    }
+    if(full)
+    {
+        head = head->next;
+    }
+    for(int j = 0; j < 128; j++)
+    {
+        tail->buf[j] = logbuf[j];
+    }
+    tail = tail->next;
+    i++;
+}
+
+void output_iRingBuf()
+{
+    for(; head->next != tail; head = head->next)
+    {
+        log_write("%s\n", head->buf);
+    }
+    log_write("%s\n", head->buf);
+}
 
 void init_log(const char *log_file) 
 {
@@ -28,6 +83,8 @@ void init_log(const char *log_file)
         log_fp = fp;
     }
     Log("Log is written to %s", log_file ? log_file : "stdout");
+
+    init_iRingBuf();
 }
 
 /*bool log_enable() */
