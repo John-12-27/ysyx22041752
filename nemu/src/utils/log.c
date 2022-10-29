@@ -14,10 +14,16 @@
 ***************************************************************************************/
 
 #include <common.h>
-#include <log.h>
+#include <utils.h>
+#include <cpu/decode.h>
 
 extern uint64_t g_nr_guest_inst;
 FILE *log_fp = NULL;
+FILE *mtrace_fp = NULL;
+
+bool inputL = false;
+bool inputM = false;
+
 
 static iRingBuf iringbuf[IRINGBUF_DEPTH] = {};
 static iRingBuf *head = NULL;
@@ -44,7 +50,7 @@ static void init_iRingBuf()
     tail = &iringbuf[0];
 }
 
-void iRingBufLoad(char logbuf[])
+static void iRingBufLoad(char logbuf[])
 {
     static bool full = false;
     static int i = 0;
@@ -62,6 +68,33 @@ void iRingBufLoad(char logbuf[])
     }
     tail = tail->next;
     i++;
+}
+
+void log_inst(Decode *s)
+{
+    char *p = s->logbuf;
+    p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
+    int ilen = s->snpc - s->pc;
+    int i;
+    uint8_t *inst = (uint8_t *)&s->isa.inst.val;
+    for (i = ilen - 1; i >= 0; i --) 
+    {
+        p += snprintf(p, 4, " %02x", inst[i]);
+    }
+    int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
+    int space_len = ilen_max - ilen;
+    if (space_len < 0) 
+    {
+        space_len = 0;
+    }
+    space_len = space_len * 3 + 1;
+    memset(p, ' ', space_len);
+    p += space_len;
+
+    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+    disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
+        MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+    iRingBufLoad(s->logbuf);
 }
 
 void output_iRingBuf()
@@ -87,9 +120,17 @@ void init_log(const char *log_file)
     init_iRingBuf();
 }
 
-/*bool log_enable() */
-/*{*/
-    /*return MUXDEF(CONFIG_TRACE, */
-            /*(g_nr_guest_inst >= CONFIG_TRACE_START) &&*/
-         /*(g_nr_guest_inst <= CONFIG_TRACE_END), false);*/
-/*}*/
+bool log_enable(vaddr_t pc) 
+{
+    bool status = false;
+    if(inputL)
+    {
+#ifdef CONFIG_ITRACE_COND
+        if(pc >= CONFIG_TRACE_START&& pc <= CONFIG_TRACE_END)
+#endif
+        {
+            status = true;
+        }
+    }
+    return status;
+}

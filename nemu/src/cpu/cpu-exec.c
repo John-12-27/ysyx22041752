@@ -18,7 +18,6 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <sdb.h>
-#include <log.h>
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -26,6 +25,9 @@
  */
 #define MAX_INST_TO_PRINT 10
 
+extern bool log_enable(vaddr_t pc);
+extern void log_inst(Decode *s);
+extern void output_iRingBuf();
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -37,7 +39,7 @@ void device_update();
 static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc) 
 {
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-#ifdef CONFIG_ENABLE_WATCHPOINT 
+#ifdef CONFIG_WATCHPOINTS
     if(checkChange())
     {
         nemu_state.state = NEMU_STOP;
@@ -52,29 +54,10 @@ static void exec_once(Decode *s, vaddr_t pc)
     isa_exec_once(s);
     cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
-    char *p = s->logbuf;
-    p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = s->snpc - s->pc;
-    int i;
-    uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-    for (i = ilen - 1; i >= 0; i --) 
+    if(log_enable(pc))
     {
-        p += snprintf(p, 4, " %02x", inst[i]);
+        log_inst(s);
     }
-    int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-    int space_len = ilen_max - ilen;
-    if (space_len < 0) 
-    {
-        space_len = 0;
-    }
-    space_len = space_len * 3 + 1;
-    memset(p, ' ', space_len);
-    p += space_len;
-
-    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-    disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-        MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-    iRingBufLoad(s->logbuf);
 #endif
 }
 
@@ -140,14 +123,11 @@ void cpu_exec(uint64_t n)
         case NEMU_ABORT:
             Log("nemu: %s at pc = " FMT_WORD, (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), nemu_state.halt_pc);
 
-#ifdef CONFIG_ITRACE_COND
-            if(nemu_state.halt_ret != 0)
-            {
-                output_iRingBuf(); 
-            }
-#endif
       // fall through
         case NEMU_QUIT: 
+#ifdef CONFIG_ITRACE
+            output_iRingBuf(); 
+#endif
             statistic();
     }
 }

@@ -17,7 +17,6 @@
 #define __UTILS_H__
 
 #include <common.h>
-
 // ----------- state -----------
 
 enum { NEMU_RUNNING, NEMU_STOP, NEMU_END, NEMU_ABORT, NEMU_QUIT };
@@ -30,6 +29,16 @@ typedef struct
 } NEMUState;
 
 extern NEMUState nemu_state;
+
+/* tracer */
+#define IRINGBUF_DEPTH 10
+
+typedef struct iRingBuf 
+{
+    char buf[128];
+    struct iRingBuf *next;
+} iRingBuf;
+
 
 // ----------- timer -----------
 
