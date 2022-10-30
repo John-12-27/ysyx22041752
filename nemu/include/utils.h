@@ -31,13 +31,23 @@ typedef struct
 extern NEMUState nemu_state;
 
 /* tracer */
-#define IRINGBUF_DEPTH 10
+#if ((CONFIG_TRACE_END - CONFIG_TRACE_START) <= 10)
+    #define IRINGBUF_DEPTH 10
+#else
+    #define IRINGBUF_DEPTH (CONFIG_TRACE_END - CONFIG_TRACE_START)
+#endif
+#if ((CONFIG_VMTRACE_END - CONFIG_VMTRACE_START) <= 10)
+    #define MRINGBUF_DEPTH 10
+#else
+    #define MRINGBUF_DEPTH (CONFIG_VMTRACE_END - CONFIG_VMTRACE_START)
+#endif
 
-typedef struct iRingBuf 
+typedef struct RingBuf 
 {
-    char buf[128];
-    struct iRingBuf *next;
-} iRingBuf;
+    int  NO;
+    char buf[256];
+    struct RingBuf *next;
+} RingBuf;
 
 
 // ----------- timer -----------
@@ -65,6 +75,13 @@ uint64_t get_time();
 #define ANSI_NONE       "\33[0m"
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
+#define mlog_write(...) \
+  { \
+    extern FILE* mtrace_fp; \
+      fprintf(mtrace_fp, __VA_ARGS__); \
+      fflush(mtrace_fp); \
+  } 
 
 #define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \

@@ -17,57 +17,110 @@
 #include <utils.h>
 #include <cpu/decode.h>
 
-extern uint64_t g_nr_guest_inst;
 FILE *log_fp = NULL;
 FILE *mtrace_fp = NULL;
 
 bool inputL = false;
 bool inputM = false;
 
+static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
+static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
+static RingBuf *ihead = NULL;
+static RingBuf *itail = NULL;
+static RingBuf *mhead = NULL;
+static RingBuf *mtail = NULL;
 
-static iRingBuf iringbuf[IRINGBUF_DEPTH] = {};
-static iRingBuf *head = NULL;
-static iRingBuf *tail = NULL;
-
-static void init_iRingBuf()
+static void init_RingBuf(RingBuf f[], bool mringbuf_init)
 {
-    for(int i = 0; i < IRINGBUF_DEPTH; i++)
+    int maxDepth = 0;
+    if(mringbuf_init)
     {
-        for(int j = 0; j < 128; j++)
+        maxDepth = MRINGBUF_DEPTH;
+        mhead = &f[0];
+        mtail = &f[0];
+    }
+    else
+    {
+        maxDepth = IRINGBUF_DEPTH;
+        ihead = &f[0];
+        itail = &f[0];
+    }
+    for(int i = 0; i < maxDepth; i++)
+    {
+        f[i].NO = i;
+        for(int j = 0; j < 256; j++)
         {
-            iringbuf[i].buf[j] = '\0';
+            f[i].buf[j] = '\0';
         }
-        if(i != IRINGBUF_DEPTH - 1)
+        if(i != maxDepth - 1)
         {
-            iringbuf[i].next = &iringbuf[i+1];
+            f[i].next = &f[i+1];
         }
         else
         {
-            iringbuf[i].next = &iringbuf[0];
+            f[i].next = &f[0];
         }
     }
-    head = &iringbuf[0];
-    tail = &iringbuf[0];
 }
 
-static void iRingBufLoad(char logbuf[])
+static void RingBufLoad(char logbuf[], bool mload)
 {
-    static bool full = false;
-    static int i = 0;
-    if(!full && i == 10)
+    static bool mfull = false;
+    static int mcnt = 0;
+    static bool ifull = false;
+    static int icnt = 0;
+    if(!mload)
     {
-        full = true;
+        if(!ifull && icnt == 10)
+        {
+            ifull = true;
+        }
+        if(ifull)
+        {
+            ihead = ihead->next;
+        }
+        for(int j = 0; j < 256; j++)
+        {
+            itail->buf[j] = logbuf[j];
+        }
+        itail = itail->next;
+        icnt++;
     }
-    if(full)
+    else
     {
-        head = head->next;
+        if(!mfull && mcnt == 10)
+        {
+            mfull = true;
+        }
+        if(mfull)
+        {
+            mhead = mhead->next;
+        }
+        for(int j = 0; j < 256; j++)
+        {
+            mtail->buf[j] = logbuf[j];
+        }
+        mtail = mtail->next;
+        mcnt++;
     }
-    for(int j = 0; j < 128; j++)
+}
+
+void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
+{
+    char *p = s->mlogbuf;
+    p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
+    p += snprintf(p, sizeof(s->mlogbuf), "vaddr:"FMT_WORD , vaddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " paddr:"FMT_PADDR, paddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " data:"FMT_WORD , data);
+    if(read)
     {
-        tail->buf[j] = logbuf[j];
+        p += snprintf(p, sizeof(s->mlogbuf), " R");
     }
-    tail = tail->next;
-    i++;
+    else
+    {
+        p += snprintf(p, sizeof(s->mlogbuf), " W");
+    }
+    RingBufLoad(s->mlogbuf, true);
 }
 
 void log_inst(Decode *s)
@@ -94,30 +147,66 @@ void log_inst(Decode *s)
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
         MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-    iRingBufLoad(s->logbuf);
+    RingBufLoad(s->logbuf, false);
+}
+
+void output_mRingBuf()
+{
+    for(; mhead->next != mtail; mhead = mhead->next)
+    {
+        mlog_write("%s\n", mhead->buf);
+    }
+    mlog_write("%s\n", mhead->buf);
 }
 
 void output_iRingBuf()
 {
-    for(; head->next != tail; head = head->next)
+    for(; ihead->next != itail; ihead = ihead->next)
     {
-        log_write("%s\n", head->buf);
+        log_write("%s\n", ihead->buf);
     }
-    log_write("%s\n", head->buf);
+    log_write("%s\n", ihead->buf);
 }
 
-void init_log(const char *log_file) 
+void init_mlog(const char *file) 
+{
+    mtrace_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
+        mtrace_fp = fp;
+    }
+    Log("Mtrace is written to %s", file ? file : "stdout");
+    init_RingBuf(mringbuf, true);
+}
+
+void init_log(const char *file) 
 {
     log_fp = stdout;
-    if(log_file != NULL) 
+    if(file != NULL) 
     {
-        FILE *fp = fopen(log_file, "w");
-        Assert(fp, "Can not open '%s'", log_file);
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
         log_fp = fp;
     }
-    Log("Log is written to %s", log_file ? log_file : "stdout");
+    Log("Log is written to %s", file ? file : "stdout");
+    init_RingBuf(iringbuf, false);
+}
 
-    init_iRingBuf();
+bool mtrace_enable(vaddr_t vaddr, paddr_t paddr) 
+{
+    bool status = false;
+    if(inputM)
+    {
+#ifdef CONFIG_MTRACE_COND
+        if(((vaddr >= CONFIG_VMTRACE_START) && (vaddr <= CONFIG_VMTRACE_END)) || ((paddr >= CONFIG_PMTRACE_START) && (paddr <= CONFIG_PMTRACE_END )))
+#endif
+        {
+            status = true;
+        }
+    }
+    return status;
 }
 
 bool log_enable(vaddr_t pc) 
@@ -125,8 +214,8 @@ bool log_enable(vaddr_t pc)
     bool status = false;
     if(inputL)
     {
-#ifdef CONFIG_ITRACE_COND
-        if(pc >= CONFIG_TRACE_START&& pc <= CONFIG_TRACE_END)
+#if CONFIG_ITRACE_COND
+        if((pc >= CONFIG_TRACE_START) && (pc <= CONFIG_TRACE_END))
 #endif
         {
             status = true;

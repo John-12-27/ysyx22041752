@@ -28,6 +28,7 @@
 extern bool log_enable(vaddr_t pc);
 extern void log_inst(Decode *s);
 extern void output_iRingBuf();
+extern void output_mRingBuf();
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -127,6 +128,9 @@ void cpu_exec(uint64_t n)
         case NEMU_QUIT: 
 #ifdef CONFIG_ITRACE
             output_iRingBuf(); 
+#endif
+#ifdef CONFIG_MTRACE
+            output_mRingBuf();
 #endif
             statistic();
     }
