@@ -117,9 +117,10 @@ void init_monitor(int argc, char *argv[]) {
   init_rand();
 
   /* Open the log file. */
+#ifdef CONFIG_TRACE
   init_log(log_file);
   init_mlog(mtrace_file);
-
+#endif
   /* Initialize memory. */
   init_mem();
 
