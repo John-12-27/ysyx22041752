@@ -56,6 +56,7 @@ static int cmd_q(char *args) {
 static int cmd_help(char *args);
 static int cmd_si(char *args);
 static int cmd_info(char *args);
+static int cmd_b(char *args);
 static int cmd_x(char *args);
 static int cmd_p(char *args);
 static int cmd_w(char *args);
@@ -71,6 +72,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "The number of instructions to execute specified by the parameter, and the default value of the parameter is 1", cmd_si },
   { "info", "Print all registers(r) or watchpoints(w)", cmd_info },
+  { "b", "halt at the specfical function", cmd_b },
   { "x", "Print the specfical memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "w", "Set watchpoints", cmd_w},
@@ -154,6 +156,26 @@ static int cmd_info(char *args)
     {
         printf(ANSI_BG_RED "=========================================\n");
         printf("Invalid subcommand or Invalid watchpoint.\n");
+        printf("=========================================" ANSI_NONE "\n");
+    }
+    
+    return 0;
+}
+
+vaddr_t findPc(const char *s);
+static int cmd_b(char *args)
+{
+    char *arg = strtok(NULL, " ");
+    char s [30] = {"$pc==0x"}; 
+    if(arg != NULL)
+    {
+        sprintf(&s[7], "%lx", findPc(arg));
+        cmd_w(s);
+    }
+    else
+    {
+        printf(ANSI_BG_RED "=========================================\n");
+        printf("Invalid name of function.\n");
         printf("=========================================" ANSI_NONE "\n");
     }
     

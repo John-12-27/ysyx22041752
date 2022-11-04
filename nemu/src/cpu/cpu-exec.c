@@ -26,8 +26,7 @@
 #define MAX_INST_TO_PRINT 10
 
 extern symFunc *pFirstFunc;
-extern strTab  *pFirstStr ;
-extern void freeAllStrTab(strTab *p);
+extern void freeAllStrTab();
 extern void freeAllFunc(symFunc *p);
 extern bool log_enable(vaddr_t pc);
 extern void findStr(vaddr_t pc);
@@ -49,7 +48,7 @@ static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc)
     if(checkChange())
     {
         nemu_state.state = NEMU_STOP;
-        findStr(_this->pc);
+        findStr(_this->dnpc);
     }
 #endif
 }
@@ -82,21 +81,24 @@ static void execute(uint64_t n)
         difftest_and_watchpoint(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) 
         {
-            freeAllStrTab(pFirstStr);
-            freeAllFunc(pFirstFunc);
             break;
         }
         IFDEF(CONFIG_DEVICE, device_update());
     }
 }
 
-static void statistic() {
-  IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
+static void statistic() 
+{
+    freeAllStrTab();
+    freeAllFunc(pFirstFunc);
+    IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%ld", "%'ld")
-  Log("host time spent = " NUMBERIC_FMT " us", g_timer);
-  Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
-  if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
-  else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
+    Log("host time spent = " NUMBERIC_FMT " us", g_timer);
+    Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+    if (g_timer > 0) 
+        Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
+    else 
+        Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
 void assert_fail_msg() 

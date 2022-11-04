@@ -63,7 +63,7 @@ typedef struct strTab
 {
     uint64_t size;
     char *pStrStart;
-    struct strTab *next;
+    //struct strTab *next;
 } strTab;
 
 // ----------- timer -----------

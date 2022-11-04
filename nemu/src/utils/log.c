@@ -228,8 +228,8 @@ bool log_enable(vaddr_t pc)
 
 symFunc *pFirstFunc = NULL;
 static symFunc *pLastFunc  = NULL;
-strTab  *pFirstStr  = NULL;
-static strTab  *pLastStr   = NULL;
+strTab strtab;
+static char *shstrtab;
 void funcTabInit(const char *file)
 {
     if(file != NULL)
@@ -242,6 +242,14 @@ void funcTabInit(const char *file)
         if(elf64_ehdr.e_shoff)
         {
             Elf64_Shdr elf64_shdr;
+
+            fseek(fp, (long)(elf64_ehdr.e_shoff + elf64_ehdr.e_shstrndx * elf64_ehdr.e_shentsize), SEEK_SET);
+            Log("There are %lu bytes in the Section entry %d.\n", fread(&elf64_shdr, sizeof(char), sizeof(elf64_shdr), fp), (uint32_t)elf64_ehdr.e_shstrndx);
+
+            shstrtab = malloc(elf64_shdr.sh_size);
+            fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
+            Log("There are %lu bytes in the Section header string table.\n", fread(shstrtab, sizeof(char), elf64_shdr.sh_size, fp));
+
             fseek(fp, (long)elf64_ehdr.e_shoff, SEEK_SET);
             for(int i = 0; i < elf64_ehdr.e_shnum; i++)
             {
@@ -249,23 +257,12 @@ void funcTabInit(const char *file)
 
                 if(elf64_shdr.sh_type == SHT_STRTAB)
                 {
-                    if(pFirstStr == NULL)
+                    if(strcmp(".strtab", shstrtab + elf64_shdr.sh_name) == 0)
                     {
-                        pFirstStr = malloc(sizeof(strTab));
-                        pLastStr  = pFirstStr;
-                        pLastStr->size = elf64_shdr.sh_size;
-                        pLastStr->pStrStart = malloc(elf64_shdr.sh_size);
+                        strtab.size = elf64_shdr.sh_size;
+                        strtab.pStrStart = malloc(elf64_shdr.sh_size);
                         fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
-                        Log("There are %lu bytes in the String table.\n", fread(pLastStr->pStrStart, sizeof(char), elf64_shdr.sh_size, fp));
-                    }
-                    else
-                    {
-                        pLastStr->next = malloc(sizeof(strTab));
-                        pLastStr = pLastStr->next;
-                        pLastStr->size = elf64_shdr.sh_size;
-                        pLastStr->pStrStart = malloc(elf64_shdr.sh_size);
-                        fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
-                        Log("There are %lu bytes in the String table.\n", fread(pLastStr->pStrStart, sizeof(char), elf64_shdr.sh_size, fp));
+                        Log("There are %lu bytes in the String table.\n", fread(strtab.pStrStart, sizeof(char), elf64_shdr.sh_size, fp));
                     }
                 }
 
@@ -304,52 +301,54 @@ void funcTabInit(const char *file)
                 }
                 fseek(fp, (long)(elf64_ehdr.e_shoff + (1+i) * sizeof(elf64_shdr)), SEEK_SET);
             }
-            if(pLastStr != NULL)
-            {
-                pLastStr->next = NULL;
-            }
         }
         fclose(fp);
     }
 }
 
-/*vaddr_t findPc(const char *s)*/
-/*{*/
-    /*strTab *p = pFirstStr;*/
-    /*uint64_t offset = 0;*/
-    /*if(s != NULL)*/
-    /*{*/
-        /*while(p->next != NULL)*/
-        /*{*/
-            /*char *ps = p->pStrStart;*/
-            /*offset = 0;*/
-            /*while(ps >= (p->pStrStart + p->size))*/
-            /*{*/
-                /*if(strcmp(s, ps) != 0)*/
-                /*{*/
-                    /*offset = ps - p->pStrStart;*/
-                    /*break;*/
-                /*}*/
-                /*ps += strlen(ps) + 1;*/
-            /*}*/
-            /*p = p->next;*/
-        /*}*/
-    /*}*/
-/*}*/
+vaddr_t findPc(const char *s)
+{
+    if(s != NULL)
+    {
+        symFunc *p = pFirstFunc;
+        uint64_t offset = 0;
+
+        char *ps = strtab.pStrStart;
+        while(ps <= (strtab.pStrStart + strtab.size))
+        {
+            if(strcmp(s, ps) == 0)
+            {
+                break;
+            }
+            ps += strlen(ps) + 1;
+        }
+        offset = ps - strtab.pStrStart;
+
+        while(p->next != NULL)
+        {
+            if(p->name == offset)
+            {
+                return p->baseAddr;
+            }
+            p = p->next;
+        }
+    }
+    return 0;
+}
 
 void findStr(vaddr_t pc) 
 {
-    if(!inputF)
+    if((!inputF))
     {
         return;
     }
     symFunc *p = pFirstFunc;
-    while(p->next != NULL)
+    while((p != NULL) && (p->next != NULL))
     {
         if((pc >= p->baseAddr) && (pc < (p->baseAddr + p->size)))
         {
             printf(ANSI_BG_GREEN "=========================================\n");
-            printf("Calling %s\n", pFirstStr->pStrStart + p->name);
+            printf("Running %s\n", strtab.pStrStart + p->name);
             printf("=========================================" ANSI_NONE "\n");
             break;
         }
@@ -357,17 +356,10 @@ void findStr(vaddr_t pc)
     }
 }
 
-void freeAllStrTab(strTab *p)
+void freeAllStrTab()
 {
-    if(p != NULL)
-    {
-        if(p->next != NULL)
-        {
-            freeAllStrTab(p->next);
-        }
-        free(p->pStrStart);
-        free(p);
-    }
+    free(shstrtab);
+    free(strtab.pStrStart);
 }
 
 void freeAllFunc(symFunc *p)
