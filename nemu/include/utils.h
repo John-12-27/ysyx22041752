@@ -17,6 +17,7 @@
 #define __UTILS_H__
 
 #include <common.h>
+#include <elf.h>
 // ----------- state -----------
 
 enum { NEMU_RUNNING, NEMU_STOP, NEMU_END, NEMU_ABORT, NEMU_QUIT };
@@ -49,6 +50,21 @@ typedef struct RingBuf
     struct RingBuf *next;
 } RingBuf;
 
+typedef struct symFunc
+{
+    //Elf64_Sym func;
+    Elf64_Addr baseAddr;
+    uint64_t   size;
+    uint32_t   name;
+    struct symFunc *next;
+} symFunc;
+
+typedef struct strTab
+{
+    uint64_t size;
+    char *pStrStart;
+    struct strTab *next;
+} strTab;
 
 // ----------- timer -----------
 
@@ -90,6 +106,7 @@ uint64_t get_time();
       fflush(log_fp); \
   } while (0) \
 )
+
 /*
 #define _Log(...) \
   do { \

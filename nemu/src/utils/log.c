@@ -16,12 +16,14 @@
 #include <common.h>
 #include <utils.h>
 #include <cpu/decode.h>
+#include <elf.h>
 
 FILE *log_fp = NULL;
 FILE *mtrace_fp = NULL;
 
 bool inputL = false;
 bool inputM = false;
+bool inputF = false;
 
 static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
 static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
@@ -222,4 +224,160 @@ bool log_enable(vaddr_t pc)
         }
     }
     return status;
+}
+
+symFunc *pFirstFunc = NULL;
+static symFunc *pLastFunc  = NULL;
+strTab  *pFirstStr  = NULL;
+static strTab  *pLastStr   = NULL;
+void funcTabInit(const char *file)
+{
+    if(file != NULL)
+    {
+        Elf64_Ehdr elf64_ehdr;
+        FILE *fp = fopen(file, "rb");
+        Assert(fp, "Can not open '%s'", file);
+        
+        Log("There are %lu bytes in ELF header.\n",fread(&elf64_ehdr, sizeof(char), sizeof(elf64_ehdr), fp));
+        if(elf64_ehdr.e_shoff)
+        {
+            Elf64_Shdr elf64_shdr;
+            fseek(fp, (long)elf64_ehdr.e_shoff, SEEK_SET);
+            for(int i = 0; i < elf64_ehdr.e_shnum; i++)
+            {
+                Log("There are %lu bytes in the Section entry %d.\n", fread(&elf64_shdr, sizeof(char), sizeof(elf64_shdr), fp), i);
+
+                if(elf64_shdr.sh_type == SHT_STRTAB)
+                {
+                    if(pFirstStr == NULL)
+                    {
+                        pFirstStr = malloc(sizeof(strTab));
+                        pLastStr  = pFirstStr;
+                        pLastStr->size = elf64_shdr.sh_size;
+                        pLastStr->pStrStart = malloc(elf64_shdr.sh_size);
+                        fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
+                        Log("There are %lu bytes in the String table.\n", fread(pLastStr->pStrStart, sizeof(char), elf64_shdr.sh_size, fp));
+                    }
+                    else
+                    {
+                        pLastStr->next = malloc(sizeof(strTab));
+                        pLastStr = pLastStr->next;
+                        pLastStr->size = elf64_shdr.sh_size;
+                        pLastStr->pStrStart = malloc(elf64_shdr.sh_size);
+                        fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
+                        Log("There are %lu bytes in the String table.\n", fread(pLastStr->pStrStart, sizeof(char), elf64_shdr.sh_size, fp));
+                    }
+                }
+
+                else if(elf64_shdr.sh_type == SHT_SYMTAB)
+                {
+                    Elf64_Sym  elf64_sym;
+                    fseek(fp, (long)elf64_shdr.sh_offset, SEEK_SET);
+
+                    for(int j = 0; j < elf64_shdr.sh_size / elf64_shdr.sh_entsize; j++)
+                    {
+                        Log("There are %lu bytes in the Symbol table %d.\n", fread(&elf64_sym, sizeof(char), sizeof(elf64_sym), fp), j); 
+                        if(ELF64_ST_TYPE(elf64_sym.st_info) == STT_FUNC)
+                        {
+                            if(pFirstFunc == NULL)
+                            {
+                                pFirstFunc = malloc(sizeof(symFunc));
+                                pLastFunc = pFirstFunc;
+                                pLastFunc->baseAddr = elf64_sym.st_value;
+                                pLastFunc->size     = elf64_sym.st_size;
+                                pLastFunc->name     = elf64_sym.st_name;
+                            }
+                            else
+                            {
+                                pLastFunc->next = malloc(sizeof(symFunc));
+                                pLastFunc = pLastFunc->next;
+                                pLastFunc->baseAddr = elf64_sym.st_value;
+                                pLastFunc->size     = elf64_sym.st_size;
+                                pLastFunc->name     = elf64_sym.st_name;
+                            }
+                        }
+                    }
+                    if(pLastFunc != NULL)
+                    {
+                        pLastFunc->next = NULL;
+                    }
+                }
+                fseek(fp, (long)(elf64_ehdr.e_shoff + (1+i) * sizeof(elf64_shdr)), SEEK_SET);
+            }
+            if(pLastStr != NULL)
+            {
+                pLastStr->next = NULL;
+            }
+        }
+        fclose(fp);
+    }
+}
+
+/*vaddr_t findPc(const char *s)*/
+/*{*/
+    /*strTab *p = pFirstStr;*/
+    /*uint64_t offset = 0;*/
+    /*if(s != NULL)*/
+    /*{*/
+        /*while(p->next != NULL)*/
+        /*{*/
+            /*char *ps = p->pStrStart;*/
+            /*offset = 0;*/
+            /*while(ps >= (p->pStrStart + p->size))*/
+            /*{*/
+                /*if(strcmp(s, ps) != 0)*/
+                /*{*/
+                    /*offset = ps - p->pStrStart;*/
+                    /*break;*/
+                /*}*/
+                /*ps += strlen(ps) + 1;*/
+            /*}*/
+            /*p = p->next;*/
+        /*}*/
+    /*}*/
+/*}*/
+
+void findStr(vaddr_t pc) 
+{
+    if(!inputF)
+    {
+        return;
+    }
+    symFunc *p = pFirstFunc;
+    while(p->next != NULL)
+    {
+        if((pc >= p->baseAddr) && (pc < (p->baseAddr + p->size)))
+        {
+            printf(ANSI_BG_GREEN "=========================================\n");
+            printf("Calling %s\n", pFirstStr->pStrStart + p->name);
+            printf("=========================================" ANSI_NONE "\n");
+            break;
+        }
+        p = p->next;
+    }
+}
+
+void freeAllStrTab(strTab *p)
+{
+    if(p != NULL)
+    {
+        if(p->next != NULL)
+        {
+            freeAllStrTab(p->next);
+        }
+        free(p->pStrStart);
+        free(p);
+    }
+}
+
+void freeAllFunc(symFunc *p)
+{
+    if(p != NULL)
+    {
+        if(p->next != NULL)
+        {
+            freeAllFunc(p->next);
+        }
+        free(p);
+    }
 }

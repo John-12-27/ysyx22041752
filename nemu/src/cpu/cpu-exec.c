@@ -25,7 +25,12 @@
  */
 #define MAX_INST_TO_PRINT 10
 
+extern symFunc *pFirstFunc;
+extern strTab  *pFirstStr ;
+extern void freeAllStrTab(strTab *p);
+extern void freeAllFunc(symFunc *p);
 extern bool log_enable(vaddr_t pc);
+extern void findStr(vaddr_t pc);
 extern void log_inst(Decode *s);
 extern void output_iRingBuf();
 extern void output_mRingBuf();
@@ -44,6 +49,7 @@ static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc)
     if(checkChange())
     {
         nemu_state.state = NEMU_STOP;
+        findStr(_this->pc);
     }
 #endif
 }
@@ -76,6 +82,8 @@ static void execute(uint64_t n)
         difftest_and_watchpoint(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) 
         {
+            freeAllStrTab(pFirstStr);
+            freeAllFunc(pFirstFunc);
             break;
         }
         IFDEF(CONFIG_DEVICE, device_update());
@@ -91,7 +99,8 @@ static void statistic() {
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
-void assert_fail_msg() {
+void assert_fail_msg() 
+{
   isa_reg_display();
   statistic();
 }
