@@ -59,11 +59,17 @@ typedef struct symFunc
     struct symFunc *next;
 } symFunc;
 
+typedef struct fStack
+{
+    vaddr_t return_pc;
+    uint32_t   name;
+    struct fStack *last;
+} fStack;
+
 typedef struct strTab
 {
     uint64_t size;
     char *pStrStart;
-    //struct strTab *next;
 } strTab;
 
 // ----------- timer -----------
@@ -91,6 +97,13 @@ uint64_t get_time();
 #define ANSI_NONE       "\33[0m"
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
+#define flog_write(...) \
+  { \
+    extern FILE* flog_fp; \
+      fprintf(flog_fp, __VA_ARGS__); \
+      fflush(flog_fp); \
+  } 
 
 #define mlog_write(...) \
   { \

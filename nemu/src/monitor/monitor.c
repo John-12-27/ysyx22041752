@@ -19,6 +19,7 @@
 void init_rand();
 void init_log(const char *log_file);
 void init_mlog(const char *log_file);
+void init_flog(const char *file);
 void funcTabInit(const char *file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
@@ -48,6 +49,7 @@ void sdb_set_batch_mode();
 static char *log_file = NULL;
 static char *mtrace_file = NULL;
 static char *ftrace_file = NULL;
+static char *elfInput_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
@@ -89,12 +91,20 @@ static int parse_args(int argc, char *argv[]) {
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhm:f:l:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhm:-f:l:d:p:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'm': mtrace_file = optarg; inputM = true; break;
-      case 'f': ftrace_file = optarg; inputF = true; break;
+      case 'f': if(ftrace_file == NULL)
+                {
+                    ftrace_file = optarg;
+                }
+                else
+                {
+                    elfInput_file = optarg;
+                    inputF = true;
+                }break;
       case 'l': log_file = optarg; inputL = true; break;
       case 'd': diff_so_file = optarg; break;
       case 1: img_file = optarg; return 0;
@@ -113,7 +123,8 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
-void init_monitor(int argc, char *argv[]) {
+void init_monitor(int argc, char *argv[]) 
+{
   /* Perform some global initialization. */
 
   /* Parse arguments. */
@@ -125,8 +136,9 @@ void init_monitor(int argc, char *argv[]) {
   /* Open the log file. */
 #ifdef CONFIG_TRACE
   init_log(log_file);
+  init_flog(ftrace_file);
   init_mlog(mtrace_file);
-  funcTabInit(ftrace_file);
+  funcTabInit(elfInput_file);
 #endif
   /* Initialize memory. */
   init_mem();

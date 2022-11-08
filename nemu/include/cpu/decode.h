@@ -23,6 +23,8 @@ typedef struct Decode {
   vaddr_t snpc; // static next pc
   vaddr_t dnpc; // dynamic next pc
   ISADecodeInfo isa;
+  bool jalrTag; // a tag of "return"
+  bool jalTag;  // a tag of "call"
   IFDEF(CONFIG_ITRACE, char logbuf[256]);
   IFDEF(CONFIG_MTRACE, char mlogbuf[256]);
 } Decode;

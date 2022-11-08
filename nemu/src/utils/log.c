@@ -19,6 +19,7 @@
 #include <elf.h>
 
 FILE *log_fp = NULL;
+FILE *flog_fp = NULL;
 FILE *mtrace_fp = NULL;
 
 bool inputL = false;
@@ -31,6 +32,8 @@ static RingBuf *ihead = NULL;
 static RingBuf *itail = NULL;
 static RingBuf *mhead = NULL;
 static RingBuf *mtail = NULL;
+static fStack  *fstack_top = NULL;
+static fStack  *fstack_bottom = NULL;
 
 static void init_RingBuf(RingBuf f[], bool mringbuf_init)
 {
@@ -181,6 +184,18 @@ void init_mlog(const char *file)
     }
     Log("Mtrace is written to %s", file ? file : "stdout");
     init_RingBuf(mringbuf, true);
+}
+
+void init_flog(const char *file) 
+{
+    flog_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
+        flog_fp = fp;
+    }
+    Log("ftrace is written to %s", file ? file : "stdout");
 }
 
 void init_log(const char *file) 
@@ -334,6 +349,56 @@ vaddr_t findPc(const char *s)
         }
     }
     return 0;
+}
+
+void call_return(vaddr_t snpc, vaddr_t dnpc)
+{
+    if((!inputF))
+    {
+        return;
+    }
+    symFunc *p = pFirstFunc;
+    while((p != NULL) && (p->next != NULL))
+    {
+        if(dnpc == p->baseAddr) 
+        {
+            if(fstack_bottom == NULL)
+            {
+                fstack_bottom = malloc(sizeof(fStack));
+                fstack_bottom->last = NULL;
+                fstack_top = fstack_bottom;
+                fstack_top->return_pc = snpc;
+                fstack_top->name = p->name;
+            }
+            else
+            {
+                fStack *tmp;
+                tmp = malloc(sizeof(fStack));
+                tmp->last = fstack_top;
+                tmp->return_pc = snpc;
+                tmp->name = p->name;
+                fstack_top = tmp;
+            }
+
+            flog_write("Call %s, pc=%lx\n", strtab.pStrStart + fstack_top->name, dnpc);
+            /*printf(ANSI_BG_GREEN "=========================================\n");*/
+            /*printf("Call %s\n", strtab.pStrStart + fstack_top->name);*/
+            /*printf("=========================================" ANSI_NONE "\n");*/
+            break;
+        }
+        else if(dnpc == fstack_top->return_pc)
+        {
+            fStack *tmp = fstack_top;
+            flog_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
+            /*printf(ANSI_BG_GREEN "=========================================\n");*/
+            /*printf("Return from %s\n", strtab.pStrStart + tmp->name);*/
+            /*printf("=========================================" ANSI_NONE "\n");*/
+            fstack_top = fstack_top->last;
+            free(tmp);
+            break;
+        }
+        p = p->next;
+    }
 }
 
 void findStr(vaddr_t pc) 

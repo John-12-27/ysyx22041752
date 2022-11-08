@@ -53,12 +53,19 @@ static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc)
 #endif
 }
 
+void call_return(vaddr_t pc, vaddr_t dnpc);
 static void exec_once(Decode *s, vaddr_t pc) 
 {
     s->pc = pc;
     s->snpc = pc;
     isa_exec_once(s);
     cpu.pc = s->dnpc;
+
+    if(s->jalTag || s->jalrTag)
+    {
+        call_return(s->snpc, s->dnpc);
+    }
+
 #ifdef CONFIG_ITRACE
     if(log_enable(pc))
     {
