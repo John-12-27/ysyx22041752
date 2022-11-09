@@ -60,12 +60,12 @@ static void exec_once(Decode *s, vaddr_t pc)
     s->snpc = pc;
     isa_exec_once(s);
     cpu.pc = s->dnpc;
-
+#ifdef CONFIG_FTRACE
     if(s->jalTag || s->jalrTag)
     {
         call_return(s->snpc, s->dnpc);
     }
-
+#endif
 #ifdef CONFIG_ITRACE
     if(log_enable(pc))
     {
