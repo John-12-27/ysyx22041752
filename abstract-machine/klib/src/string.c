@@ -103,8 +103,16 @@ void *memmove(void *dst, const void *src, size_t n) {
   panic("Not implemented");
 }
 
-void *memcpy(void *out, const void *in, size_t n) {
-  panic("Not implemented");
+void *memcpy(void *out, const void *in, size_t n) 
+{
+    unsigned char *p = out;
+    unsigned char const *s = in;
+    for(size_t i = 0; n > 0; n--)
+    {
+        p[i] = s[i];
+        i++;
+    }
+    return out;
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) 

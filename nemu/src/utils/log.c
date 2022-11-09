@@ -358,7 +358,7 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
         return;
     }
     symFunc *p = pFirstFunc;
-    while((p != NULL) && (p->next != NULL))
+    while(p != NULL)
     {
         if(dnpc == p->baseAddr) 
         {
@@ -386,18 +386,17 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
             /*printf("=========================================" ANSI_NONE "\n");*/
             break;
         }
-        else if(dnpc == fstack_top->return_pc)
-        {
-            fStack *tmp = fstack_top;
-            flog_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
-            /*printf(ANSI_BG_GREEN "=========================================\n");*/
-            /*printf("Return from %s\n", strtab.pStrStart + tmp->name);*/
-            /*printf("=========================================" ANSI_NONE "\n");*/
-            fstack_top = fstack_top->last;
-            free(tmp);
-            break;
-        }
         p = p->next;
+    }
+    if(dnpc == fstack_top->return_pc)
+    {
+        fStack *tmp = fstack_top;
+        flog_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
+        /*printf(ANSI_BG_GREEN "=========================================\n");*/
+        /*printf("Return from %s\n", strtab.pStrStart + tmp->name);*/
+        /*printf("=========================================" ANSI_NONE "\n");*/
+        fstack_top = fstack_top->last;
+        free(tmp);
     }
 }
 
@@ -408,7 +407,7 @@ void findStr(vaddr_t pc)
         return;
     }
     symFunc *p = pFirstFunc;
-    while((p != NULL) && (p->next != NULL))
+    while(p != NULL)
     {
         if((pc >= p->baseAddr) && (pc < (p->baseAddr + p->size)))
         {

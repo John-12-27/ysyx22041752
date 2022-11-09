@@ -52,8 +52,8 @@ typedef struct RingBuf
 
 typedef struct symFunc
 {
-    //Elf64_Sym func;
-    Elf64_Addr baseAddr;
+    uint64_t baseAddr;
+    //Elf64_Addr baseAddr;
     uint64_t   size;
     uint32_t   name;
     struct symFunc *next;
