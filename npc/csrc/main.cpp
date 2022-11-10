@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     if(!NVBOARD_MODE)
     {
 
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < 50; i++)
         {
             top->inst_i = mem[top->addr-0x80000000];
             single_cycle();

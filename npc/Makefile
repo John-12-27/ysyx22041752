@@ -57,6 +57,9 @@ commit: $(BIN)
 	@echo "---- COMMITED ----"	
 include ../Makefile
 
+run: $(BIN)
+	@$(BUILD_DIR)/$(TOPNAME) $(IMG_BIN)
+
 clean:
 	-rm -rf logs $(BUILD_DIR)
 .PHONY: clean all commit
