@@ -20,8 +20,9 @@ extern bool mtrace_enable(vaddr_t vaddr, paddr_t paddr);
 extern void log_inst(Decode *s);
 extern void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read);
 
-word_t vaddr_ifetch(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
+word_t vaddr_ifetch(vaddr_t addr, int len) 
+{
+    return paddr_read(addr, len);
 }
 
 word_t vaddr_read(Decode *s, vaddr_t addr, int len) 

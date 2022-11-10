@@ -79,48 +79,52 @@ static long load_img() {
 extern bool inputL;
 extern bool inputM;
 extern bool inputF;
-static int parse_args(int argc, char *argv[]) {
-  const struct option table[] = {
-    {"batch"    , no_argument      , NULL, 'b'},
-    {"mtrace"   , required_argument, NULL, 'm'},
-    {"ftrace"   , required_argument, NULL, 'f'},
-    {"log"      , required_argument, NULL, 'l'},
-    {"diff"     , required_argument, NULL, 'd'},
-    {"port"     , required_argument, NULL, 'p'},
-    {"help"     , no_argument      , NULL, 'h'},
-    {0          , 0                , NULL,  0 },
-  };
-  int o;
-  while ( (o = getopt_long(argc, argv, "-bhm:-f:l:d:p:", table, NULL)) != -1) {
-    switch (o) {
-      case 'b': sdb_set_batch_mode(); break;
-      case 'p': sscanf(optarg, "%d", &difftest_port); break;
-      case 'm': mtrace_file = optarg; inputM = true; break;
-      case 'f': if(ftrace_file == NULL)
-                {
-                    ftrace_file = optarg;
-                }
-                else
-                {
-                    elfInput_file = optarg;
-                    inputF = true;
-                }break;
-      case 'l': log_file = optarg; inputL = true; break;
-      case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
-      default:
-        printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-        printf("\t-b,--batch              run with batch mode\n");
-        printf("\t-m,--mtrace=FILE        output mtrace to FILE\n");
-        printf("\t-f,--ftrace=FILE        input a FILE and enable the tracer of functions\n");
-        printf("\t-l,--log=FILE           output log to FILE\n");
-        printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
-        printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
-        printf("\n");
-        exit(0);
+static int parse_args(int argc, char *argv[]) 
+{
+    const struct option table[] = 
+    {
+        {"batch"    , no_argument      , NULL, 'b'},
+        {"mtrace"   , required_argument, NULL, 'm'},
+        {"ftrace"   , required_argument, NULL, 'f'},
+        {"log"      , required_argument, NULL, 'l'},
+        {"diff"     , required_argument, NULL, 'd'},
+        {"port"     , required_argument, NULL, 'p'},
+        {"help"     , no_argument      , NULL, 'h'},
+        {0          , 0                , NULL,  0 },
+    };
+    int o;
+    while ( (o = getopt_long(argc, argv, "-bhm:f:l:d:p:", table, NULL)) != -1) 
+    {
+        switch (o) 
+        {
+            case 'b': sdb_set_batch_mode(); break;
+            case 'p': sscanf(optarg, "%d", &difftest_port); break;
+            case 'm': mtrace_file = optarg; inputM = true; break;
+            case 'f': if(ftrace_file == NULL)
+                      {
+                          ftrace_file = optarg;
+                      }
+                      else
+                      {
+                          elfInput_file = optarg;
+                          inputF = true;
+                      }break;
+            case 'l': log_file = optarg; inputL = true; break;
+            case 'd': diff_so_file = optarg; break;
+            case 1:   img_file = optarg; return 0;
+            default:
+                printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+                printf("\t-b,--batch              run with batch mode\n");
+                printf("\t-m,--mtrace=FILE        output mtrace to FILE\n");
+                printf("\t-f,--ftrace=FILE        input a FILE and enable the tracer of functions\n");
+                printf("\t-l,--log=FILE           output log to FILE\n");
+                printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
+                printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+                printf("\n");
+                exit(0);
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 void init_monitor(int argc, char *argv[]) 
@@ -168,13 +172,15 @@ void init_monitor(int argc, char *argv[])
   /* Display welcome message. */
   welcome();
 }
+
 #else // CONFIG_TARGET_AM
-static long load_img() {
-  extern char bin_start, bin_end;
-  size_t size = &bin_end - &bin_start;
-  Log("img size = %ld", size);
-  memcpy(guest_to_host(RESET_VECTOR), &bin_start, size);
-  return size;
+static long load_img() 
+{
+    extern char bin_start, bin_end;
+    size_t size = &bin_end - &bin_start;
+    Log("img size = %ld", size);
+    memcpy(guest_to_host(RESET_VECTOR), &bin_start, size);
+    return size;
 }
 
 void am_init_monitor() {

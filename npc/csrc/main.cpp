@@ -3,7 +3,11 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h> 
 #include <Vtop.h>
-#define SIM
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <assert.h>
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC*    tfp      = NULL;
@@ -54,36 +58,96 @@ static void reset(int n)
     top->rst = 0;
 }
 
-int64_t inst_mem[5] = {0x93,0x100113,0x200193,0x300193,0x400193};
+static uint8_t *mem = NULL;
 
-int main(int argc, char** argv, char** env) 
+static char *img_file = NULL;
+static bool NVBOARD_MODE = false;
+static int parse_args(int argc, char *argv[])
 {
-	if (false && argc && argv && env)
-	{
+    const struct option table[] = 
+    {
+        {"nvboard"  , no_argument   , NULL, 'n'},
+        {"help   "  , no_argument   , NULL, 'h'},
+        {0          , 0             , NULL,  0 },
+    };
+    int o;
+    while((o = getopt_long(argc, argv, "-nh", table, NULL)) != -1)
+    {
+        switch(o)
+        {
+            case 'n': NVBOARD_MODE = true; break;
+            case  1 : img_file = optarg; return 0;
+            default :
+                      printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+                      printf("-n, --nvboard        run with nvboard_mode\n");
+        }
+    }
+    return 0;
+}
 
+static long load_img()
+{
+    if(img_file == NULL)
+    {
+        printf("\n");
+        printf("====== No image is given. ======\n");
+        printf("\n");
+        return 0;
+    }
+
+    FILE *fp = fopen(img_file, "rb");
+    assert(fp != NULL);
+
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+
+    printf("\n");
+    printf("====== The image is %s, size = %ld. ======\n", img_file, size);
+    printf("\n");
+    mem = (uint8_t *)malloc(size);
+
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(mem, size, 1, fp);
+    assert(ret == 1);
+    fclose(fp);
+    return size;
+}
+
+int main(int argc, char *argv[]) 
+{
+	if(argc)
+	{
+        parse_args(argc, argv);
 	}
+    long img_size = load_img();
+
 	sim_init(argc,argv);
     reset(10);
-#ifdef SIM
-    for(int i = 0; i < 5; i++)
+    if(!NVBOARD_MODE)
     {
-        top->inst_i = inst_mem[top->addr-0x80000000];
-        single_cycle();
+
+        for(int i = 0; i < 5; i++)
+        {
+            top->inst_i = mem[top->addr-0x80000000];
+            single_cycle();
+        }
+
+        sim_exit();
     }
-    sim_exit();
-#else
-	nvboard_bind_all_pins(top);	
-	nvboard_init();	
-	while(1)
-	{
-		nvboard_update();
-        single_cycle();
-		//step_and_dump_wave();
-		if(0)	
-		{
-			sim_exit();
-		}
-	}
-#endif
+    else
+    {
+	    nvboard_bind_all_pins(top);	
+	    nvboard_init();	
+	    while(1)
+	    {
+	    	nvboard_update();
+            single_cycle();
+	    	//step_and_dump_wave();
+	    	if(0)	
+	    	{
+	    		sim_exit();
+	    	}
+	    }
+    }
 	return 0;
 }
