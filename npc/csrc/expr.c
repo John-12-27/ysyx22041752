@@ -1,65 +1,48 @@
-/***************************************************************************************
-* Copyright (c) 2014-2022 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
-
-#include <isa.h>
-
-/* We use the POSIX regex functions to process regular expressions.
- * Type 'man regex' for more information about POSIX regex functions.
- */
+// +FHDR----------------------------------------------------------------------------
+//                 Copyright (c) 2022 
+//                       ALL RIGHTS RESERVED
+// ---------------------------------------------------------------------------------
+// Filename      : expr.c
+// Author        : Cw
+// Created On    : 2022-11-11 15:15
+// Last Modified : 
+// ---------------------------------------------------------------------------------
+// Description   : 
+//
+//
+// -FHDR----------------------------------------------------------------------------
+#include <stdio.h>
+#include <assert.h>
 #include <regex.h>
-#include <memory/paddr.h>
-enum {
-  TK_NOTYPE = 256, 
-  TK_EQ, 
-  TK_NEQ, 
-  TK_NUM, 
-  TK_HEX, 
-  TK_AND, 
-  TK_REG,
-  TK_POINTER,
+#include <string.h>
+#include <stdlib.h>
+#include "expr.h"
+#include "color.h"
 
-};
+static int nr_token __attribute__((used))  = 0;
+static Token tokens[NUM_TOKENS] __attribute__((used)) = {};
 
-static struct rule {
-  const char *regex;
-  int token_type;
+static struct rule 
+{
+    const char *regex;
+    int token_type;
 } rules[] = {
-
-  /* TODO: Add more rules.
-   * Pay attention to the precedence level of different rules.
-   */
-
-  {"0x\(([0-9]|[a-f]|[A-F])+)", TK_HEX},      // hexadecimal num 
-  {"[0-9]+"  , TK_NUM},      // decimal num 
-  {" +"      , TK_NOTYPE},   // spaces
-  {"\\+"     , '+'},         // plus
-  {"\\-"     , '-'},         // sub
-  {"\\*"     , '*'},         // mult or pointers dereference 
-  {"/"       , '/'},         // div 
-  {"\\("     , '('},         // (
-  {"\\)"     , ')'},         // )
-  {"=="      , TK_EQ},       // equal
-  {"!="      , TK_NEQ},      // not equal
-  {"&&"      , TK_AND},      // logic and
-  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1|a0|a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
+    {"0x\(([0-9]|[a-f]|[A-F])+)", TK_HEX},      // hexadecimal num 
+    {"[0-9]+"  , TK_NUM},      // decimal num 
+    {" +"      , TK_NOTYPE},   // spaces
+    {"\\+"     , '+'},         // plus
+    {"\\-"     , '-'},         // sub
+    {"\\*"     , '*'},         // mult or pointers dereference 
+    {"/"       , '/'},         // div 
+    {"\\("     , '('},         // (
+    {"\\)"     , ')'},         // )
+    {"=="      , TK_EQ},       // equal
+    {"!="      , TK_NEQ},      // not equal
+    {"&&"      , TK_AND},      // logic and
+    {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1|a0|a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
 };
-
-#define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
-
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
  */
@@ -68,28 +51,20 @@ void init_regex()
     int i;
     char error_msg[128];
     int ret;
-
     for (i = 0; i < NR_REGEX; i ++) 
     {
         ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
         if (ret != 0) 
         {
             regerror(ret, &re[i], error_msg, 128);
-            panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+
+            printf(ANSI_BG_RED "=========================================\n");
+            printf("regex compilation failed: %s\n%s", error_msg, rules[i].regex); 
+            printf("=========================================" ANSI_NONE "\n");
+            assert(0);
         }
     }
 }
-
-#define STR_LEN 32
-#define NUM_TOKENS 32
-
-typedef struct token {
-  int type;
-  word_t val;
-} Token;
-
-static Token tokens[NUM_TOKENS] __attribute__((used)) = {};
-static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e, bool *success)
 {
@@ -98,7 +73,6 @@ static bool make_token(char *e, bool *success)
     regmatch_t pmatch;
     bool negTag = false;
     nr_token = 0;
-
     while (e[position] != '\0') 
     {
         /* Try all rules one by one. */
@@ -109,12 +83,8 @@ static bool make_token(char *e, bool *success)
                 char *substr_start = e + position;
                 int substr_len = pmatch.rm_eo;
                 char *substr_end = substr_start + substr_len;
-
                 Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",i, rules[i].regex, position, substr_len, substr_len, substr_start);
-
                 position += substr_len;
-
-
                 if(nr_token == NUM_TOKENS)
                 {
                     printf(ANSI_BG_RED "=========================================\n");
@@ -122,7 +92,6 @@ static bool make_token(char *e, bool *success)
                     printf("=========================================" ANSI_NONE "\n");
                     return false;
                 }
-
                 switch (rules[i].token_type) 
                 {
                     case TK_NUM: 
@@ -201,10 +170,9 @@ static bool make_token(char *e, bool *success)
                     {
                         char regstr[4] = {0};
                         strncpy(regstr, substr_start, substr_len);
-                        
                         tokens[nr_token].type = TK_REG;
                         /*Assert(regstr != NULL, "Please check the *regstr");*/
-                        tokens[nr_token].val  = isa_reg_str2val(regstr, success);
+                        tokens[nr_token].val  = 0;//isa_reg_str2val(regstr, success);
                     } break;
                     case '/':
                     {
@@ -234,28 +202,25 @@ static bool make_token(char *e, bool *success)
                     {
                         nr_token--;
                     } break;
-
-            default: TODO();
+            default: break;
         }
         nr_token++;
         break;
       }
     }
-
-    if (i == NR_REGEX) 
-    {
-       printf(ANSI_BG_RED "=========================================\n");
-       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
-       printf("=========================================" ANSI_NONE "\n");
-      return false;
+        if (i == NR_REGEX) 
+        {
+            printf(ANSI_BG_RED "=========================================\n");
+            printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+            printf("=========================================" ANSI_NONE "\n");
+            return false;
+        }
     }
-  }
-
   return true;
 }
 
 // 用“堆栈”保存'('，遇到')'就出栈
-bool check_parentheses(Token *p, Token *q, bool *success)
+static bool check_parentheses(Token *p, Token *q, bool *success)
 {
     int8_t top = 0;
     bool parClear = false;
@@ -297,7 +262,6 @@ bool check_parentheses(Token *p, Token *q, bool *success)
                 printf("=========================================" ANSI_NONE "\n");
                 return false;
             }
-        
             top--;
         }
         if(!top && (i < q) && p->type == '(')
@@ -323,7 +287,7 @@ bool check_parentheses(Token *p, Token *q, bool *success)
     }
 }
 
-Token *check_operator(Token *p, Token *q)
+static Token *check_operator(Token *p, Token *q)
 {
     char    stack[NUM_TOKENS] = {'\0'};
     uint8_t mainOp = 0;
@@ -418,7 +382,6 @@ Token *check_operator(Token *p, Token *q)
                     tag = i;
                     mainOp++;
                 }
-                
             }
             else if(i->type == TK_REG)
             {
@@ -471,7 +434,6 @@ word_t eval(Token *p, Token *q, bool *success)
             val1 = eval(p, op-1, success);
         }
         word_t val2 = eval(op+1, q, success);
-
         switch(op->type)
         {
             case TK_REG:
@@ -480,7 +442,7 @@ word_t eval(Token *p, Token *q, bool *success)
             }
             case TK_POINTER:
             {
-                return paddr_read((paddr_t)val2, 8);
+                return 0;//paddr_read((paddr_t)val2, 8);
             } break;
             case TK_EQ: 
             {
@@ -520,10 +482,13 @@ word_t eval(Token *p, Token *q, bool *success)
                     *success = false;
                 }
             } break;
-            default : panic("Operator err!!!");
+            default : 
+                printf(ANSI_BG_RED "=========================================\n");
+                printf("Operator err!!!\n");
+                printf("=========================================" ANSI_NONE "\n");
+                assert(0);
         }
     }
-
     return 0;
 }
 
@@ -534,6 +499,5 @@ word_t expr(char *e, bool *success)
         *success = false;
         return 0;
     }
-
     return eval(&tokens[0], &tokens[nr_token-1], success); 
 }

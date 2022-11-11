@@ -21,5 +21,10 @@ image: $(IMAGE).elf
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
+nvboard: image
+	$(MAKE) -C $(NPC_HOME) nvboard IMG_BIN=$(IMAGE).bin
+
+SIMFLAGS = -h
 run: image
-	$(MAKE) -C $(NPC_HOME) run IMG_BIN=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) sim OPTIONS=$(SIMFLAGS) IMG_BIN=$(IMAGE).bin
+

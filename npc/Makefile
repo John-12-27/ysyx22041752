@@ -32,7 +32,7 @@ CSRCS += $(SRC_AUTO_BIND)
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
-LDFLAGS += -lSDL2 -lSDL2_image
+LDFLAGS += -lSDL2 -lSDL2_image -lreadline
 
 all: $(BIN)
 
@@ -57,9 +57,19 @@ commit: $(BIN)
 	@echo "---- COMMITED ----"	
 include ../Makefile
 
-run: $(BIN)
-	@$(BUILD_DIR)/$(TOPNAME) $(IMG_BIN)
+nvboard: $(BIN)
+	@echo 
+	@echo "---- running on nvboard ----"
+	$(BUILD_DIR)/$(TOPNAME) -n $(IMG_BIN) 
+
+sim: $(BIN)
+	@echo 
+	@echo "---- simulating ----"
+	@rm -rf logs
+	@mkdir -p logs
+	$(BUILD_DIR)/$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
+	@gtkwave ./logs/dump.vcd
 
 clean:
 	-rm -rf logs $(BUILD_DIR)
-.PHONY: clean all commit
+.PHONY: clean all commit nvboard sim
