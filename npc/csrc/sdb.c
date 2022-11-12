@@ -21,6 +21,8 @@
 #include "wp.h"
 #include "monitor.h"
 #include "memory.h"
+#include "exec.h"
+#include "npc_state.h"
 
 static int cmd_help(char *args);
 static int cmd_si(char *args);
@@ -74,7 +76,7 @@ static char* rl_gets()
 
 static int cmd_c(char *args) 
 {
-    /*cpu_exec(-1);*/
+    exec(0, true);
     return 0;
 }
 
@@ -203,7 +205,7 @@ static int cmd_si(char *args)
     {
         siCnt = 1;
     }
-    /*cpu_exec(siCnt);*/
+    exec(siCnt, false);
     return 0;
 }
 
@@ -212,7 +214,7 @@ static int cmd_info(char *args)
     char *arg = strtok(NULL, " ");
     if(*arg == 'r')
     {
-        /*isa_reg_display();        */
+        reg_display();        
     }
     else if(*args == 'w')
     {

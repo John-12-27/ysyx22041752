@@ -16,8 +16,8 @@ VERILATOR_FLAGS += -cc --exe
 VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_FLAGS += -Wall
 VERILATOR_FLAGS += --trace
-VERILATOR_FLAGS += --build
-VERILATOR_FLAGS += -MMD
+VERILATOR_FLAGS += --build 
+VERILATOR_FLAGS += -MMD 
 
 TOPNAME = top
 NXDC_FILES = constr/top.nxdc
@@ -34,6 +34,8 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 LDFLAGS += -lSDL2 -lSDL2_image -lreadline
 
+#CXXSRC = ./csrc/disasm.cc
+
 all: $(BIN)
 
 $(shell mkdir -p $(BUILD_DIR))
@@ -46,7 +48,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	@echo "---- VERILATE & BUILD ----"
-	$(VERILATOR) $(VERILATOR_FLAGS) \
+	$(VERILATOR) $(VERILATOR_FLAGS) $(CXXFLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))

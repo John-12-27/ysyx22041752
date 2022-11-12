@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_regfiles.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:21
-// Last Modified : 2022-10-17 21:36
+// Last Modified : 2022-11-12 16:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,7 +19,9 @@ module ysyx_22041752_regfiles (
     output wire [63: 0] data_r2,
     input  wire [ 4: 0] addr_w ,
     input  wire         we     ,
-    input  wire [63: 0] data_w
+    input  wire [63: 0] data_w ,
+
+    output wire [63: 0] dpi_regs [31:0]
 );
 
 reg [63:0] regs [31:0];
@@ -40,6 +42,13 @@ generate
                 regs[i] <= data_w;
         end
         
+    end
+endgenerate
+
+generate
+    for(i = 0; i < 32; i++) begin
+        :DPI_C_REGS
+        assign dpi_regs[i] = regs[i];
     end
 endgenerate
 

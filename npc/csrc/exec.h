@@ -2,23 +2,22 @@
 //                 Copyright (c) 2022 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : typedef.h
+// Filename      : exec.h
 // Author        : Cw
-// Created On    : 2022-11-11 16:43
+// Created On    : 2022-11-12 11:44
 // Last Modified : 
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-#ifndef _TYPEDEF_H_
-#define _TYPEDEF_H_
-#include <stdint.h>
-typedef uint64_t  word_t;
-typedef int64_t  sword_t;
-typedef word_t vaddr_t;
-typedef word_t paddr_t;
+#ifndef _EXEC_H_
+#define _EXEC_H_
+#include <stdbool.h>
+#include "typedef.h"
 
-#define FMT_WORD  "0x%016lx" 
-#define FMT_PADDR "0x%016lx"
+extern bool *halt_flag;
+extern void reset(int n);
+extern void sim_init(int argc, char** argv);
+extern void exec(uint64_t n, bool batch);
 #endif

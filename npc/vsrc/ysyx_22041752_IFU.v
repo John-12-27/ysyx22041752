@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2022-10-18 19:50
+// Last Modified : 2022-11-12 12:58
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,7 +26,7 @@ always @(posedge clk) begin
         pc <= 64'h80000000;
     end
     else begin
-        pc <= pc + 1;
+        pc <= pc + 4;
     end
 end
 assign addr = pc;

@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include "expr.h"
 #include "color.h"
+#include "memory.h"
+#include "npc_state.h"
 
 static int nr_token __attribute__((used))  = 0;
 static Token tokens[NUM_TOKENS] __attribute__((used)) = {};
@@ -64,6 +66,26 @@ void init_regex()
             assert(0);
         }
     }
+}
+
+static word_t isa_reg_str2val(const char *s, bool *success) 
+{
+    if(strcmp(s,"$pc") == 0)
+    {
+        return *cpu_pc;
+    }
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        if(strcmp(s, regs[i]) == 0)
+        {
+            return cpu_gpr[i];
+        }
+    }
+    *success = false;
+    printf(ANSI_BG_RED "=========================================\n");
+    printf("Unknown register !\n");
+    printf("=========================================" ANSI_NONE "\n");
+    return 0;
 }
 
 static bool make_token(char *e, bool *success)
@@ -172,7 +194,7 @@ static bool make_token(char *e, bool *success)
                         strncpy(regstr, substr_start, substr_len);
                         tokens[nr_token].type = TK_REG;
                         /*Assert(regstr != NULL, "Please check the *regstr");*/
-                        tokens[nr_token].val  = 0;//isa_reg_str2val(regstr, success);
+                        tokens[nr_token].val  = isa_reg_str2val(regstr, success);
                     } break;
                     case '/':
                     {
@@ -442,7 +464,7 @@ word_t eval(Token *p, Token *q, bool *success)
             }
             case TK_POINTER:
             {
-                return 0;//paddr_read((paddr_t)val2, 8);
+                return read_mem((paddr_t)val2, 8);
             } break;
             case TK_EQ: 
             {

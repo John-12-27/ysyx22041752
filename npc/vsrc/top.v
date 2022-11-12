@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2022-10-18 19:44
+// Last Modified : 2022-11-12 16:37
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,6 +26,7 @@ wire [63: 0] imm;
 wire [ 4: 0] addr_w ;
 wire         we      = 1'b1;
 wire [63: 0] data_w ;
+wire [63: 0] dpi_regs [31:0];
 
 ysyx_22041752_IFU u_ysyx_22041752_ifu_0(
     .clk                            ( clk                           ),
@@ -52,7 +53,8 @@ ysyx_22041752_regfiles u_ysyx_22041752_regfiles_0(
     .data_r2                        (                               ),
     .addr_w                         ( addr_w                        ),
     .we                             ( we                            ),
-    .data_w                         ( data_w                        )
+    .data_w                         ( data_w                        ),
+    .dpi_regs                       ( dpi_regs                      )
 );
 
 /* verilator lint_on PINCONNECTEMPTY */
@@ -60,6 +62,12 @@ ysyx_22041752_ADDU u_ysyx_22041752_addu_0(
     .src1                           ( data_r1                       ),
     .src2                           ( imm                           ),
     .result                         ( data_w                        )
+);
+
+dpi_c u_dpi_c(
+    .inst_i                         (inst),
+    .dpi_regs                       ( dpi_regs                      ),
+    .pc                             (addr)
 );
 
 endmodule
