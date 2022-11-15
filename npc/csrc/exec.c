@@ -41,7 +41,6 @@ static void step_and_dump_wave()
     tfp->dump(contextp->time());
 };
 
-//extern void single_cycle();
 static void single_cycle()
 {
     top->clk = 0; top->eval();	
@@ -50,7 +49,6 @@ static void single_cycle()
     step_and_dump_wave();
 }
 
-//extern void sim_exit();
 static void sim_exit()
 {
     step_and_dump_wave();

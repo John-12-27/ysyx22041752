@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include "typedef.h"
 
-extern bool *halt_flag;
+//extern bool *halt_flag;
 extern void reset(int n);
 extern void sim_init(int argc, char** argv);
 extern void exec(uint64_t n, bool batch);
