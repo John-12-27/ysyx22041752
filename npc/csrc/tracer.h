@@ -13,9 +13,9 @@
 // -FHDR----------------------------------------------------------------------------
 #ifndef _TRACER_H_
 #define _TRACER_H_
+#include <elf.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <elf.h>
 #include "typedef.h"
 #include "npc_state.h"
 
@@ -27,14 +27,6 @@
 #define CONFIG_VMTRACE_END   0x80000008
 #define CONFIG_PMTRACE_START 0x80000000
 #define CONFIG_PMTRACE_END   0x80000008
-
-extern FILE *log_fp;
-extern FILE *flog_fp;
-extern FILE *mtrace_fp;
-
-extern bool inputL;
-extern bool inputM;
-extern bool inputF;
 
 #define flog_write(...) \
   { \

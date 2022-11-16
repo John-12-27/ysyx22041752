@@ -24,7 +24,10 @@ image: $(IMAGE).elf
 nvboard: image
 	$(MAKE) -C $(NPC_HOME) nvboard IMG_BIN=$(IMAGE).bin
 
-SIMFLAGS = -h
-run: image
-	$(MAKE) -C $(NPC_HOME) sim OPTIONS=$(SIMFLAGS) IMG_BIN=$(IMAGE).bin
+override SIMFLAGS += -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf
 
+run: image
+	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin
+
+gdb: image
+	$(MAKE) -C $(NPC_HOME) gdb OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin

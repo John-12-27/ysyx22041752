@@ -33,8 +33,7 @@ endif
 
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CXXSRCS = $(shell find $(abspath ./csrc) -name "*.cc" -or -name "*.cpp")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c")
+CXXSRCS = $(shell find $(abspath ./csrc) -name "*.cpp" -or -name "*.c")
 
 TOPNAME   = top
 BUILD_DIR = ./build
@@ -63,7 +62,7 @@ VERILATOR_FLAGS += --coverage
 #VERILATOR_INPUT = -f input.vc $(VSRCS) $(CXXSRCS)
 
 ######################################################################
-default: $(BIN)
+default: commit
 
 $(VERILATE): $(VSRCS) $(CXXSRCS)
 	@echo
@@ -79,37 +78,25 @@ build: $(VERILATE)
 	@echo "-- BUILD -------------------"
 	$(MAKE) -j -C $(OBJ_DIR) -f ../../Makefile_obj
 
-
-run: build
-# To compile, we can either
-# 1. Pass --build to Verilator by editing VERILATOR_FLAGS above.
-# 2. Or, run the make rules Verilator does:
-#	$(MAKE) -j -C obj_dir -f Vtop.mk
-# 3. Or, call a submakefile where we can override the rules ourselves:
-
+commit: build 
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo
-	@echo "-- RUN ---------------------"
+	@echo "---- COMMITED ----"	
+include ../Makefile
+
+sim: build
+	@echo
+	@echo "---- simulating ----"
 	@rm -rf logs
 	@mkdir -p logs
-	obj_dir/Vtop +trace
+	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
 
+gdb: build
 	@echo
-	@echo "-- COVERAGE ----------------"
-	@rm -rf logs/annotated
-	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
+	@echo "---- debugging ----"
+	gdb -s $(OBJ_DIR)/V$(TOPNAME) --args $(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
 
-	@echo
-	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
-	@echo
-
-
-######################################################################
-# Other targets
-
-show-config:
-	$(VERILATOR) -V
-
-maintainer-copy::
-clean mostlyclean distclean maintainer-clean::
-	-rm -rf $(BUILD_DIR) logs *.log *.dmp *.vpd coverage.dat core
+clean :
+	-rm -rf $(BUILD_DIR) logs 
+	
+.PHONY: sim gdb clean build

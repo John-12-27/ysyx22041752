@@ -13,7 +13,7 @@
 // -FHDR----------------------------------------------------------------------------
 #include <stdio.h>
 #include "npc_state.h"
-/*#include "verilated_dpi.h"*/
+#include "verilated_dpi.h"
 
 Decode S;
 uint64_t *cpu_gpr = NULL;
@@ -21,14 +21,14 @@ uint64_t *cpu_pc  = NULL;
 
 NPCState npc_state = { .state = NPC_STOP, .halt_pc = 0, .halt_ret = 0};
 
-/*extern "C" void set_pc_ptr(const svOpenArrayHandle r)*/
-/*{*/
-    /*cpu_pc = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());*/
-/*}*/
-/*extern "C" void set_gpr_ptr(const svOpenArrayHandle r)*/
-/*{*/
-    /*cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());*/
-/*}*/
+extern "C" void set_pc_ptr(const svOpenArrayHandle r)
+{
+    cpu_pc = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
+{
+    cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
 
 const char *regs[] = 
 {

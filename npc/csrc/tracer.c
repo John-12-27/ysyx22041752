@@ -16,14 +16,11 @@
 #include <stdlib.h>
 #include "tracer.h"
 #include "color.h"
+#include "monitor.h"
 
 FILE *log_fp = NULL;
 FILE *flog_fp = NULL;
 FILE *mtrace_fp = NULL;
-
-bool inputL = false;
-bool inputM = false;
-bool inputF = false;
 
 static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
 static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
@@ -127,6 +124,7 @@ void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
     RingBufLoad(s->mlogbuf, true);
 }
 
+extern void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 void log_inst(Decode *s)
 {
     char *p = s->logbuf;
@@ -148,7 +146,6 @@ void log_inst(Decode *s)
     memset(p, ' ', space_len);
     p += space_len;
 
-    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
          s->pc, (uint8_t *)&s->inst, ilen);
     RingBufLoad(s->logbuf, false);
@@ -178,9 +175,8 @@ void init_mlog(const char *file)
     if(file != NULL) 
     {
         FILE *fp = fopen(file, "w");
-        printf("Can not open %s\n", file);
-        assert(0);
         mtrace_fp = fp;
+        assert(mtrace_fp != NULL);
     }
     Log("Mtrace is written to %s", file ? file : "stdout");
     init_RingBuf(mringbuf, true);
@@ -192,9 +188,8 @@ void init_flog(const char *file)
     if(file != NULL) 
     {
         FILE *fp = fopen(file, "w");
-        printf("Can not open %s\n", file);
-        assert(0);
         flog_fp = fp;
+        assert(flog_fp != NULL);
     }
     Log("ftrace is written to %s", file ? file : "stdout");
 }
@@ -205,9 +200,8 @@ void init_log(const char *file)
     if(file != NULL) 
     {
         FILE *fp = fopen(file, "w");
-        printf("Can not open %s\n", file);
-        assert(0);
         log_fp = fp;
+        assert(log_fp != NULL);
     }
     Log("Log is written to %s", file ? file : "stdout");
     init_RingBuf(iringbuf, false);
@@ -249,8 +243,7 @@ void funcTabInit(const char *file)
     {
         Elf64_Ehdr elf64_ehdr;
         FILE *fp = fopen(file, "rb");
-        printf("Can not open %s\n", file);
-        assert(0);
+        assert(fp != NULL);
         
         Log("There are %lu bytes in ELF header.\n",fread(&elf64_ehdr, sizeof(char), sizeof(elf64_ehdr), fp));
         if(elf64_ehdr.e_shoff)

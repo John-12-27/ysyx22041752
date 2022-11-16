@@ -354,6 +354,7 @@ void sdb_mainloop()
             {
                 if (cmd_table[i].handler(args) < 0) 
                 {
+                    npc_state.state = NPC_QUIT;
                     return; 
                 }
                 break;
