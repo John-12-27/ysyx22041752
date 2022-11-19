@@ -122,9 +122,9 @@ static int decode_exec(Decode *s)
   INSTPAT("000000? ????? ????? 001 ????? 0010011", slli   , SH, R(dest) = src1 << src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 001 ????? 0011011", slliw  ,SHW, R(dest) = SEXT(BITS(src1, 31, 0) << src2, 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("000000? ????? ????? 101 ????? 0010011", srli   , SH, R(dest) = src1 >> src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("000000? ????? ????? 101 ????? 0011011", srliw  ,SHW, R(dest) = SEXT(BITS(src1, 31, 0) >> src2, 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000000 ????? ????? 101 ????? 0011011", srliw  ,SHW, R(dest) = SEXT(BITS(src1, 31, 0) >> src2, 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("010000? ????? ????? 101 ????? 0010011", srai   , SH, R(dest) = (src1 >> src2) | (SEXT(BITS(src1, 63, 63), 1) << (64-src2)); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("010000? ????? ????? 101 ????? 0011011", sraiw  ,SHW, R(dest) = SEXT((BITS(src1, 31, 0) >> src2) | BITS(SEXT(BITS(src1, 31, 31), 1) << (32-src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0100000 ????? ????? 101 ????? 0011011", sraiw  ,SHW, R(dest) = SEXT((BITS(src1, 31, 0) >> src2) | BITS(SEXT(BITS(src1, 31, 31), 1) << (32-src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 000 ????? 0110011", add    ,  R, R(dest) = src1 + src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 000 ????? 0111011", addw   ,  R, R(dest) = SEXT(BITS((src1 + src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0100000 ????? ????? 000 ????? 0110011", sub    ,  R, R(dest) = src1 - src2; s->jalTag = false; s->jalrTag = false);
