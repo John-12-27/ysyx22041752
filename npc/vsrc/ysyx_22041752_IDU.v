@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-19 09:59
+// Last Modified : 2022-11-19 20:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,7 +31,9 @@ module ysyx_22041752_IDU (
 	//forward_bus
 	input  wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus,
 	input  wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus,
-	input  wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus
+	input  wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus,
+
+    output wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0]
 );
 
 reg  ds_valid   ;
@@ -54,24 +56,39 @@ assign {rf_we   ,  //69:69
 wire              br_taken;
 wire [`PC_WD-1:0] br_target;
 
-wire op_add;
-wire op_sub;
-wire op_slt;
-wire op_and;
-wire op_or ;
-wire op_xor;
-wire op_sll;
-wire op_srl;
-wire op_sra;
-wire op_lui;
+wire op_mul ;
+wire op_div ;
+wire op_rem ;
+wire op_add ;
+wire op_sub ;
+wire op_slt ;
+wire op_sltu;
+wire op_and ;
+wire op_or  ;
+wire op_xor ;
+wire op_sll ;
+wire op_srl ;
+wire op_sra ;
 
-wire src_shamt;
-wire src_pc   ;
-wire src_imm_u;
-wire src_4    ;
-wire src_imm_i;
-wire src_imm_s;
-wire id_rf_we ;
+wire        res_sext    ;
+wire        res_zext    ;
+wire        src_shamt   ;
+wire        src_pc      ;
+wire        src_imm_u   ;
+wire        src_4       ;
+wire        src_0       ;
+wire        src_imm_i   ;
+wire        src_imm_s   ;
+wire        id_rf_we    ;
+wire        id_mem_we   ;
+wire        id_mem_re   ;
+wire [ 1:0] id_mem_bytes;
+wire [ 5:0] shamt;
+wire [19:0] imm_u;
+wire [20:0] imm_j;
+wire [11:0] imm_i;
+wire [11:0] imm_s;
+wire [12:0] imm_b;
 
 wire [ 6:0] opcode;
 wire [ 4:0] rd;
@@ -80,12 +97,6 @@ wire [ 4:0] rs1;
 wire [ 4:0] rs2;
 wire [ 6:0] funct7;
 wire [ 5:0] sh_funct6;
-wire [ 5:0] shamt;
-wire [19:0] imm_u;
-wire [20:0] imm_j;
-wire [11:0] imm_i;
-wire [11:0] imm_s;
-wire [12:0] imm_b;
 
 wire es_rs1_hazard;
 wire es_rs2_hazard;
@@ -93,8 +104,7 @@ wire ms_rs1_hazard;
 wire ms_rs2_hazard;
 wire ws_rs1_hazard;
 wire ws_rs2_hazard;
-wire [2:0] sel_rs;
-wire [2:0] sel_rt;
+
 wire [`RF_ADDR_WD-1:0] es_dest_reg;
 wire [`RF_ADDR_WD-1:0] ms_dest_reg;
 wire [`RF_ADDR_WD-1:0] ws_dest_reg;
@@ -110,26 +120,36 @@ wire [`RF_DATA_WD-1:0] data_r2;
 wire [`RF_DATA_WD-1:0] rs1_value;
 wire [`RF_DATA_WD-1:0] rs2_value;
 assign br_bus       = {br_taken,br_target};
-assign ds_to_es_bus = {op_add        ,   
+
+assign ds_to_es_bus = {op_mul        ,
+                       op_div        ,
+                       op_rem        ,
+                       op_add        ,   
                        op_sub        ,  
                        op_slt        ,  
+                       op_sltu       ,  
                        op_and        ,  
                        op_or         ,  
                        op_xor        ,  
                        op_sll        ,  
                        op_srl        ,  
                        op_sra        ,  
-                       op_lui        ,  
-                       imm_s         ,  
+                       res_sext      , 
+                       res_zext      , 
                        shamt         ,  
                        src_shamt     ,  
 					   src_pc        ,	
 					   src_imm_u     ,  
                        src_4         ,  
+                       src_0         ,
                        src_imm_i     ,  
                        src_imm_s     ,  
                        id_rf_we      ,  
+                       id_mem_we     ,
+                       id_mem_re     ,
+                       id_mem_bytes  ,
                        rd            ,  
+                       imm_s         ,  
                        imm_i         ,  
                        imm_u         ,  
                        rs1_value     ,  
@@ -155,70 +175,134 @@ always @(posedge clk) begin
     end
 end
 
-wire inst_lui   ;
-wire inst_auipc ;
-wire inst_jal   ;
-wire inst_jalr  ;
-wire inst_beq   ;
-wire inst_bne   ;
-wire inst_blt   ;
-wire inst_bge   ;
-wire inst_bltu  ;
-wire inst_bgeu  ;
-wire inst_lb    ;
-wire inst_lh    ;
-wire inst_lw    ;
-wire inst_lbu   ;
-wire inst_lhu   ;
-wire inst_lwu   ;
-wire inst_ld    ;
-wire inst_sb    ;
-wire inst_sh    ;
-wire inst_sw    ;
-wire inst_sd    ;
-wire inst_addi  ;
-wire inst_addiw ;
-wire inst_slti  ;
-wire inst_sltiu ;
-wire inst_xori  ;
-wire inst_ori   ;
-wire inst_andi  ;
-wire inst_slli  ;
-wire inst_slliw ;
-wire inst_srli  ;
-wire inst_srliw ;
-wire inst_srai  ;
-wire inst_sraiw ;
-wire inst_add   ;
-wire inst_addw  ;
-wire inst_sub   ;
-wire inst_subw  ;
-wire inst_sll   ;
-wire inst_sllw  ;
-wire inst_slt   ;
-wire inst_sltu  ;
-wire inst_xor   ;
-wire inst_srl   ;
-wire inst_srlw  ;
-wire inst_sra   ;
-wire inst_sraw  ;
-wire inst_or    ;
-wire inst_and   ;
-wire inst_mul   ;
-wire inst_mulh  ;
-wire inst_mulhsu;
-wire inst_mulhu ;
-wire inst_mulw  ;
-wire inst_div   ;
-wire inst_divu  ;
-wire inst_divw  ;
-wire inst_divuw ;
-wire inst_rem   ;
-wire inst_remu  ;
-wire inst_remw  ;
-wire inst_remuw ;
-wire inst_ebreak;
+wire inst_lui    ;
+wire inst_auipc  ;
+wire inst_jal    ;
+wire inst_jalr   ;
+wire inst_beq    ;
+wire inst_bne    ;
+wire inst_blt    ;
+wire inst_bge    ;
+wire inst_bltu   ;
+wire inst_bgeu   ;
+wire inst_lb     ;
+wire inst_lh     ;
+wire inst_lw     ;
+wire inst_lbu    ;
+wire inst_lhu    ;
+wire inst_lwu    ;
+wire inst_ld     ;
+wire inst_sb     ;
+wire inst_sh     ;
+wire inst_sw     ;
+wire inst_sd     ;
+wire inst_addi   ;
+wire inst_addiw  ;
+wire inst_slti   ;
+wire inst_sltiu  ;
+wire inst_xori   ;
+wire inst_ori    ;
+wire inst_andi   ;
+wire inst_slli   ;
+wire inst_slliw  ;
+wire inst_srli   ;
+wire inst_srliw  ;
+wire inst_srai   ;
+wire inst_sraiw  ;
+wire inst_add    ;
+wire inst_addw   ;
+wire inst_sub    ;
+wire inst_subw   ;
+wire inst_sll    ;
+wire inst_sllw   ;
+wire inst_slt    ;
+wire inst_sltu   ;
+wire inst_xor    ;
+wire inst_srl    ;
+wire inst_srlw   ;
+wire inst_sra    ;
+wire inst_sraw   ;
+wire inst_or     ;
+wire inst_and    ;
+wire inst_mul    ;
+wire inst_mulh   ;
+wire inst_mulhsu ;
+wire inst_mulhu  ;
+wire inst_mulw   ;
+wire inst_div    ;
+wire inst_divu   ;
+wire inst_divw   ;
+wire inst_divuw  ;
+wire inst_rem    ;
+wire inst_remu   ;
+wire inst_remw   ;
+wire inst_remuw  ;
+wire inst_ebreak ;
+wire inst_invalid;
 
+assign inst_invalid = !(inst_lui   || 
+                        inst_auipc || 
+                        inst_jal   || 
+                        inst_jalr  || 
+                        inst_beq   || 
+                        inst_bne   || 
+                        inst_blt   || 
+                        inst_bge   || 
+                        inst_bltu  || 
+                        inst_bgeu  || 
+                        inst_lb    || 
+                        inst_lh    || 
+                        inst_lw    || 
+                        inst_lbu   || 
+                        inst_lhu   || 
+                        inst_lwu   || 
+                        inst_ld    || 
+                        inst_sb    || 
+                        inst_sh    || 
+                        inst_sw    || 
+                        inst_sd    || 
+                        inst_addi  || 
+                        inst_addiw || 
+                        inst_slti  || 
+                        inst_sltiu || 
+                        inst_xori  || 
+                        inst_ori   || 
+                        inst_andi  || 
+                        inst_slli  || 
+                        inst_slliw || 
+                        inst_srli  || 
+                        inst_srliw || 
+                        inst_srai  || 
+                        inst_sraiw || 
+                        inst_add   || 
+                        inst_addw  || 
+                        inst_sub   || 
+                        inst_subw  || 
+                        inst_sll   || 
+                        inst_sllw  || 
+                        inst_slt   || 
+                        inst_sltu  || 
+                        inst_xor   || 
+                        inst_srl   || 
+                        inst_srlw  || 
+                        inst_sra   || 
+                        inst_sraw  || 
+                        inst_or    || 
+                        inst_and   || 
+                        inst_mul   || 
+                        inst_mulh  || 
+                        inst_mulhsu|| 
+                        inst_mulhu || 
+                        inst_mulw  || 
+                        inst_div   || 
+                        inst_divu  || 
+                        inst_divw  || 
+                        inst_divuw || 
+                        inst_rem   || 
+                        inst_remu  || 
+                        inst_remw  || 
+                        inst_remuw || 
+                        inst_ebreak); 
 
 assign opcode    = ds_inst[ 6: 0];
 assign rd        = ds_inst[11: 7];
@@ -300,17 +384,41 @@ assign inst_srliw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'
 assign inst_srai   = opcode == 7'b0010011 && funct3 == 3'b101 && sh_funct6 == 6'b000000 ;
 assign inst_sraiw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'b0000000;
 
-assign op_add = inst_add | inst_addw | inst_auipc | inst_jal | inst_jalr | inst_lb | inst_lh | inst_lw | inst_lbu | inst_lhu | inst_lwu | inst_ld | inst_sb | inst_sh | inst_sw | inst_sd | inst_addi | inst_addiw;
+assign op_mul = inst_mul  | inst_mulh  | inst_mulhsu| inst_mulhu | inst_mulw;
+assign op_div = inst_div  | inst_divu  | inst_divw  | inst_divuw ;
+assign op_rem = inst_rem  | inst_remu  | inst_remw  | inst_remuw ;
+assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | inst_sd   | 
+                inst_lb   | inst_lh    | inst_lw    | inst_lbu   | inst_lhu  | inst_addi | 
+                inst_lwu  | inst_ld    | inst_sb    | inst_sh    | inst_sw   | inst_addiw;
 assign op_sub = inst_sub  | inst_subw;
-assign op_slt = inst_slti | inst_sltiu | inst_slt | inst_sltu;
+assign op_slt = inst_slti | inst_slt;
+assign op_sltu= inst_sltiu| inst_sltu;
 assign op_and = inst_andi | inst_and;
 assign op_or  = inst_ori  | inst_or;
 assign op_xor = inst_xori | inst_xor;
 assign op_sll = inst_slli | inst_slliw | inst_sll | inst_sllw;
 assign op_srl = inst_srli | inst_srliw | inst_srl | inst_srlw;
 assign op_sra = inst_srai | inst_sraiw | inst_sra | inst_sraw;
-assign op_lui = inst_lui;
-assign id_rf_we = !(inst_sb || inst_sh || inst_sw || inst_sd || inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu || inst_jal || inst_jalr);
+assign id_rf_we  = !(inst_sb || inst_sh    || inst_sw   || inst_sd    || inst_beq  || 
+                    inst_bne || inst_blt   || inst_bge  || inst_bltu  || inst_bgeu );
+assign id_mem_we = inst_sb   || inst_sh    || inst_sw   || inst_sd;
+assign id_mem_re = inst_lb   || inst_lh    || inst_lw   || inst_lbu   || inst_lhu  || inst_lwu   || inst_ld;
+assign src_shamt = inst_slli || inst_slliw || inst_srli || inst_srliw || inst_srai || inst_sraiw; 
+assign src_pc    = inst_jal  || inst_jalr  || inst_auipc;
+assign src_imm_u = inst_lui  || inst_auipc;
+assign src_4     = inst_jal  || inst_jalr;
+assign src_0     = inst_lui;
+assign src_imm_i = inst_lb   || inst_lh    || inst_lw   || inst_lbu   || inst_lhu  || inst_lwu  ||
+                   inst_ld   || inst_addi  || inst_addiw|| inst_slti  || inst_sltiu|| inst_xori || inst_ori || inst_andi;
+assign src_imm_s = inst_sb   || inst_sh    || inst_sw   || inst_sd;
+assign res_sext  = inst_lb   || inst_lh    || inst_lw   ||
+                   inst_addiw|| inst_slliw || inst_srliw|| inst_sraiw || inst_addw || inst_subw || inst_sllw||
+                   inst_srlw || inst_sraw  || inst_mulw || inst_divw  || inst_divuw|| inst_remw || inst_remuw;
+assign res_zext  = inst_lbu  || inst_lhu   || inst_lwu;
+assign id_mem_bytes = (inst_lb || inst_lbu || inst_sb) ? 2'b00 :
+                      (inst_lh || inst_lhu || inst_sh) ? 2'b01 :
+                      (inst_lw || inst_lwu || inst_sw) ? 2'b10 :
+                                                         2'b11 ;
 
 //read from regfile
 ysyx_22041752_rf U_YSYX_22041752_RF_0(
@@ -352,7 +460,11 @@ assign rs2_value = es_rs2_hazard ? es_wreg_data :
 wire rs1_eq_rs2 ;
 wire rs1_l_rs2  ;
 wire rs1u_l_rs2u;
+wire [`RF_DATA_WD-1:0] bt_a;
+wire [`RF_DATA_WD-1:0] bt_b;
+wire [`RF_DATA_WD-1:0] bc_r;
 
+assign rs1_l_rs2  = bc_r[`RF_DATA_WD-1];
 assign rs1_eq_rs2 = rs1_value == rs2_value;
 assign br_taken = (   inst_beq  &&  rs1_eq_rs2
                    || inst_bne  && !rs1_eq_rs2
@@ -364,10 +476,26 @@ assign br_taken = (   inst_beq  &&  rs1_eq_rs2
 				   || inst_jalr
                   ) && ds_valid;
 
-assign br_target = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu) 
-										  ? (ds_pc + {{51{imm_b[12]}},imm_b}) :
-                   inst_jalr ? (rs1_value + {{52{imm_i[11]}}, imm_i}) :
-                                      ds_pc + {{43{imm_j[20]}}, imm_j};
+ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
+    .a                              ( rs1_value   ),
+    .b                              ( rs2_value   ),
+    .sub                            ( 1'b1        ),
+    .cout                           (~rs1u_l_rs2u ),
+    .result                         ( bc_r        )
+);
 
+assign bt_a = inst_jalr ? rs1_value : ds_pc;
+assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu) ? {{51{imm_b[12]}},imm_b} :
+               inst_jalr                                                               ? {{52{imm_i[11]}},imm_i} :
+                                                                                         {{43{imm_j[20]}},imm_j} ;
+
+/* verilator lint_off PINCONNECTEMPTY */
+ysyx_22041752_aser64 U_YSYX_22041752_ASER64_1(
+    .a                              ( bt_a      ),
+    .b                              ( bt_b      ),
+    .sub                            ( 1'0       ),
+    .cout                           (           ),
+    .result                         ( br_target )
+);
 
 endmodule

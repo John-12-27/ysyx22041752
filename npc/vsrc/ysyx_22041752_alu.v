@@ -1,0 +1,88 @@
+// +FHDR----------------------------------------------------------------------------
+//                 Copyright (c) 2022 
+//                       ALL RIGHTS RESERVED
+// ---------------------------------------------------------------------------------
+// Filename      : ysyx_22041752_alu.v
+// Author        : Cw
+// Created On    : 2022-11-19 18:06
+// Last Modified : 2022-11-19 20:20
+// ---------------------------------------------------------------------------------
+// Description   : 
+//
+//
+// -FHDR----------------------------------------------------------------------------
+`include "ysyx_22041752_mycpu.vh"
+
+module ysyx_22041752_alu(
+    //input  wire        clk         ,
+    //input  wire        reset       , 
+    //input  wire        op_mul      ,     
+    //input  wire        op_div      ,
+    //input  wire        op_rem      ,
+    input  wire        op_add      ,
+    input  wire        op_sub      ,
+    input  wire        op_slt      ,
+    input  wire        op_sltu     ,
+    input  wire        op_and      ,
+    input  wire        op_or       ,
+    input  wire        op_xor      ,
+    input  wire        op_sll      ,
+    input  wire        op_srl      ,
+    input  wire        op_sra      ,
+    input  wire [63:0] alu_src1    ,
+    input  wire [63:0] alu_src2    ,
+    output wire [63:0] alu_result  ,
+    output wire [63:0] mem_result  
+    //output wire [63:0] mul_result
+);
+
+wire [ 63:0] r_slt; 
+wire [ 63:0] r_and;
+wire [ 63:0] r_or ;
+wire [ 63:0] r_xor;
+wire [ 63:0] r_sll; 
+wire [ 63:0] r_srl; 
+wire [127:0] r_sra; 
+
+// 64-bit adder
+wire [63:0] adder_a;
+wire [63:0] adder_b;
+wire        adder_cin;
+wire [63:0] adder_result;
+wire        adder_cout;
+
+assign adder_a   = alu_src1;
+assign adder_b   = adder_cin ? ~alu_src2 : alu_src2;
+assign adder_cin = op_sub | op_slt;
+ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
+    .a          ( adder_a      ),
+    .b          ( adder_b      ),
+    .sub        ( adder_cin    ),
+    .cout       ( adder_cout   ),
+    .result     ( adder_result )
+);
+
+// SLT result
+assign r_slt[63:1] = 63'b0;
+assign r_slt[0]    = op_sltu ? ~adder_cout : adder_result[63];
+
+// bitwise operation
+assign r_and = alu_src1 &  alu_src2;
+assign r_or  = alu_src1 |  alu_src2; 
+assign r_xor = alu_src1 ^  alu_src2; 
+assign r_sll = alu_src1 << alu_src2; 
+assign r_srl = alu_src1 >> alu_src2; 
+assign r_sra = {{64{alu_src1[63]}}, alu_src1} >> alu_src2;
+
+assign alu_result = ({64{op_add|op_sub }} & adder_result)
+                  | ({64{op_slt|op_sltu}} & r_slt       )
+                  | ({64{op_and        }} & r_and       )
+                  | ({64{op_or         }} & r_or        )
+                  | ({64{op_xor        }} & r_xor       )
+                  | ({64{op_sll        }} & r_sll       )
+                  | ({64{op_srl        }} & r_srl       )
+                  | ({64{op_sra        }} & r_sra[63:0] );
+
+assign mem_result = adder_result;
+
+endmodule

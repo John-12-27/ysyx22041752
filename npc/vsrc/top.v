@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2022-11-18 09:58
+// Last Modified : 2022-11-19 16:15
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -58,8 +58,10 @@ wire [63:0] mul_result;
 wire [63:0] div_result;
 wire [63:0] div_complete;
 
+
+wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0];
 // IF stage
-ysyx_22041752_IFU U_IF(
+ysyx_22041752_IFU U_IF_0(
     .clk            (clk            ),
     .reset          (reset          ),
     //allowin
@@ -69,35 +71,29 @@ ysyx_22041752_IFU U_IF(
     //outputs
     .fs_to_ds_valid (fs_to_ds_valid ),
     .fs_to_ds_bus   (fs_to_ds_bus   ),
-    // inst sram interface
-    .inst_sram_en   (inst_sram_en   ),
-    .inst_sram_wen  (inst_sram_wen  ),
-    .inst_sram_addr (inst_sram_addr ),
-    .inst_sram_wdata(inst_sram_wdata),
-    .inst_sram_rdata(inst_sram_rdata)
+
+    .inst_en        (),
+    .inst_addr      (),
+    .inst_rdata     ()
 );
 // ID stage
-id_stage id_stage(
-    .clk            (clk            ),
-    .reset          (reset          ),
-    //allowin
-    .es_allowin     (es_allowin     ),
-    .ds_allowin     (ds_allowin     ),
-    //from fs
-    .fs_to_ds_valid (fs_to_ds_valid ),
-    .fs_to_ds_bus   (fs_to_ds_bus   ),
-    //to es
-    .ds_to_es_valid (ds_to_es_valid ),
-    .ds_to_es_bus   (ds_to_es_bus   ),
-    //to fs
-    .br_bus         (br_bus         ),
-    //to rf: for write back
-    .ws_to_rf_bus   (ws_to_rf_bus   ),
-	//forward_bus
-	.es_forward_bus (es_forward_bus ),
-	.ms_forward_bus (ms_forward_bus ),
-	.ws_forward_bus (ws_forward_bus )
+ysyx_22041752_IDU U_IDU_0(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .es_allowin                     ( es_allowin                    ),
+    .ds_allowin                     ( ds_allowin                    ),
+    .fs_to_ds_valid                 ( fs_to_ds_valid                ),
+    .fs_to_ds_bus                   ( fs_to_ds_bus                  ),
+    .ds_to_es_valid                 ( ds_to_es_valid                ),
+    .ds_to_es_bus                   ( ds_to_es_bus                  ),
+    .br_bus                         ( br_bus                        ),
+    .ws_to_rf_bus                   ( ws_to_rf_bus                  ),
+    .es_forward_bus                 ( es_forward_bus                ),
+    .ms_forward_bus                 ( ms_forward_bus                ),
+    .ws_forward_bus                 ( ws_forward_bus                ),
+    .dpi_regs                       ( dpi_regs                      )
 );
+
 // EXE stage
 exe_stage exe_stage(
     .clk            (clk            ),
@@ -157,10 +153,10 @@ wb_stage wb_stage(
 	.ws_forward_bus   (ws_forward_bus)
 );
 
-//dpi_c u_dpi_c(
-    //.inst_i                         (inst),
-    //.dpi_regs                       ( dpi_regs                      ),
-    //.pc                             (addr)
-//);
+dpi_c u_dpi_c(
+    .inst_i                         (inst    ),
+    .dpi_regs                       (dpi_regs),
+    .pc                             (addr    )
+);
 
 endmodule
