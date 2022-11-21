@@ -20,4 +20,5 @@
 extern void reset(int n);
 extern void sim_init(int argc, char** argv);
 extern void exec(uint64_t n, bool batch);
+extern void sim_exit();
 #endif

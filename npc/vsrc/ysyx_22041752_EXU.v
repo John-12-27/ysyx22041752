@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-11-19 20:26
+// Last Modified : 2022-11-21 15:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -170,6 +170,7 @@ ysyx_22041752_alu U_YSYX_22041752_ALU_0(
     .op_sll          ( op_sll         ),
     .op_srl          ( op_srl         ),
     .op_sra          ( op_sra         ),
+    .res_sext        ( res_sext       ),
     .alu_src1        ( alu_src1       ),
     .alu_src2        ( alu_src2       ),
     .alu_result      ( alu_result     ),
@@ -180,7 +181,7 @@ assign data_sram_en  = 1'b1;
 assign data_sram_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                        es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
                        es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
-               8'h01 ;
+                                                                        8'h01 ;
 
 assign data_sram_wdata = rs2_value;
 //forward_bus

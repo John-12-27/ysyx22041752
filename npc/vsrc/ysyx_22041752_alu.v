@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2022-11-19 20:20
+// Last Modified : 2022-11-21 15:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,6 +29,7 @@ module ysyx_22041752_alu(
     input  wire        op_sll      ,
     input  wire        op_srl      ,
     input  wire        op_sra      ,
+    input  wire        res_sext    ,
     input  wire [63:0] alu_src1    ,
     input  wire [63:0] alu_src2    ,
     output wire [63:0] alu_result  ,
@@ -74,14 +75,16 @@ assign r_sll = alu_src1 << alu_src2;
 assign r_srl = alu_src1 >> alu_src2; 
 assign r_sra = {{64{alu_src1[63]}}, alu_src1} >> alu_src2;
 
-assign alu_result = ({64{op_add|op_sub }} & adder_result)
-                  | ({64{op_slt|op_sltu}} & r_slt       )
-                  | ({64{op_and        }} & r_and       )
-                  | ({64{op_or         }} & r_or        )
-                  | ({64{op_xor        }} & r_xor       )
-                  | ({64{op_sll        }} & r_sll       )
-                  | ({64{op_srl        }} & r_srl       )
-                  | ({64{op_sra        }} & r_sra[63:0] );
+wire [63:0] res;
+assign res = ({64{op_add|op_sub }}&{adder_result[63:0]})
+            |({64{op_slt|op_sltu}}&{r_slt       [63:0]})
+            |({64{op_and        }}&{r_and       [63:0]})
+            |({64{op_or         }}&{r_or        [63:0]})
+            |({64{op_xor        }}&{r_xor       [63:0]})
+            |({64{op_sll        }}&{r_sll       [63:0]})
+            |({64{op_srl        }}&{r_srl       [63:0]})
+            |({64{op_sra        }}&{r_sra       [63:0]});
+assign alu_result = res_sext ? {{32{res[31]}}, res[31:0]} : res;
 
 assign mem_result = adder_result;
 

@@ -53,6 +53,7 @@ VERILATOR_FLAGS += --trace
 VERILATOR_FLAGS += --assert
 # Generate coverage analysis
 VERILATOR_FLAGS += --coverage
+VERILATOR_FLAGS += -Wno-EOFNEWLINE 
 # Run Verilator in debug mode
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
@@ -69,7 +70,7 @@ $(VERILATE): $(VSRCS) $(CXXSRCS)
 	@rm -rf $(OBJ_DIR)
 	@mkdir -p $(BUILD_DIR)
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) --top-module $(TOPNAME) --Mdir $(OBJ_DIR) $^
+	$(VERILATOR) $(VERILATOR_FLAGS) -I./vsrc --top-module $(TOPNAME) --Mdir $(OBJ_DIR) $^
 
 #$(OBJ_DIR)/%.o: %.c 
 
@@ -90,6 +91,7 @@ sim: build
 	@rm -rf logs
 	@mkdir -p logs
 	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
+	@gtkwave ./logs/dump.vcd
 
 gdb: build
 	@echo

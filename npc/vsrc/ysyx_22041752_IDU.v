@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-19 20:26
+// Last Modified : 2022-11-21 21:49
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -33,7 +33,8 @@ module ysyx_22041752_IDU (
 	input  wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus,
 	input  wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus,
 
-    output wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0]
+    output wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0],
+    output wire [                 0:0]    stop
 );
 
 reg  ds_valid   ;
@@ -239,7 +240,7 @@ wire inst_remw   ;
 wire inst_remuw  ;
 wire inst_ebreak ;
 wire inst_invalid;
-
+assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
 assign inst_invalid = !(inst_lui   || 
                         inst_auipc || 
                         inst_jal   || 
@@ -460,10 +461,12 @@ assign rs2_value = es_rs2_hazard ? es_wreg_data :
 wire rs1_eq_rs2 ;
 wire rs1_l_rs2  ;
 wire rs1u_l_rs2u;
+wire bc_co      ;
 wire [`RF_DATA_WD-1:0] bt_a;
 wire [`RF_DATA_WD-1:0] bt_b;
 wire [`RF_DATA_WD-1:0] bc_r;
 
+assign rs1u_l_rs2u=~bc_co;
 assign rs1_l_rs2  = bc_r[`RF_DATA_WD-1];
 assign rs1_eq_rs2 = rs1_value == rs2_value;
 assign br_taken = (   inst_beq  &&  rs1_eq_rs2
@@ -480,7 +483,7 @@ ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
     .a                              ( rs1_value   ),
     .b                              ( rs2_value   ),
     .sub                            ( 1'b1        ),
-    .cout                           (~rs1u_l_rs2u ),
+    .cout                           ( bc_co       ),
     .result                         ( bc_r        )
 );
 

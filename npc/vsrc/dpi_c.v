@@ -5,16 +5,19 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2022-11-12 19:42
+// Last Modified : 2022-11-21 21:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
+`include "ysyx_22041752_mycpu.vh"
+
 module dpi_c (
-    input  wire[31: 0] inst_i,
-    input  wire[63: 0] dpi_regs [31:0],
-    input  wire[63: 0] pc
+    input  wire                  stop           ,
+    input  wire                  reset          ,
+    input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0],
+    input  wire[`PC_WD     -1:0] pc
 );
 
 reg [63:0] rf[31:0];
@@ -28,14 +31,11 @@ generate
     end
 endgenerate
 
-wire [0:0] ebreak;    
-assign ebreak = inst_i == 32'b0000000_00001_00000_000_00000_1110011;
-
-import "DPI-C" context function void halt(input logic [0:0] s[]);
+import "DPI-C" context function void halt(input logic [63:0] s[]);
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
 import "DPI-C" context function void set_pc_ptr(input logic [63:0] a[]);
 initial set_gpr_ptr(rf);
 initial set_pc_ptr(pc);
-initial halt(ebreak);
+initial halt(stop);
 
 endmodule

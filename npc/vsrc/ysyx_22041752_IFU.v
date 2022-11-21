@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2022-11-19 16:13
+// Last Modified : 2022-11-21 19:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -25,8 +25,8 @@ module ysyx_22041752_IFU (
     output wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     // inst sram interface
     output wire                         inst_en   ,
-    output wire [`PC_WD-1:0]            inst_addr ,
-    input  wire [`INST_WD-1:0]          inst_rdata
+    output wire [`SRAM_ADDR_WD-1:0]     inst_addr ,
+    input  wire [`SRAM_DATA_WD-1:0]     inst_rdata
 );
 
 reg         fs_valid;
@@ -53,7 +53,7 @@ assign nextpc       = br_taken ? br_target : seq_pc;
 // IF stage
 assign fs_ready_go    = 1'b1;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
-assign fs_to_ds_valid =  fs_valid && fs_ready_go;
+assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~br_taken;
 always @(posedge clk) begin
     if (reset) begin
         fs_valid <= 1'b0;

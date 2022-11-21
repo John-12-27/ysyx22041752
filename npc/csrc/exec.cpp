@@ -28,10 +28,10 @@ VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
 Vtop* top;
 
-bool *halt_flag = NULL;
+uint64_t *halt_flag = NULL;
 extern "C" void halt(const svOpenArrayHandle r)
 {
-    halt_flag = (bool *)(((VerilatedDpiOpenVar*)r)->datap());
+    halt_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
 
 static void step_and_dump_wave()
@@ -43,13 +43,13 @@ static void step_and_dump_wave()
 
 static void single_cycle()
 {
-    top->clk = 0; top->eval();	
+    top->clk = 1; top->eval();	
     step_and_dump_wave();
-    top->clk = 1; top->eval();
+    top->clk = 0; top->eval();
     step_and_dump_wave();
 }
 
-static void sim_exit()
+void sim_exit()
 {
     step_and_dump_wave();
     tfp->close();
@@ -57,14 +57,17 @@ static void sim_exit()
 
 static void exec_once()
 {
-    S.pc = top->addr;
-    S.snpc = top->addr;
-    top->inst_i = read_mem(top->addr, 4);
-    S.inst = top->inst_i;
-    printf("pc=0x%lx\t\tinst=0x%x\n", top->addr, top->inst_i);
+    S.pc = top->inst_sram_addr;
+    S.snpc = top->inst_sram_addr;
+    //if(top->inst_sram_en && top->clk == 0)
+    //{
+        top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
+    //}
+    S.inst = top->inst_sram_rdata;
+    printf("pc=0x%lx\t\tinst=0x%lx\n", top->inst_sram_addr, top->inst_sram_rdata);
     single_cycle();
     S.snpc += 4;
-    S.dnpc = top->addr;
+    S.dnpc = top->inst_sram_addr;
     if(log_enable(S.pc))
     {
         log_inst(&S);
@@ -73,12 +76,12 @@ static void exec_once()
 
 void reset(int n)
 {
-    top->rst = 1;
+    top->reset = 1;
     while(n-- > 0)
     {
         single_cycle();
     }
-    top->rst = 0;
+    top->reset = 0;
 }
 
 void sim_init(int argc, char** argv)
@@ -108,13 +111,15 @@ void exec(uint64_t n, bool batch)
         while(1)
         {
             exec_once();
-            if(*halt_flag)
+
+            if(*halt_flag == 1)
             {
                 npc_state.state = NPC_END;
                 npc_state.halt_pc = *cpu_pc;
                 npc_state.halt_ret = cpu_gpr[10];
                 break;
             }
+
         }
     }
     else
@@ -122,13 +127,15 @@ void exec(uint64_t n, bool batch)
         while(n--)
         {
             exec_once();
-            if(*halt_flag)
+
+            if(*halt_flag == 1)
             {
                 npc_state.state = NPC_END;
                 npc_state.halt_pc = *cpu_pc;
                 npc_state.halt_ret = cpu_gpr[10];
                 break;
             }
+
         }
     }
     switch (npc_state.state) 
@@ -141,5 +148,4 @@ void exec(uint64_t n, bool batch)
         case NPC_QUIT: 
             output_iRingBuf();
     }
-    sim_exit();
 }
