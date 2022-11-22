@@ -72,7 +72,7 @@ static void RingBufLoad(char logbuf[], bool mload)
     static int icnt = 0;
     if(!mload)
     {
-        if(!ifull && icnt == 10)
+        if(!ifull && icnt == IRINGBUF_DEPTH)
         {
             ifull = true;
         }
@@ -89,7 +89,7 @@ static void RingBufLoad(char logbuf[], bool mload)
     }
     else
     {
-        if(!mfull && mcnt == 10)
+        if(!mfull && mcnt == MRINGBUF_DEPTH)
         {
             mfull = true;
         }
@@ -129,7 +129,7 @@ void log_inst(Decode *s)
 {
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = s->snpc - s->pc;
+    int ilen = 4;//s->snpc - s->pc;
     int i;
     uint8_t *inst = (uint8_t *)&s->inst;
     for (i = ilen - 1; i >= 0; i --) 

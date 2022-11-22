@@ -22,32 +22,36 @@
 #include "npc_state.h"
 #include "color.h"
 #include "tracer.h"
-#include "verilated_dpi.h"
+//#include "verilated_dpi.h"
+#include "Vtop__Dpi.h"
 
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
 Vtop* top;
 
-uint64_t *halt_flag = NULL;
-uint64_t *valid_flag = NULL;
-word_t *inst = NULL;
-uint64_t *cpu_dnpc  = NULL;
-extern "C" void halt(const svOpenArrayHandle r)
-{
-    halt_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
-extern "C" void valid(const svOpenArrayHandle r)
-{
-    valid_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
-extern "C" void set_dnpc_ptr(const svOpenArrayHandle r)
-{
-    cpu_dnpc= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
-extern "C" void set_inst_ptr(const svOpenArrayHandle r)
-{
-    inst= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
+//uint64_t *halt_flag = NULL;
+//uint64_t *valid_flag = NULL;
+//word_t *inst = NULL;
+//uint64_t *cpu_dnpc  = NULL;
+//extern "C" void halt(const svOpenArrayHandle r)
+//{
+    //halt_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+//}
+//extern "C" void valid(const svOpenArrayHandle r)
+//{
+    //valid_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+//}
+//extern "C" void set_dnpc_ptr(const svOpenArrayHandle r)
+//{
+    //cpu_dnpc= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+//}
+//extern "C" void set_inst_ptr(const svOpenArrayHandle r)
+//{
+    //inst= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+//}
+
+uint8_t halt_flag  = 0;
+uint8_t valid_flag = 0;
 
 static void step_and_dump_wave()
 {
@@ -72,30 +76,19 @@ void sim_exit()
 
 static void exec_once()
 {
-    //S.pc = top->inst_sram_addr;
-    //S.snpc = top->inst_sram_addr;
-    //if(top->inst_sram_en && top->clk == 0)
-    //{
-        top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
-    //}
-    //S.inst = top->inst_sram_rdata;
-    //printf("pc=0x%lx\t\tinst=0x%lx\n", top->inst_sram_addr, top->inst_sram_rdata);
+    top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
     single_cycle();
-    S.pc = *cpu_pc;
-    S.inst = *inst;
-    S.snpc += 4;
-    S.dnpc = *cpu_dnpc;
 
-    printf("valid_flag is %lx\n", *valid_flag);
-    printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
+    record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
 
-    //if(*valid_flag == 1)
-    //{
-    ////if(log_enable(S.pc))
-    ////{
-        //log_inst(&S);
-    ////}
-    //}
+    if(valid_flag)
+    {
+        //printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
+        if(log_enable(S.pc))
+        {
+            log_inst(&S);
+        }
+    }
 
 }
 
@@ -123,6 +116,7 @@ void sim_init(int argc, char** argv)
 
 void exec(uint64_t n, bool batch)
 {
+    svSetScope(svGetScopeFromName("TOP.top.u_dpi_c"));
     switch (npc_state.state) 
     {
         case NPC_END: 
@@ -137,10 +131,10 @@ void exec(uint64_t n, bool batch)
         {
             exec_once();
 
-            if(*halt_flag == 1)
+            if(halt_flag)
             {
                 npc_state.state = NPC_END;
-                npc_state.halt_pc = *cpu_pc;
+                npc_state.halt_pc = S.pc;
                 npc_state.halt_ret = cpu_gpr[10];
                 break;
             }
@@ -153,10 +147,10 @@ void exec(uint64_t n, bool batch)
         {
             exec_once();
 
-            if(*halt_flag == 1)
+            if(halt_flag)
             {
                 npc_state.state = NPC_END;
-                npc_state.halt_pc = *cpu_pc;
+                npc_state.halt_pc = S.pc;
                 npc_state.halt_ret = cpu_gpr[10];
                 break;
             }

@@ -19,7 +19,7 @@
 #include "typedef.h"
 #include "npc_state.h"
 
-#define IRINGBUF_DEPTH 100
+#define IRINGBUF_DEPTH 10
 #define MRINGBUF_DEPTH 10
 #define CONFIG_TRACE_START   0x80000000
 #define CONFIG_TRACE_END     0x80000114

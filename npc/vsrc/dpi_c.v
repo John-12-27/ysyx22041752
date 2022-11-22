@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2022-11-22 17:35
+// Last Modified : 2022-11-22 21:04
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -63,22 +63,22 @@ always @(posedge clk) begin
     inst_r2 <= inst_r1;
 end
 
-wire [63:0] Halt;
-wire [63:0] Valid;
-assign Halt  = {63'b0, stop_r2};
-assign Valid = {63'b0, ws_valid};
+export "DPI-C" function record;
 
-import "DPI-C" context function void halt(input logic [63:0] s[]);
-import "DPI-C" context function void valid(input logic [63:0] s[]);
+function void record();
+    output bit     halt ;
+    output bit     valid;
+    output longint pc   ;
+    output longint dnpc ;
+    output int     inst ;
+    halt  = stop_r2 ;
+    valid = ws_valid;
+    pc    = debug_wb_pc;
+    dnpc  = debug_ms_pc;
+    inst  = inst_r2 ;
+endfunction
+
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
-import "DPI-C" context function void set_pc_ptr(input logic [63:0] a[]);
-import "DPI-C" context function void set_dnpc_ptr(input logic [63:0] a[]);
-import "DPI-C" context function void set_inst_ptr(input logic [63:0] a[]);
 initial set_gpr_ptr(rf);
-initial set_pc_ptr(debug_wb_pc);
-initial set_dnpc_ptr(debug_ms_pc);
-initial halt(Halt);
-initial valid(Valid);
-initial set_inst_ptr(inst_r2);
 
 endmodule

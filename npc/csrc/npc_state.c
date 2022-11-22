@@ -17,14 +17,15 @@
 
 Decode S;
 uint64_t *cpu_gpr = NULL;
-uint64_t *cpu_pc  = NULL;
+/*uint64_t *cpu_pc  = NULL;*/
 
 NPCState npc_state = { .state = NPC_STOP, .halt_pc = 0, .halt_ret = 0};
 
-extern "C" void set_pc_ptr(const svOpenArrayHandle r)
-{
-    cpu_pc = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
+/*extern "C" void set_pc_ptr(const svOpenArrayHandle r)*/
+/*{*/
+    /*cpu_pc = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());*/
+/*}*/
+
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
 {
     cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
@@ -47,7 +48,7 @@ void reg_display()
         printf("%s\t\t%d\t0x%lx\n",regs[i],i,cpu_gpr[i]);
     }
     printf("======================================\n");
-    printf("PC\t0x%lx\n",*cpu_pc);
+    printf("PC\t0x%lx\n",S.pc);
 }
 
 int is_exit_status_bad() 
