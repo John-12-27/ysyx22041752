@@ -29,9 +29,24 @@ VerilatedVcdC*    tfp     ;
 Vtop* top;
 
 uint64_t *halt_flag = NULL;
+uint64_t *valid_flag = NULL;
+word_t *inst = NULL;
+uint64_t *cpu_dnpc  = NULL;
 extern "C" void halt(const svOpenArrayHandle r)
 {
     halt_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+extern "C" void valid(const svOpenArrayHandle r)
+{
+    valid_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+extern "C" void set_dnpc_ptr(const svOpenArrayHandle r)
+{
+    cpu_dnpc= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+extern "C" void set_inst_ptr(const svOpenArrayHandle r)
+{
+    inst= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
 
 static void step_and_dump_wave()
@@ -57,21 +72,31 @@ void sim_exit()
 
 static void exec_once()
 {
-    S.pc = top->inst_sram_addr;
-    S.snpc = top->inst_sram_addr;
+    //S.pc = top->inst_sram_addr;
+    //S.snpc = top->inst_sram_addr;
     //if(top->inst_sram_en && top->clk == 0)
     //{
         top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
     //}
-    S.inst = top->inst_sram_rdata;
-    printf("pc=0x%lx\t\tinst=0x%lx\n", top->inst_sram_addr, top->inst_sram_rdata);
+    //S.inst = top->inst_sram_rdata;
+    //printf("pc=0x%lx\t\tinst=0x%lx\n", top->inst_sram_addr, top->inst_sram_rdata);
     single_cycle();
+    S.pc = *cpu_pc;
+    S.inst = *inst;
     S.snpc += 4;
-    S.dnpc = top->inst_sram_addr;
-    if(log_enable(S.pc))
-    {
-        log_inst(&S);
-    }
+    S.dnpc = *cpu_dnpc;
+
+    printf("valid_flag is %lx\n", *valid_flag);
+    printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
+
+    //if(*valid_flag == 1)
+    //{
+    ////if(log_enable(S.pc))
+    ////{
+        //log_inst(&S);
+    ////}
+    //}
+
 }
 
 void reset(int n)
