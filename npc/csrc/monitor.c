@@ -3,16 +3,19 @@
 #include "monitor.h"
 #include "sdb.h"
 #include "tracer.h"
+#include "memory.h"
 
-char *img_file = NULL;
-static char *ilog_file= NULL;
-static char *flog_file= NULL;
+       char *img_file      = NULL;
+static char *ilog_file     = NULL;
+static char *flog_file     = NULL;
 static char *elfInput_file = NULL;
-static char *mlog_file = NULL;
+static char *mlog_file     = NULL;
+static char *diff_so_file  = NULL;
+static int   difftest_port = 1234;
 
-bool inputL = false;
-bool inputM = false;
-bool inputF = false;
+bool inputL       = false;
+bool inputM       = false;
+bool inputF       = false;
 bool NVBOARD_MODE = false;
 bool BATCH_MODE   = false;
 static int parse_args(int argc, char *argv[])
@@ -24,6 +27,7 @@ static int parse_args(int argc, char *argv[])
         {"ftrace "  , required_argument, NULL, 'f'},
         {"log    "  , required_argument, NULL, 'l'},
         {"diff   "  , required_argument, NULL, 'd'},
+        {"port   "  , required_argument, NULL, 'p'},
         {"nvboard"  , no_argument      , NULL, 'n'},
         {"help   "  , no_argument      , NULL, 'h'},
         {0          , 0                , NULL,  0 },
@@ -33,8 +37,9 @@ static int parse_args(int argc, char *argv[])
     {
         switch(o)
         {
-            case 'b': BATCH_MODE   = true; break;
-            case 'n': NVBOARD_MODE = true; break;
+            case 'b': BATCH_MODE   = true;   break;
+            case 'n': NVBOARD_MODE = true;   break;
+            case 'p': sscanf(optarg, "%d", &difftest_port); break;
             case 'l': inputL = true; ilog_file = optarg; break;
             case 'f': if(flog_file == NULL)
                       {
@@ -46,10 +51,18 @@ static int parse_args(int argc, char *argv[])
                           inputF = true;
                       }break;
             case 'm': inputM = true; mlog_file = optarg; break;
+            case 'd': diff_so_file = optarg; break;
             case  1 : img_file = optarg; return 0;
             default :
-                      printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-                      printf("-n, --nvboard        run with nvboard_mode\n");
+                printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+                printf("\t-b,--batch              run with batch mode\n");
+                printf("\t-n, --nvboard        run with nvboard_mode\n");
+                printf("\t-m,--mtrace=FILE        output mtrace to FILE\n");
+                printf("\t-f,--ftrace=FILE        input a FILE and enable the tracer of functions\n");
+                printf("\t-l,--log=FILE           output log to FILE\n");
+                printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
+                printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+                printf("\n");
         }
     }
     return 0;

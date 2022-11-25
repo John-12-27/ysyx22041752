@@ -18,9 +18,9 @@
 
 uint8_t mem[MEMSIZE] = {};
 
-long load_img()
+long load_img(char *img)
 {
-    if(img_file == NULL)
+    if(img == NULL)
     {
         printf("\n");
         printf("====== No image is given. ======\n");
@@ -28,7 +28,7 @@ long load_img()
         return 0;
     }
 
-    FILE *fp = fopen(img_file, "rb");
+    FILE *fp = fopen(img, "rb");
     assert(fp != NULL);
 
     fseek(fp, 0, SEEK_END);
@@ -36,7 +36,7 @@ long load_img()
     assert(size < MEMSIZE);
 
     printf("\n");
-    printf("====== The image is %s, size = %ld. ======\n", img_file, size);
+    printf("====== The image is %s, size = %ld. ======\n", img, size);
     printf("\n");
 
     fseek(fp, 0, SEEK_SET);

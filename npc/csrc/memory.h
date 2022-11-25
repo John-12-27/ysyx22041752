@@ -19,6 +19,6 @@
 #define MBASEADDR 0x80000000
 extern uint8_t mem[MEMSIZE];
 
-extern long load_img();
+extern long load_img(char *img);
 extern word_t read_mem(paddr_t addr, uint8_t len);
 #endif
