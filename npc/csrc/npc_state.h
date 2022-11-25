@@ -16,13 +16,18 @@
 #include "typedef.h"
 
 typedef struct Decode {
-  vaddr_t pc; 
-  vaddr_t snpc; // static next pc
-  vaddr_t dnpc; // dynamic next pc
-  word_t inst;
-  char logbuf[256];
-  char mlogbuf[256];
+    vaddr_t pc; 
+    vaddr_t snpc; // static next pc
+    vaddr_t dnpc; // dynamic next pc
+    word_t inst;
+    char logbuf[256];
+    char mlogbuf[256];
 } Decode;
+
+typedef struct CPU_state {
+    word_t gpr[32];
+    vaddr_t pc; 
+} CPU_state;
 
 enum 
 { 
@@ -41,6 +46,7 @@ typedef struct
 } NPCState;
 
 extern Decode S;
+extern CPU_state cpu;
 extern NPCState npc_state;
 extern const char *regs[];
 extern uint64_t *cpu_gpr;

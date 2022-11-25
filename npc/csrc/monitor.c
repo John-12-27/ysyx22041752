@@ -14,6 +14,7 @@ static char *diff_so_file  = NULL;
 static int   difftest_port = 1234;
 
 bool inputL       = false;
+bool inputD       = false;
 bool inputM       = false;
 bool inputF       = false;
 bool NVBOARD_MODE = false;
@@ -51,7 +52,7 @@ static int parse_args(int argc, char *argv[])
                           inputF = true;
                       }break;
             case 'm': inputM = true; mlog_file = optarg; break;
-            case 'd': diff_so_file = optarg; break;
+            case 'd': inputD = true; diff_so_file = optarg; break;
             case  1 : img_file = optarg; return 0;
             default :
                 printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);

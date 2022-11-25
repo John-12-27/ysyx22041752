@@ -16,6 +16,7 @@
 #include "verilated_dpi.h"
 
 Decode S;
+CPU_state cpu;
 uint64_t *cpu_gpr = NULL;
 /*uint64_t *cpu_pc  = NULL;*/
 

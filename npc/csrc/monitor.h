@@ -18,6 +18,7 @@
 
 extern char *img_file;
 extern bool inputL;
+extern bool inputD;
 extern bool inputM;
 extern bool inputF;
 extern bool NVBOARD_MODE;

@@ -24,31 +24,11 @@
 #include "tracer.h"
 //#include "verilated_dpi.h"
 #include "Vtop__Dpi.h"
+#include "diff_dut.h"
 
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
 Vtop* top;
-
-//uint64_t *halt_flag = NULL;
-//uint64_t *valid_flag = NULL;
-//word_t *inst = NULL;
-//uint64_t *cpu_dnpc  = NULL;
-//extern "C" void halt(const svOpenArrayHandle r)
-//{
-    //halt_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-//}
-//extern "C" void valid(const svOpenArrayHandle r)
-//{
-    //valid_flag = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-//}
-//extern "C" void set_dnpc_ptr(const svOpenArrayHandle r)
-//{
-    //cpu_dnpc= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-//}
-//extern "C" void set_inst_ptr(const svOpenArrayHandle r)
-//{
-    //inst= (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-//}
 
 uint8_t halt_flag  = 0;
 uint8_t valid_flag = 0;
@@ -84,10 +64,16 @@ static void exec_once()
     if(valid_flag)
     {
         //printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
+        for(int i = 0; i < 32; i++)
+        {
+            cpu.gpr[i] = cpu_gpr[i];
+        }
+        cpu.pc = S.pc;
         if(log_enable(S.pc))
         {
             log_inst(&S);
         }
+        difftest_step(S.pc, S.dnpc);
     }
 
 }
