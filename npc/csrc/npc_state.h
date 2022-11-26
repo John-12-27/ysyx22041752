@@ -45,6 +45,7 @@ typedef struct
     uint32_t halt_ret;
 } NPCState;
 
+
 extern Decode S;
 extern CPU_state cpu;
 extern NPCState npc_state;

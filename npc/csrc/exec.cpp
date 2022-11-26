@@ -19,9 +19,7 @@
 /*#include "Vtop__Dpi.h"*/
 #include "exec.h"
 #include "memory.h"
-#include "npc_state.h"
 #include "color.h"
-#include "tracer.h"
 //#include "verilated_dpi.h"
 #include "Vtop__Dpi.h"
 #include "diff_dut.h"
@@ -60,22 +58,6 @@ static void exec_once()
     single_cycle();
 
     record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
-
-    if(valid_flag)
-    {
-        //printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
-        for(int i = 0; i < 32; i++)
-        {
-            cpu.gpr[i] = cpu_gpr[i];
-        }
-        cpu.pc = S.pc;
-        if(log_enable(S.pc))
-        {
-            log_inst(&S);
-        }
-        difftest_step(S.pc, S.dnpc);
-    }
-
 }
 
 void reset(int n)
@@ -116,15 +98,14 @@ void exec(uint64_t n, bool batch)
         while(1)
         {
             exec_once();
-
-            if(halt_flag)
+            if(trace_diff_watch())
             {
-                npc_state.state = NPC_END;
-                npc_state.halt_pc = S.pc;
-                npc_state.halt_ret = cpu_gpr[10];
                 break;
             }
-
+            if(halt())
+            {
+                break;
+            }
         }
     }
     else
@@ -132,15 +113,14 @@ void exec(uint64_t n, bool batch)
         while(n--)
         {
             exec_once();
-
-            if(halt_flag)
+            if(trace_diff_watch())
             {
-                npc_state.state = NPC_END;
-                npc_state.halt_pc = S.pc;
-                npc_state.halt_ret = cpu_gpr[10];
                 break;
             }
-
+            if(halt())
+            {
+                break;
+            }
         }
     }
     switch (npc_state.state) 

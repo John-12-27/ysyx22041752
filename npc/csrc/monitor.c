@@ -10,8 +10,8 @@ static char *ilog_file     = NULL;
 static char *flog_file     = NULL;
 static char *elfInput_file = NULL;
 static char *mlog_file     = NULL;
-static char *diff_so_file  = NULL;
-static int   difftest_port = 1234;
+       char *diff_so_file  = NULL;
+       int   difftest_port = 1234;
 
 bool inputL       = false;
 bool inputD       = false;

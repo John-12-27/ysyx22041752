@@ -17,6 +17,8 @@
 #include <stdbool.h>
 
 extern char *img_file;
+extern char *diff_so_file ;
+extern int   difftest_port;
 extern bool inputL;
 extern bool inputD;
 extern bool inputM;
