@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2022-11-21 15:39
+// Last Modified : 2022-11-26 22:04
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -54,7 +54,7 @@ wire        adder_cout;
 
 assign adder_a   = alu_src1;
 assign adder_b   = adder_cin ? ~alu_src2 : alu_src2;
-assign adder_cin = op_sub | op_slt;
+assign adder_cin = op_sub | op_slt | op_sltu;
 ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
     .a          ( adder_a      ),
     .b          ( adder_b      ),

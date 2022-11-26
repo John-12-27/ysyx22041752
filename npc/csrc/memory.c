@@ -17,6 +17,7 @@
 #include "monitor.h"
 
 uint8_t mem[MEMSIZE] = {};
+/*uint8_t dmem[MEMSIZE] = {};*/
 
 long load_img(char *img)
 {
@@ -55,6 +56,19 @@ word_t read_mem(paddr_t addr, uint8_t len)
         case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);
         case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
         default: assert(0);
+    }
+    return 0;
+}
+
+word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
+{
+    switch(wen)
+    {
+        case 0x01: *(uint8_t  *)(mem + addr - MBASEADDR) = data; break;
+        case 0x03: *(uint16_t *)(mem + addr - MBASEADDR) = data; break;
+        case 0x0f: *(uint32_t *)(mem + addr - MBASEADDR) = data; break;
+        case 0xff: *(uint64_t *)(mem + addr - MBASEADDR) = data; break;
+        default: assert(0); break;
     }
     return 0;
 }

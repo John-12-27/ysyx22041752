@@ -71,7 +71,10 @@ static bool trace_diff_watch()
             log_inst(&S);
         }
         res = difftest_step(S.pc, S.dnpc);
-        res = checkChange();
+        if(!res)
+        {
+            res = checkChange();
+        }
     }
     return res;
 }
@@ -91,8 +94,24 @@ static bool halt()
 
 static void exec_once()
 {
+    vaddr_t d_addr;
+    uint8_t d_wen = 0;
+    bool    d_en  = false;
+    word_t  d_wdata;
     top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
+    if(top->data_sram_en)
+    {
+        d_en    = top->data_sram_en;
+        d_addr  = top->data_sram_addr;
+        d_wen   = top->data_sram_wen;
+        d_wdata = top->data_sram_wdata;
+    }
     single_cycle();
+    if(d_en)
+    {
+        top->data_sram_rdata = read_mem(d_addr, 8);
+        write_mem(d_addr, d_wdata, d_wen);
+    }
 
     record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
 }

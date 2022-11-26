@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_aser64.v
 // Author        : Cw
 // Created On    : 2022-08-24 09:46
-// Last Modified : 2022-11-19 11:21
+// Last Modified : 2022-11-26 22:00
 // ---------------------------------------------------------------------------------
 // Description   : 64-bit adder with 4 16-bit carry lookahead adders
 //
@@ -26,17 +26,12 @@ wire        c1 ;
 wire        c2 ;
 wire        c3 ;
 wire [63:0] r  ;
-reg  [63:0] x  ;
-reg  [63:0] y  ;
-always @(a or b or sub) begin
-    x = a;
-end
-always @(a or b or sub) begin
-    if(sub)
-        y = ~b;
-    else
-        y = b;
-end
+wire [63:0] x  ;
+wire [63:0] y  ;
+
+assign x = a;
+assign y = b;
+//assign y = sub ? ~b : b;
 
 ysyx_22041752_adder_p16 #(
     .DATA_LEN                       ( DATA_LEN                     ))
