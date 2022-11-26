@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2022-11-22 20:24
+// Last Modified : 2022-11-26 17:03
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -57,7 +57,6 @@ wire [63:0] div_complete;
 // trace debug interface
 wire [`PC_WD       -1:0] debug_wb_pc      ;
 wire                     debug_ws_valid   ;
-wire [`PC_WD       -1:0] debug_ms_pc      ;
 wire [`INST_WD     -1:0] debug_wb_inst    ;
 wire                     debug_wb_rf_wen  ;
 wire [`RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
@@ -129,9 +128,7 @@ ysyx_22041752_MEU U_MEU_0(
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
     .data_sram_rdata( data_sram_rdata ),
-    .ms_forward_bus ( ms_forward_bus  ),
-
-    .debug_ms_pc    ( debug_ms_pc     )
+    .ms_forward_bus ( ms_forward_bus  )
 );
 
 // WB stage
@@ -143,8 +140,8 @@ ysyx_22041752_WBU U_WBU_0(
     .ms_to_ws_bus      ( ms_to_ws_bus      ),
     .ws_to_rf_bus      ( ws_to_rf_bus      ),
     .ws_forward_bus    ( ws_forward_bus    ),
-    .debug_wb_pc       ( debug_wb_pc       ),
     .debug_ws_valid    ( debug_ws_valid    ),
+    .debug_wb_pc	   ( debug_wb_pc	   ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
     .debug_wb_rf_wdata ( debug_wb_rf_wdata )
@@ -155,7 +152,6 @@ dpi_c u_dpi_c(
     .stop              ( stop              ),
     .ws_valid          ( debug_ws_valid    ),
     .dpi_regs          ( dpi_regs          ),
-    .debug_ms_pc       ( debug_ms_pc       ),
     .debug_wb_pc       ( debug_wb_pc       ),
     .debug_wb_inst     ( debug_wb_inst     ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),

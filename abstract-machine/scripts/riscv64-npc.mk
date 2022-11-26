@@ -24,7 +24,7 @@ image: $(IMAGE).elf
 nvboard: image
 	$(MAKE) -C $(NPC_HOME) nvboard IMG_BIN=$(IMAGE).bin
 
-override SIMFLAGS += -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf
+override SIMFLAGS += -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d /home/john/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so
 
 run: image
 	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin

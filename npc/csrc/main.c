@@ -10,10 +10,10 @@
 int main(int argc, char *argv[]) 
 {
     init_monitor(argc, argv);
+	cpu.pc = 0x80000000;
 
-    load_img(img_file);
-    /*long img_size = load_img(img_file);*/
-    /*init_difftest(diff_so_file, img_size, difftest_port);*/
+    long img_size = load_img(img_file);
+    init_difftest(diff_so_file, img_size, difftest_port);
 	sim_init(argc,argv);
     reset(10);
     if(!NVBOARD_MODE)

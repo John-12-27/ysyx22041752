@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2022-11-22 16:24
+// Last Modified : 2022-11-26 17:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,9 +29,7 @@ module ysyx_22041752_MEU (
     input  wire [`SRAM_DATA_WD    -1:0] data_sram_rdata,
     //input  wire [`RF_DATA_WD      -1:0] mul_result    ,
 	//forward_bus
-	output wire [`FORWARD_BUS_WD  -1:0] ms_forward_bus,
-
-    output wire [`PC_WD           -1:0] debug_ms_pc
+	output wire [`FORWARD_BUS_WD  -1:0] ms_forward_bus
 );
 
 reg         ms_valid;
@@ -98,6 +96,4 @@ wire ms_forward_valid;
 assign ms_forward_valid = ms_rf_we && ms_valid;
 assign ms_forward_bus   = {ms_forward_valid,ms_final_result,rd};
 
-
-assign debug_ms_pc = ms_pc;
 endmodule

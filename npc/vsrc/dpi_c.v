@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2022-11-22 21:04
+// Last Modified : 2022-11-26 17:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -18,7 +18,6 @@ module dpi_c (
     input  wire                  stop             ,
     input  wire                  ws_valid         ,
     input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0]  ,
-    input  wire[`PC_WD     -1:0] debug_ms_pc      ,
     input  wire[`PC_WD     -1:0] debug_wb_pc      ,
     input  wire[`INST_WD   -1:0] debug_wb_inst    ,
     input  wire                  debug_wb_rf_wen  ,
@@ -40,6 +39,7 @@ endgenerate
 reg stop_r0;
 reg stop_r1;
 reg stop_r2;
+reg stop_r3;
 always @(posedge clk) begin
     stop_r0 <= stop;
 end
@@ -49,10 +49,19 @@ end
 always @(posedge clk) begin
     stop_r2 <= stop_r1;
 end
+always @(posedge clk) begin
+    stop_r3 <= stop_r2;
+end
+
+reg valid_r;
+always @(posedge clk) begin
+	valid_r <= ws_valid;
+end
 
 reg [`INST_WD-1:0] inst_r0;
 reg [`INST_WD-1:0] inst_r1;
 reg [`INST_WD-1:0] inst_r2;
+reg [`INST_WD-1:0] inst_r3;
 always @(posedge clk) begin
     inst_r0 <= debug_wb_inst;
 end
@@ -61,6 +70,14 @@ always @(posedge clk) begin
 end
 always @(posedge clk) begin
     inst_r2 <= inst_r1;
+end
+always @(posedge clk) begin
+    inst_r3 <= inst_r2;
+end
+
+reg [`PC_WD-1:0] current_pc;
+always @(posedge clk) begin
+	current_pc <= debug_wb_pc;
 end
 
 export "DPI-C" function record;
@@ -71,11 +88,11 @@ function void record();
     output longint pc   ;
     output longint dnpc ;
     output int     inst ;
-    halt  = stop_r2 ;
-    valid = ws_valid;
-    pc    = debug_wb_pc;
-    dnpc  = debug_ms_pc;
-    inst  = inst_r2 ;
+    halt  = stop_r3 ;
+    valid = valid_r;
+    pc    = current_pc;
+    dnpc  = debug_wb_pc;
+    inst  = inst_r3 ;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
