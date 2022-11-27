@@ -25,8 +25,8 @@ typedef struct Decode {
   ISADecodeInfo isa;
   bool jalrTag; // a tag of "return"
   bool jalTag;  // a tag of "call"
-  IFDEF(CONFIG_ITRACE, char logbuf[256]);
-  IFDEF(CONFIG_MTRACE, char mlogbuf[256]);
+  char logbuf[256];
+  char mlogbuf[256];
 } Decode;
 
 // --- pattern matching mechanism ---

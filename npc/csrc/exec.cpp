@@ -98,20 +98,25 @@ static void exec_once()
     uint8_t d_wen = 0;
     bool    d_en  = false;
     word_t  d_wdata;
-    top->inst_sram_rdata = read_mem(top->inst_sram_addr, 4);
+    top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
     if(top->data_sram_en)
     {
         d_en    = top->data_sram_en;
         d_addr  = top->data_sram_addr;
         d_wen   = top->data_sram_wen;
         d_wdata = top->data_sram_wdata;
+        log_inst(&S);
     }
     single_cycle();
-    if(d_en)
-    {
-        top->data_sram_rdata = read_mem(d_addr, 8);
-        write_mem(d_addr, d_wdata, d_wen);
-    }
+
+    //if(d_en && (d_wen == 0))
+    //{
+        //top->data_sram_rdata = read_mem(d_addr, 8);
+    //}
+    //else if(d_en && (d_wen != 0))
+    //{
+        //write_mem(d_addr, d_wdata, d_wen);
+    //}
 
     record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
 }
@@ -188,5 +193,6 @@ void exec(uint64_t n, bool batch)
       // fall through
         case NPC_QUIT: 
             output_iRingBuf();
+            output_mRingBuf();
     }
 }

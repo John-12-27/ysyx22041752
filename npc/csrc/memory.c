@@ -15,6 +15,7 @@
 #include <assert.h>
 #include "memory.h"
 #include "monitor.h"
+#include "tracer.h"
 
 uint8_t mem[MEMSIZE] = {};
 /*uint8_t dmem[MEMSIZE] = {};*/
@@ -47,7 +48,7 @@ long load_img(char *img)
     return size;
 }
 
-word_t read_mem(paddr_t addr, uint8_t len)
+word_t inst_fetch(paddr_t addr, uint8_t len)
 {
     switch(len)
     {
@@ -60,6 +61,24 @@ word_t read_mem(paddr_t addr, uint8_t len)
     return 0;
 }
 
+word_t read_mem(paddr_t addr, uint8_t len)
+{
+    word_t data;
+    switch(len)
+    {
+        case 1: data = *(uint8_t  *)(mem + addr - MBASEADDR); break;
+        case 2: data = *(uint16_t *)(mem + addr - MBASEADDR); break;
+        case 4: data = *(uint32_t *)(mem + addr - MBASEADDR); break;
+        case 8: data = *(uint64_t *)(mem + addr - MBASEADDR); break;
+        default: assert(0); break;
+    }
+    /*if(mtrace_enable(addr, addr))*/
+    {
+        log_mem(&S, addr, addr, data, true);
+    }
+    return data;
+}
+
 word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
 {
     switch(wen)
@@ -69,6 +88,10 @@ word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
         case 0x0f: *(uint32_t *)(mem + addr - MBASEADDR) = data; break;
         case 0xff: *(uint64_t *)(mem + addr - MBASEADDR) = data; break;
         default: assert(0); break;
+    }
+    /*if(mtrace_enable(addr, addr))*/
+    {
+        log_mem(&S, addr, addr, data, true);
     }
     return 0;
 }
