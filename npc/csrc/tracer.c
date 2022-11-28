@@ -125,7 +125,7 @@ void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
 }
 
 extern void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-void log_inst(Decode *s)
+void log_inst(Decode *s, bool inst_l)
 {
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -148,7 +148,10 @@ void log_inst(Decode *s)
 
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
          s->pc, (uint8_t *)&s->inst, ilen);
-    RingBufLoad(s->logbuf, false);
+    if(inst_l)
+    {
+        RingBufLoad(s->logbuf, false);
+    }
 }
 
 void output_mRingBuf()

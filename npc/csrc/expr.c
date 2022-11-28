@@ -464,7 +464,7 @@ word_t eval(Token *p, Token *q, bool *success)
             }
             case TK_POINTER:
             {
-                return read_mem((paddr_t)val2, 8);
+                return read_mem((paddr_t)val2);
             } break;
             case TK_EQ: 
             {

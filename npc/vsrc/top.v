@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2022-11-26 19:58
+// Last Modified : 2022-11-28 16:59
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -56,6 +56,7 @@ wire [63:0] div_complete;
 
 // trace debug interface
 wire [`PC_WD       -1:0] debug_wb_pc      ;
+wire [`PC_WD       -1:0] debug_ms_pc      ;
 wire                     debug_ws_valid   ;
 wire [`INST_WD     -1:0] debug_wb_inst    ;
 wire                     debug_wb_rf_wen  ;
@@ -128,7 +129,9 @@ ysyx_22041752_MEU U_MEU_0(
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
     .data_sram_rdata( data_sram_rdata ),
-    .ms_forward_bus ( ms_forward_bus  )
+    .ms_forward_bus ( ms_forward_bus  ),
+
+    .debug_ms_pc    ( debug_ms_pc     )
 );
 
 // WB stage
@@ -153,6 +156,7 @@ dpi_c u_dpi_c(
     .ws_valid          ( debug_ws_valid    ),
     .dpi_regs          ( dpi_regs          ),
     .debug_wb_pc       ( debug_wb_pc       ),
+    .debug_ms_pc       ( debug_ms_pc       ),
     .debug_wb_inst     ( debug_wb_inst     ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),

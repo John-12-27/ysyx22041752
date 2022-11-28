@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-26 22:04
+// Last Modified : 2022-11-28 21:55
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -384,8 +384,8 @@ assign inst_slli   = opcode == 7'b0010011 && funct3 == 3'b001 && sh_funct6 == 6'
 assign inst_slliw  = opcode == 7'b0011011 && funct3 == 3'b001 && funct7    == 7'b0000000;
 assign inst_srli   = opcode == 7'b0010011 && funct3 == 3'b101 && sh_funct6 == 6'b000000 ;
 assign inst_srliw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'b0000000;
-assign inst_srai   = opcode == 7'b0010011 && funct3 == 3'b101 && sh_funct6 == 6'b000000 ;
-assign inst_sraiw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'b0000000;
+assign inst_srai   = opcode == 7'b0010011 && funct3 == 3'b101 && sh_funct6 == 6'b010000 ;
+assign inst_sraiw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'b0100000;
 
 assign op_mul = inst_mul  | inst_mulh  | inst_mulhsu| inst_mulhu | inst_mulw;
 assign op_div = inst_div  | inst_divu  | inst_divw  | inst_divuw ;
@@ -424,16 +424,16 @@ assign id_mem_bytes = (inst_lb || inst_lbu || inst_sb) ? 2'b00 :
                                                          2'b11 ;
 
 //read from regfile
-ysyx_22041752_rf U_YSYX_22041752_RF_0(
-    .clk                            ( clk                           ),
-    .addr_r1                        ( rs1                           ),
-    .addr_r2                        ( rs2                           ),
-    .data_r1                        ( data_r1                       ),
-    .data_r2                        ( data_r2                       ),
-    .addr_w                         ( rf_waddr                      ),
-    .we                             ( rf_we                         ),
-    .data_w                         ( rf_wdata                      ),
-    .dpi_regs                       ( dpi_regs                      )
+ysyx_22041752_rf U_RF_0(
+    .clk        ( clk      ),
+    .addr_r1    ( rs1      ),
+    .addr_r2    ( rs2      ),
+    .data_r1    ( data_r1  ),
+    .data_r2    ( data_r2  ),
+    .addr_w     ( rf_waddr ),
+    .we         ( rf_we    ),
+    .data_w     ( rf_wdata ),
+    .dpi_regs   ( dpi_regs )
 );
 
 wire rs1_is_not_zero;

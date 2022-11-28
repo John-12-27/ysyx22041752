@@ -66,9 +66,9 @@ static bool trace_diff_watch()
             cpu.gpr[i] = cpu_gpr[i];
         }
         cpu.pc = S.pc;
-        if(log_enable(S.pc))
+        //if(log_enable(S.pc))
         {
-            log_inst(&S);
+            log_inst(&S, true);
         }
         res = difftest_step(S.pc, S.dnpc);
         if(!res)
@@ -94,29 +94,31 @@ static bool halt()
 
 static void exec_once()
 {
-    vaddr_t d_addr;
-    uint8_t d_wen = 0;
-    bool    d_en  = false;
-    word_t  d_wdata;
-    top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
-    if(top->data_sram_en)
-    {
-        d_en    = top->data_sram_en;
-        d_addr  = top->data_sram_addr;
-        d_wen   = top->data_sram_wen;
-        d_wdata = top->data_sram_wdata;
-        log_inst(&S);
-    }
+    //vaddr_t d_addr;
+    //uint8_t d_wen = 0;
+    //bool    d_en  = false;
+    //word_t  d_wdata;
+    //top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
+    //if(top->data_sram_en)
+    //{
+        //d_en    = top->data_sram_en;
+        //d_addr  = top->data_sram_addr;
+        //d_wen   = top->data_sram_wen;
+        //d_wdata = top->data_sram_wdata;
+    //}
     single_cycle();
 
-    //if(d_en && (d_wen == 0))
-    //{
-        //top->data_sram_rdata = read_mem(d_addr, 8);
-    //}
-    //else if(d_en && (d_wen != 0))
-    //{
-        //write_mem(d_addr, d_wdata, d_wen);
-    //}
+    top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
+    if(top->data_sram_en && (top->data_sram_wen == 0))
+    {
+        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));
+        top->data_sram_rdata = read_mem(top->data_sram_addr);
+    }
+    else if(top->data_sram_en && (top->data_sram_wen != 0))
+    {
+        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));
+        write_mem(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
+    }
 
     record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
 }

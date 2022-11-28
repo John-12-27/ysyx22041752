@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-11-26 21:10
+// Last Modified : 2022-11-28 19:49
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -181,7 +181,8 @@ assign data_sram_en  = es_mem_re | es_mem_we;
 assign data_sram_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                        es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
                        es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
-                                                                        8'h01 ;
+                       es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 8'h01 :
+                                                                        8'h00 ;
 
 assign data_sram_wdata = rs2_value;
 //forward_bus

@@ -15,17 +15,12 @@
 #include "npc_state.h"
 #include "verilated_dpi.h"
 
-Decode S;
+Decode S; //record for every inst
+Decode M; //record for the inst which is accessing memory
 CPU_state cpu;
 uint64_t *cpu_gpr = NULL;
-/*uint64_t *cpu_pc  = NULL;*/
 
 NPCState npc_state = { .state = NPC_STOP, .halt_pc = 0, .halt_ret = 0};
-
-/*extern "C" void set_pc_ptr(const svOpenArrayHandle r)*/
-/*{*/
-    /*cpu_pc = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());*/
-/*}*/
 
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
 {

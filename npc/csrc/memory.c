@@ -61,26 +61,38 @@ word_t inst_fetch(paddr_t addr, uint8_t len)
     return 0;
 }
 
-word_t read_mem(paddr_t addr, uint8_t len)
+word_t read_mem(paddr_t addr)
 {
-    word_t data;
-    switch(len)
+    if((addr < MBASEADDR)|| (addr >= (MEMSIZE+MBASEADDR)))
     {
-        case 1: data = *(uint8_t  *)(mem + addr - MBASEADDR); break;
-        case 2: data = *(uint16_t *)(mem + addr - MBASEADDR); break;
-        case 4: data = *(uint32_t *)(mem + addr - MBASEADDR); break;
-        case 8: data = *(uint64_t *)(mem + addr - MBASEADDR); break;
-        default: assert(0); break;
+        return 0;
     }
+    word_t data;
+
+    /*switch(len)*/
+    /*{*/
+        /*case 1: data = *(uint8_t  *)(mem + addr - MBASEADDR); break;*/
+        /*case 2: data = *(uint16_t *)(mem + addr - MBASEADDR); break;*/
+        /*case 4: data = *(uint32_t *)(mem + addr - MBASEADDR); break;*/
+        /*case 8: data = *(uint64_t *)(mem + addr - MBASEADDR); break;*/
+        /*default: assert(0); break;*/
+    /*}*/
+
+    data = *(uint64_t *)(mem + addr - MBASEADDR);
     /*if(mtrace_enable(addr, addr))*/
     {
-        log_mem(&S, addr, addr, data, true);
+        log_inst(&M, false);
+        log_mem(&M, addr, addr, data, true);
     }
     return data;
 }
 
 word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
 {
+    if((addr < MBASEADDR)|| (addr >= (MEMSIZE+MBASEADDR)))
+    {
+        return 0;
+    }
     switch(wen)
     {
         case 0x01: *(uint8_t  *)(mem + addr - MBASEADDR) = data; break;
@@ -91,7 +103,8 @@ word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
     }
     /*if(mtrace_enable(addr, addr))*/
     {
-        log_mem(&S, addr, addr, data, true);
+        log_inst(&M, false);
+        log_mem(&M, addr, addr, data, false);
     }
     return 0;
 }

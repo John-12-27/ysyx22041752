@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2022-11-21 19:31
+// Last Modified : 2022-11-28 23:50
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -32,7 +32,7 @@ module ysyx_22041752_IFU (
 reg         fs_valid;
 wire        fs_ready_go;
 wire        fs_allowin;
-wire        to_fs_valid;
+reg         to_fs_valid;
 
 wire [`PC_WD-1:0] seq_pc;
 wire [`PC_WD-1:0] nextpc;
@@ -41,12 +41,16 @@ wire              br_taken;
 wire [`PC_WD-1:0] br_target;
 assign {br_taken,br_target} = br_bus;
 
-wire [`INST_WD-1:0] fs_inst;
-reg  [`PC_WD-1:0]   fs_pc;
+//wire [`INST_WD-1:0] fs_inst;
+reg [`INST_WD-1:0] fs_inst;
+reg [`PC_WD-1:0]   fs_pc;
 assign fs_to_ds_bus = {fs_inst, fs_pc};
 
 // pre-IF stage
-assign to_fs_valid  = ~reset;
+//assign to_fs_valid  = ~reset;
+always @(posedge clk) begin
+    to_fs_valid <= ~reset;
+end
 assign seq_pc       = fs_pc + 4;
 assign nextpc       = br_taken ? br_target : seq_pc; 
 
@@ -74,6 +78,10 @@ end
 
 assign inst_en    = to_fs_valid && fs_allowin;
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata[`INST_WD-1:0];
+//assign fs_inst    = inst_rdata[`INST_WD-1:0];
+always @(posedge clk) begin
+    if(fs_allowin)
+        fs_inst <= inst_rdata[`INST_WD-1:0];
+end
 
 endmodule

@@ -79,7 +79,7 @@ extern strTab strtab;
 extern symFunc *pFirstFunc;
 
 extern void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read);
-extern void log_inst(Decode *s);
+extern void log_inst(Decode *s, bool mem);
 extern void output_mRingBuf();
 extern void output_iRingBuf();
 extern void init_mlog(const char *file);

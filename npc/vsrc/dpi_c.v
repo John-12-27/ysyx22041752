@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2022-11-26 17:01
+// Last Modified : 2022-11-28 21:55
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,6 +19,7 @@ module dpi_c (
     input  wire                  ws_valid         ,
     input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0]  ,
     input  wire[`PC_WD     -1:0] debug_wb_pc      ,
+    input  wire[`PC_WD     -1:0] debug_ms_pc      ,
     input  wire[`INST_WD   -1:0] debug_wb_inst    ,
     input  wire                  debug_wb_rf_wen  ,
     input  wire[`RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
@@ -63,16 +64,16 @@ reg [`INST_WD-1:0] inst_r1;
 reg [`INST_WD-1:0] inst_r2;
 reg [`INST_WD-1:0] inst_r3;
 always @(posedge clk) begin
-    inst_r0 <= debug_wb_inst;
+    inst_r0 <= debug_wb_inst;   //exe_stage
 end
 always @(posedge clk) begin
-    inst_r1 <= inst_r0;
+    inst_r1 <= inst_r0;         //mem_stage
 end
 always @(posedge clk) begin
-    inst_r2 <= inst_r1;
+    inst_r2 <= inst_r1;         //wb_stage
 end
-always @(posedge clk) begin
-    inst_r3 <= inst_r2;
+always @(posedge clk) begin     
+    inst_r3 <= inst_r2;         //done
 end
 
 reg [`PC_WD-1:0] current_pc;
@@ -81,7 +82,6 @@ always @(posedge clk) begin
 end
 
 export "DPI-C" function record;
-
 function void record();
     output bit     halt ;
     output bit     valid;
@@ -93,6 +93,14 @@ function void record();
     pc    = current_pc;
     dnpc  = debug_wb_pc;
     inst  = inst_r3 ;
+endfunction
+
+export "DPI-C" function mem_inst;
+function void mem_inst();
+    output longint pc   ;
+    output int     inst ;
+    pc    = debug_ms_pc;
+    inst  = inst_r1 ;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
