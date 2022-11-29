@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-29 14:09
+// Last Modified : 2022-11-29 21:36
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -58,6 +58,9 @@ assign {rf_we   ,  //69:69
 wire              br_taken;
 wire [`PC_WD-1:0] br_target;
 
+wire mul_u  ;
+wire mul_su ;
+wire mul_h  ;
 wire op_mul ;
 wire op_div ;
 wire op_rem ;
@@ -123,7 +126,10 @@ wire [`RF_DATA_WD-1:0] rs1_value;
 wire [`RF_DATA_WD-1:0] rs2_value;
 assign br_bus       = {br_taken,br_target};
 
-assign ds_to_es_bus = {op_mul        ,
+assign ds_to_es_bus = {//mul_u         ,
+                       //mul_su        ,
+                       //mul_h         ,
+                       op_mul        ,
                        op_div        ,
                        op_rem        ,
                        op_add        ,   
@@ -388,6 +394,9 @@ assign inst_srai   = opcode == 7'b0010011 && funct3 == 3'b101 && sh_funct6 == 6'
 assign inst_sraiw  = opcode == 7'b0011011 && funct3 == 3'b101 && funct7    == 7'b0100000;
 
 assign op_mul = inst_mul  | inst_mulh  | inst_mulhsu| inst_mulhu | inst_mulw;
+assign mul_u  = inst_mulhu;
+assign mul_su = inst_mulhsu;
+assign mul_h  = inst_mulh | inst_mulhsu| inst_mulhu;
 assign op_div = inst_div  | inst_divu  | inst_divw  | inst_divuw ;
 assign op_rem = inst_rem  | inst_remu  | inst_remw  | inst_remuw ;
 assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | inst_sd   | 
