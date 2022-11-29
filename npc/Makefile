@@ -91,7 +91,12 @@ sim: build
 	@rm -rf logs
 	@mkdir -p logs
 	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
-	@gtkwave ./logs/dump.vcd
+	#@gtkwave ./logs/dump.vcd
+
+batch: build
+	@echo 
+	@echo "---- running with batch mode ----"
+	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
 
 gdb: build
 	@echo
@@ -101,4 +106,4 @@ gdb: build
 clean :
 	-rm -rf $(BUILD_DIR) logs 
 	
-.PHONY: sim gdb clean build
+.PHONY: sim batch gdb clean build

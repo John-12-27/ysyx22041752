@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-11-28 19:49
+// Last Modified : 2022-11-29 14:47
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -146,9 +146,9 @@ always @(posedge clk) begin
 end
 
 assign alu_src1 = src_pc   ? es_pc : 
-                     src_0    ? 64'd0 :
-                     res_sext && (op_sll || op_srl || op_sra) ? {32'b0,rs1_value[31:0]} :
-                            rs1_value;
+                  src_0    ? 64'd0 :
+                  res_sext && (op_sll || op_srl || op_sra) ? {32'b0,rs1_value[31:0]} :
+                  rs1_value;
   
 assign alu_src2 = src_4 ? 64'd4 : 
                      src_imm_u ? {{32{imm_u[19]}},imm_u,12'b0} :
@@ -159,7 +159,7 @@ assign alu_src2 = src_4 ? 64'd4 :
                      (op_sll || op_srl || op_sra) ? {58'b0,rs2_value[5:0]} :
                      rs2_value;
 
-ysyx_22041752_alu U_YSYX_22041752_ALU_0(
+ysyx_22041752_alu U_ALU_0(
     .op_add          ( op_add         ),
     .op_sub          ( op_sub         ),
     .op_slt          ( op_slt         ),

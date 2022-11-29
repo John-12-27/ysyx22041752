@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-28 21:55
+// Last Modified : 2022-11-29 14:09
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -392,7 +392,8 @@ assign op_div = inst_div  | inst_divu  | inst_divw  | inst_divuw ;
 assign op_rem = inst_rem  | inst_remu  | inst_remw  | inst_remuw ;
 assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | inst_sd   | 
                 inst_lb   | inst_lh    | inst_lw    | inst_lbu   | inst_lhu  | inst_addi | 
-                inst_lwu  | inst_ld    | inst_sb    | inst_sh    | inst_sw   | inst_addiw;
+                inst_lwu  | inst_ld    | inst_sb    | inst_sh    | inst_sw   | inst_addiw|
+                inst_lui;
 assign op_sub = inst_sub  | inst_subw;
 assign op_slt = inst_slti | inst_slt;
 assign op_sltu= inst_sltiu| inst_sltu;
@@ -481,12 +482,12 @@ assign br_taken = (   inst_beq  &&  rs1_eq_rs2
 				   || inst_jalr
                   ) && ds_valid;
 
-ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
-    .a                              ( rs1_value   ),
-    .b                              ( rs2_value   ),
-    .sub                            ( 1'b1        ),
-    .cout                           ( bc_co       ),
-    .result                         ( bc_r        )
+ysyx_22041752_aser64 U_ASER64_0(
+    .a          ( rs1_value   ),
+    .b          ( rs2_value   ),
+    .sub        ( 1'b1        ),
+    .cout       ( bc_co       ),
+    .result     ( bc_r        )
 );
 
 assign bt_a = inst_jalr ? rs1_value : ds_pc;
@@ -495,12 +496,12 @@ assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst
                                                                                          {{43{imm_j[20]}},imm_j} ;
 
 /* verilator lint_off PINCONNECTEMPTY */
-ysyx_22041752_aser64 U_YSYX_22041752_ASER64_1(
-    .a                              ( bt_a      ),
-    .b                              ( bt_b      ),
-    .sub                            ( 1'0       ),
-    .cout                           (           ),
-    .result                         ( br_target )
+ysyx_22041752_aser64 U_ASER64_1(
+    .a          ( bt_a      ),
+    .b          ( bt_b      ),
+    .sub        ( 1'0       ),
+    .cout       (           ),
+    .result     ( br_target )
 );
 
 endmodule

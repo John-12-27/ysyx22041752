@@ -49,6 +49,7 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
     if((ref_r->pc != pc) && cpu.pc != pc)
     {
         printf(ANSI_BG_RED "=========================================\n");
+        printf("ERROR_PC\t0x%lx\n",cpu.pc);
         printf("REF_PC\t0x%lx\n",ref_r->pc);
         printf("NPC_PC\t0x%lx\n",pc);
         printf("=========================================" ANSI_NONE "\n");
