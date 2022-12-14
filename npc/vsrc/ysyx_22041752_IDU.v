@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2022-11-29 21:36
+// Last Modified : 2022-12-14 13:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -126,9 +126,9 @@ wire [`RF_DATA_WD-1:0] rs1_value;
 wire [`RF_DATA_WD-1:0] rs2_value;
 assign br_bus       = {br_taken,br_target};
 
-assign ds_to_es_bus = {//mul_u         ,
-                       //mul_su        ,
-                       //mul_h         ,
+assign ds_to_es_bus = {mul_u         ,
+                       mul_su        ,
+                       mul_h         ,
                        op_mul        ,
                        op_div        ,
                        op_rem        ,

@@ -66,7 +66,7 @@ static bool trace_diff_watch()
             cpu.gpr[i] = cpu_gpr[i];
         }
         cpu.pc = S.pc;
-        //if(log_enable(S.pc))
+        if(log_enable(S.pc))
         {
             log_inst(&S, true);
         }

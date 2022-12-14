@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2022-11-29 21:36
+// Last Modified : 2022-12-14 14:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,9 +16,12 @@
 module ysyx_22041752_alu(
     //input  wire        clk         ,
     //input  wire        reset       , 
-    //input  wire        op_mul      ,     
-    //input  wire        op_div      ,
-    //input  wire        op_rem      ,
+    //input  wire        mul_u       ,
+    //input  wire        mul_su      ,
+    input  wire        mul_h       ,
+    input  wire        op_mul      ,     
+    input  wire        op_div      ,
+    input  wire        op_rem      ,
     input  wire        op_add      ,
     input  wire        op_sub      ,
     input  wire        op_slt      ,
@@ -37,6 +40,10 @@ module ysyx_22041752_alu(
     //output wire [63:0] mul_result
 );
 
+wire [63:0] mul_result;
+wire [63:0] div_result;
+wire [63:0] rem_result;
+    
 wire [ 63:0] r_slt; 
 wire [ 63:0] r_and;
 wire [ 63:0] r_or ;
@@ -55,7 +62,7 @@ wire        adder_cout;
 assign adder_a   = alu_src1;
 assign adder_b   = alu_src2;
 assign adder_cin = op_sub | op_slt | op_sltu;
-ysyx_22041752_aser64 U_YSYX_22041752_ASER64_0(
+ysyx_22041752_aser64 U_ASER64_0(
     .a          ( adder_a      ),
     .b          ( adder_b      ),
     .sub        ( adder_cin    ),
@@ -83,9 +90,26 @@ assign res = ({64{op_add|op_sub }}&{adder_result[63:0]})
             |({64{op_xor        }}&{r_xor       [63:0]})
             |({64{op_sll        }}&{r_sll       [63:0]})
             |({64{op_srl        }}&{r_srl       [63:0]})
-            |({64{op_sra        }}&{r_sra       [63:0]});
+            |({64{op_sra        }}&{r_sra       [63:0]})
+            |({64{op_mul        }}&{mul_result})
+            |({64{op_div        }}&{div_result})
+            |({64{op_rem        }}&{rem_result});
 assign alu_result = res_sext ? {{32{res[31]}}, res[31:0]} : res;
 
 assign mem_result = adder_result;
+
+ysyx_22041752_mul U_MUL_0(
+    .mul_h  ( mul_h      ),
+    .x      ( alu_src1   ),
+    .y      ( alu_src2   ),
+    .res    ( mul_result )
+);
+
+ysyx_22041752_diver U_DIVER_0(
+    .x      ( alu_src1   ),
+    .y      ( alu_src2   ),
+    .res    ( div_result ),
+    .rem    ( rem_result )
+);
 
 endmodule

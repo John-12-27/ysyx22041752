@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-11-29 14:47
+// Last Modified : 2022-12-14 15:34
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -40,6 +40,9 @@ wire        es_ready_go   ;
 
 reg  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;  
 
+wire mul_u  ;
+wire mul_su ;
+wire mul_h  ;
 wire op_mul ;
 wire op_div ;
 wire op_rem ;
@@ -76,7 +79,10 @@ wire [`RF_DATA_WD-1:0] rs1_value;
 wire [`RF_DATA_WD-1:0] rs2_value;
 wire [`PC_WD     -1:0] es_pc  ;
 
-assign {op_mul        ,
+assign {mul_u         ,
+        mul_su        ,
+        mul_h         ,
+        op_mul        ,
         op_div        ,
         op_rem        ,
         op_add        ,   
@@ -160,6 +166,10 @@ assign alu_src2 = src_4 ? 64'd4 :
                      rs2_value;
 
 ysyx_22041752_alu U_ALU_0(
+    .mul_h           ( mul_h          ),
+    .op_mul          ( op_mul         ),
+    .op_div          ( op_div         ),
+    .op_rem          ( op_rem         ),
     .op_add          ( op_add         ),
     .op_sub          ( op_sub         ),
     .op_slt          ( op_slt         ),

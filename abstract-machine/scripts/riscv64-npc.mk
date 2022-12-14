@@ -27,13 +27,15 @@ nvboard: image
 NEMU_SO = $(NEMU_HOME)/build/riscv64-nemu-interpreter-so
 #NEMU_SO = $(NEMU_HOME)/tools/spike-diff/build/riscv64-spike-so
 
-override SIMFLAGS += -b -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
+override RUN_SIMFLAGS += -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
+
+override BATCH_SIMFLAGS += -b -l $(shell dirname $(IMAGE).elf)/npc-ilog.txt -m $(shell dirname $(IMAGE).elf)/npc-mlog.txt -f $(shell dirname $(IMAGE).elf)/npc-flog.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
 
 run: image
-	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(RUN_SIMFLAGS)" IMG_BIN=$(IMAGE).bin
 
 batch: image
-	$(MAKE) -C $(NPC_HOME) batch OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) batch OPTIONS="$(BATCH_SIMFLAGS)" IMG_BIN=$(IMAGE).bin
 
 gdb: image
 	$(MAKE) -C $(NPC_HOME) gdb OPTIONS="$(SIMFLAGS)" IMG_BIN=$(IMAGE).bin
