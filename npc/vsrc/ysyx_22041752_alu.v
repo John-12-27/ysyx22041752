@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2022-12-14 14:14
+// Last Modified : 2022-12-14 16:45
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -106,10 +106,10 @@ ysyx_22041752_mul U_MUL_0(
 );
 
 ysyx_22041752_diver U_DIVER_0(
-    .x      ( alu_src1   ),
-    .y      ( alu_src2   ),
-    .res    ( div_result ),
-    .rem    ( rem_result )
+    .dividend   ( alu_src1   ),
+    .divisor    ( alu_src2   ),
+    .quotient   ( div_result ),
+    .remainder  ( rem_result )
 );
 
 endmodule

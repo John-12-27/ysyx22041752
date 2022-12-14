@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_diver.v
 // Author        : Cw
 // Created On    : 2022-12-14 14:01
-// Last Modified : 2022-12-14 14:07
+// Last Modified : 2022-12-14 16:45
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,13 +14,22 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module ysyx_22041752_diver (
-    input  wire [`RF_DATA_WD-1:0] x  ,
-    input  wire [`RF_DATA_WD-1:0] y  ,
-    output wire [`RF_DATA_WD-1:0] res,
-    output wire [`RF_DATA_WD-1:0] rem
+    //input  wire                   clk       ,
+    //input  wire                   reset     ,
+
+    input  wire [`RF_DATA_WD-1:0] dividend  ,
+    input  wire [`RF_DATA_WD-1:0] divisor   ,
+    //input  wire                   div_valid ,
+    //input  wire                   divw      ,
+    //input  wire                   div_signed,
+    //input  wire                   flush     ,
+    //output wire                   div_ready ,
+    //output wire                   out_valid ,
+    output wire [`RF_DATA_WD-1:0] quotient  ,
+    output wire [`RF_DATA_WD-1:0] remainder
 );
     
-assign res = x/y;
-assign rem = x%y;
+assign quotient  = dividend/divisor;
+assign remainder = dividend%divisor;
 
 endmodule
