@@ -26,6 +26,7 @@ bool inputL = false;
 bool inputM = false;
 bool inputF = false;
 
+#if CONFIG_ITRACE || CONFIG_MTRACE
 static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
 static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
 static RingBuf *ihead = NULL;
@@ -109,25 +110,9 @@ static void RingBufLoad(char logbuf[], bool mload)
         mcnt++;
     }
 }
+#endif
 
-void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
-{
-    char *p = s->mlogbuf;
-    p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
-    p += snprintf(p, sizeof(s->mlogbuf), "vaddr:"FMT_WORD , vaddr);
-    p += snprintf(p, sizeof(s->mlogbuf), " paddr:"FMT_PADDR, paddr);
-    p += snprintf(p, sizeof(s->mlogbuf), " data:"FMT_WORD , data);
-    if(read)
-    {
-        p += snprintf(p, sizeof(s->mlogbuf), " R");
-    }
-    else
-    {
-        p += snprintf(p, sizeof(s->mlogbuf), " W");
-    }
-    RingBufLoad(s->mlogbuf, true);
-}
-
+#ifdef CONFIG_ITRACE
 void log_inst(Decode *s)
 {
     char *p = s->logbuf;
@@ -155,15 +140,6 @@ void log_inst(Decode *s)
     RingBufLoad(s->logbuf, false);
 }
 
-void output_mRingBuf()
-{
-    for(; mhead->next != mtail; mhead = mhead->next)
-    {
-        mlog_write("%s\n", mhead->buf);
-    }
-    mlog_write("%s\n", mhead->buf);
-}
-
 void output_iRingBuf()
 {
     for(; ihead->next != itail; ihead = ihead->next)
@@ -171,31 +147,6 @@ void output_iRingBuf()
         log_write("%s\n", ihead->buf);
     }
     log_write("%s\n", ihead->buf);
-}
-
-void init_mlog(const char *file) 
-{
-    mtrace_fp = stdout;
-    if(file != NULL) 
-    {
-        FILE *fp = fopen(file, "w");
-        Assert(fp, "Can not open '%s'", file);
-        mtrace_fp = fp;
-    }
-    Log("Mtrace is written to %s", file ? file : "stdout");
-    init_RingBuf(mringbuf, true);
-}
-
-void init_flog(const char *file) 
-{
-    flog_fp = stdout;
-    if(file != NULL) 
-    {
-        FILE *fp = fopen(file, "w");
-        Assert(fp, "Can not open '%s'", file);
-        flog_fp = fp;
-    }
-    Log("ftrace is written to %s", file ? file : "stdout");
 }
 
 void init_log(const char *file) 
@@ -209,21 +160,6 @@ void init_log(const char *file)
     }
     Log("Log is written to %s", file ? file : "stdout");
     init_RingBuf(iringbuf, false);
-}
-
-bool mtrace_enable(vaddr_t vaddr, paddr_t paddr) 
-{
-    bool status = false;
-    if(inputM)
-    {
-#ifdef CONFIG_MTRACE_COND
-        if(((vaddr >= CONFIG_VMTRACE_START) && (vaddr <= CONFIG_VMTRACE_END)) || ((paddr >= CONFIG_PMTRACE_START) && (paddr <= CONFIG_PMTRACE_END )))
-#endif
-        {
-            status = true;
-        }
-    }
-    return status;
 }
 
 bool log_enable(vaddr_t pc) 
@@ -240,11 +176,83 @@ bool log_enable(vaddr_t pc)
     }
     return status;
 }
+#endif
 
+#ifdef CONFIG_MTRACE
+void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
+{
+    char *p = s->mlogbuf;
+    p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
+    p += snprintf(p, sizeof(s->mlogbuf), "vaddr:"FMT_WORD , vaddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " paddr:"FMT_PADDR, paddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " data:"FMT_WORD , data);
+    if(read)
+    {
+        p += snprintf(p, sizeof(s->mlogbuf), " R");
+    }
+    else
+    {
+        p += snprintf(p, sizeof(s->mlogbuf), " W");
+    }
+    RingBufLoad(s->mlogbuf, true);
+}
+
+void output_mRingBuf()
+{
+    for(; mhead->next != mtail; mhead = mhead->next)
+    {
+        mlog_write("%s\n", mhead->buf);
+    }
+    mlog_write("%s\n", mhead->buf);
+}
+
+void init_mlog(const char *file) 
+{
+    mtrace_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
+        mtrace_fp = fp;
+    }
+    Log("Mtrace is written to %s", file ? file : "stdout");
+    init_RingBuf(mringbuf, true);
+}
+
+bool mtrace_enable(vaddr_t vaddr, paddr_t paddr) 
+{
+    bool status = false;
+    if(inputM)
+    {
+#ifdef CONFIG_MTRACE_COND
+        if(((vaddr >= CONFIG_VMTRACE_START) && (vaddr <= CONFIG_VMTRACE_END)) || ((paddr >= CONFIG_PMTRACE_START) && (paddr <= CONFIG_PMTRACE_END )))
+#endif
+        {
+            status = true;
+        }
+    }
+    return status;
+}
+#endif
+
+#ifdef CONFIG_FTRACE
 symFunc *pFirstFunc = NULL;
 static symFunc *pLastFunc  = NULL;
 strTab strtab;
 static char *shstrtab;
+
+void init_flog(const char *file) 
+{
+    flog_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
+        flog_fp = fp;
+    }
+    Log("ftrace is written to %s", file ? file : "stdout");
+}
+
 void funcTabInit(const char *file)
 {
     if(file != NULL)
@@ -437,3 +445,4 @@ void freeAllFunc(symFunc *p)
         free(p);
     }
 }
+#endif

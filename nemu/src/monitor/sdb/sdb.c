@@ -56,7 +56,9 @@ static int cmd_q(char *args) {
 static int cmd_help(char *args);
 static int cmd_si(char *args);
 static int cmd_info(char *args);
+#ifdef CONFIG_FTRACE
 static int cmd_b(char *args);
+#endif
 static int cmd_x(char *args);
 static int cmd_p(char *args);
 static int cmd_w(char *args);
@@ -72,7 +74,9 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "The number of instructions to execute specified by the parameter, and the default value of the parameter is 1", cmd_si },
   { "info", "Print all registers(r) or watchpoints(w)", cmd_info },
+#ifdef CONFIG_FTRACE
   { "b", "halt at the specfical function", cmd_b },
+#endif
   { "x", "Print the specfical memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "w", "Set watchpoints", cmd_w},
@@ -162,6 +166,7 @@ static int cmd_info(char *args)
     return 0;
 }
 
+#ifdef CONFIG_FTRACE
 vaddr_t findPc(const char *s);
 static int cmd_b(char *args)
 {
@@ -181,6 +186,7 @@ static int cmd_b(char *args)
     
     return 0;
 }
+#endif
 
 static int cmd_x(char *args)
 {
