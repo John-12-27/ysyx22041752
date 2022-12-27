@@ -35,10 +35,7 @@ word_t vaddr_read(Decode *s, vaddr_t addr, int len)
     if(status)
     {
         log_inst(s);
-        /*mlog_write("%s", s->logbuf);*/
-        /*mlog_write("\t");*/
         log_mem(s, addr, paddr, data, true);
-        /*mlog_write("%s\n", s->mlogbuf);*/
     }
 #endif
     return data;
@@ -53,10 +50,7 @@ void vaddr_write(Decode *s, vaddr_t addr, int len, word_t data)
     if(status)
     {
         log_inst(s);
-        /*mlog_write("%s", s->logbuf);*/
-        /*mlog_write("\t");*/
         log_mem(s, addr, paddr, data, false);
-        /*mlog_write("%s\n", s->mlogbuf);*/
     }
 #endif
 }

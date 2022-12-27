@@ -126,15 +126,15 @@ config TRACE
   bool "Enable tracer"
   default y
 
-config TRACE_START
+config ITRACE_START
   depends on TRACE
   hex "When tracing is enabled (unit: PC of instructions)"
-  default 0x0
+  default 0x80000000
 
-config TRACE_END
+config ITRACE_END
   depends on TRACE
   hex "When tracing is disabled (unit: PC of instructions)"
-  default 0x0
+  default 0x80000000
 
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER

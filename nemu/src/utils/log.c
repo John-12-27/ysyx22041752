@@ -26,7 +26,7 @@ bool inputL = false;
 bool inputM = false;
 bool inputF = false;
 
-#if CONFIG_ITRACE || CONFIG_MTRACE
+#if (defined(CONFIG_ITRACE) || defined(CONFIG_MTRACE))
 static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
 static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
 static RingBuf *ihead = NULL;
@@ -168,7 +168,7 @@ bool log_enable(vaddr_t pc)
     if(inputL)
     {
 #if CONFIG_ITRACE_COND
-        if((pc >= CONFIG_TRACE_START) && (pc <= CONFIG_TRACE_END))
+        if((pc >= CONFIG_ITRACE_START) && (pc <= CONFIG_ITRACE_END))
 #endif
         {
             status = true;

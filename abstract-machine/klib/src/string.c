@@ -64,17 +64,17 @@ char *strcat(char *dst, const char *src)
 
 int strcmp(const char *s1, const char *s2) 
 {
-    int res = 0;
-    while(*s1 != '\0' && *s2 != '\0')
+    int res = *s1 - *s2;
+    while((*s1 != '\0') && (*s2 != '\0'))
     {
         if(*s1 < *s2)
         {
-            res = -1;
+            res = *s1 - *s2;
             break;
         }
         else if(*s1 > *s2)
         {
-            res = 1;
+            res = *s1 - *s2;
             break;
         }
         s1++;
