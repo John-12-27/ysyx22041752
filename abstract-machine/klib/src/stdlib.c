@@ -29,17 +29,20 @@ int atoi(const char* nptr) {
   return x;
 }
 
-void *malloc(size_t size) {
-  // On native, malloc() will be called during initializaion of C runtime.
-  // Therefore do not call panic() here, else it will yield a dead recursion:
-  //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
+void *malloc(size_t size) 
+{
+    // On native, malloc() will be called during initializaion of C runtime.
+    // Therefore do not call panic() here, else it will yield a dead recursion:
+    //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+    panic("Not implemented");
 #endif
-  return NULL;
+    return NULL;
 }
 
-void free(void *ptr) {
+void free(void *ptr) 
+{
+
 }
 
 #endif

@@ -85,28 +85,57 @@ int strcmp(const char *s1, const char *s2)
 
 int strncmp(const char *s1, const char *s2, size_t n) 
 {
-  panic("Not implemented");
+    int res = *s1 - *s2;
+    while((*s1 != '\0') && (*s2 != '\0') && (n > 0))
+    {
+        if(*s1 < *s2)
+        {
+            res = *s1 - *s2;
+            break;
+        }
+        else if(*s1 > *s2)
+        {
+            res = *s1 - *s2;
+            break;
+        }
+        s1++;
+        s2++;
+        n--;
+    }
+    return res;
 }
 
 void *memset(void *s, int c, size_t n) 
 {
-    unsigned char *p = s;
+    char *p = (char *)s;
     for(; n > 0; n--)
     {
-        *p = (unsigned char)c;
+        *p = (char)c;
         p++;
     }
     return s;
 }
 
-void *memmove(void *dst, const void *src, size_t n) {
-  panic("Not implemented");
+void *memmove(void *dst, const void *src, size_t n) 
+{
+    char tmp_array[n];
+    char *csrc= (char *)src;
+    char *p   = (char *)dst;
+    for(int i = 0; i < n; i++)
+    {
+        tmp_array[i] = csrc[i];
+    }
+    for(int i = 0; i < n; i++)
+    {
+        p[i] = tmp_array[i];
+    }
+    return dst;
 }
 
 void *memcpy(void *out, const void *in, size_t n) 
 {
-    unsigned char *p = out;
-    unsigned char const *s = in;
+    char *p = (char *)out;
+    char const *s = (char const *)in;
     for(size_t i = 0; n > 0; n--)
     {
         p[i] = s[i];
@@ -118,8 +147,8 @@ void *memcpy(void *out, const void *in, size_t n)
 int memcmp(const void *s1, const void *s2, size_t n) 
 {
     int res = 0;
-    unsigned char const *p = s1;
-    unsigned char const *q = s2;
+    char const *p = (char const *)s1;
+    char const *q = (char const *)s2;
     for(; n > 0; n--)
     {
         if(p==q)
