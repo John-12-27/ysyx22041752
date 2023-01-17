@@ -93,21 +93,25 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
                 } break;
                 case 'u':
                 {
+                    d = va_arg(ap, int); 
                     dst = s2num(d, dst, 10, true, false);
                     fmt++;
                 } break;
                 case 'o':
                 {
+                    d = va_arg(ap, int); 
                     dst = s2num(d, dst, 8, true, false);
                     fmt++;
                 } break;
                 case 'x':
                 {
+                    d = va_arg(ap, int); 
                     dst = s2num(d, dst, 16, true, false);
                     fmt++;
                 } break;
                 case 'X':
                 {
+                    d = va_arg(ap, int); 
                     dst = s2num(d, dst, 16, true, true);
                     fmt++;
                 } break;
