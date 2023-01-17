@@ -17,8 +17,9 @@
 #include <memory/paddr.h>
 
 void init_rand();
-void init_log(const char *log_file);
-void init_mlog(const char *log_file);
+void init_ilog(const char *file);
+void init_mlog(const char *file);
+void init_dlog(const char *file);
 void init_flog(const char *file);
 void funcTabInit(const char *file);
 void init_mem();
@@ -27,18 +28,15 @@ void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
 
-static void welcome() {
-  Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
-  IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
-        "to record the trace. This may lead to a large log file. "
-        "If it is not necessary, you can disable it in menuconfig"));
-  Log("Build time: %s, %s", __TIME__, __DATE__);
-  printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("For help, type \"help\"\n");
-  
-  /*Log("Exercise: Please remove me in the source code and compile NEMU again.");*/
-  /*assert(0);*/
-
+static void welcome() 
+{
+    Log("Devices Trace: %s", MUXDEF(CONFIG_DTRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+    Log("Functions Trace: %s", MUXDEF(CONFIG_FTRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+    Log("Instructions Trace: %s", MUXDEF(CONFIG_ITRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+    Log("Memory Trace: %s", MUXDEF(CONFIG_MTRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+    Log("Build time: %s, %s", __TIME__, __DATE__);
+    printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+    printf("For help, type \"help\"\n");
 }
 
 #ifndef CONFIG_TARGET_AM
@@ -46,8 +44,9 @@ static void welcome() {
 
 void sdb_set_batch_mode();
 
-static char *log_file = NULL;
+static char *itrace_file = NULL;
 static char *mtrace_file = NULL;
+static char *dtrace_file = NULL;
 static char *ftrace_file = NULL;
 static char *elfInput_file = NULL;
 static char *diff_so_file = NULL;
@@ -76,8 +75,9 @@ static long load_img() {
   return size;
 }
 
-extern bool inputL;
+extern bool inputI;
 extern bool inputM;
+extern bool inputD;
 extern bool inputF;
 static int parse_args(int argc, char *argv[]) 
 {
@@ -85,21 +85,23 @@ static int parse_args(int argc, char *argv[])
     {
         {"batch"    , no_argument      , NULL, 'b'},
         {"mtrace"   , required_argument, NULL, 'm'},
+        {"device"   , required_argument, NULL, 'e'},
         {"ftrace"   , required_argument, NULL, 'f'},
-        {"log"      , required_argument, NULL, 'l'},
+        {"itrace"   , required_argument, NULL, 'i'},
         {"diff"     , required_argument, NULL, 'd'},
         {"port"     , required_argument, NULL, 'p'},
         {"help"     , no_argument      , NULL, 'h'},
         {0          , 0                , NULL,  0 },
     };
     int o;
-    while ( (o = getopt_long(argc, argv, "-bhm:f:l:d:p:", table, NULL)) != -1) 
+    while ( (o = getopt_long(argc, argv, "-bhm:e:f:i:d:p:", table, NULL)) != -1) 
     {
         switch (o) 
         {
             case 'b': sdb_set_batch_mode(); break;
             case 'p': sscanf(optarg, "%d", &difftest_port); break;
             case 'm': mtrace_file = optarg; inputM = true; break;
+            case 'e': dtrace_file = optarg; inputD = true; break;
             case 'f': if(ftrace_file == NULL)
                       {
                           ftrace_file = optarg;
@@ -109,15 +111,16 @@ static int parse_args(int argc, char *argv[])
                           elfInput_file = optarg;
                           inputF = true;
                       }break;
-            case 'l': log_file = optarg; inputL = true; break;
+            case 'i': itrace_file  = optarg; inputI = true; break;
             case 'd': diff_so_file = optarg; break;
             case 1:   img_file = optarg; return 0;
             default:
                 printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
                 printf("\t-b,--batch              run with batch mode\n");
                 printf("\t-m,--mtrace=FILE        output mtrace to FILE\n");
+                printf("\t-e,--dtrace=FILE        output dtrace to FILE\n");
                 printf("\t-f,--ftrace=FILE        input a FILE and enable the tracer of functions\n");
-                printf("\t-l,--log=FILE           output log to FILE\n");
+                printf("\t-i,--itrace=FILE        output itrace to FILE\n");
                 printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
                 printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
                 printf("\n");
@@ -138,11 +141,18 @@ void init_monitor(int argc, char *argv[])
   init_rand();
 
   /* Open the log file. */
-#ifdef CONFIG_TRACE
-  init_log(log_file);
+#ifdef CONFIG_ITRACE
+  init_ilog(itrace_file);
+#endif
+#ifdef CONFIG_FTRACE
   init_flog(ftrace_file);
-  init_mlog(mtrace_file);
   funcTabInit(elfInput_file);
+#endif
+#ifdef CONFIG_MTRACE
+  init_mlog(mtrace_file);
+#endif
+#ifdef CONFIG_DEVICE
+  init_dlog(dtrace_file);
 #endif
   /* Initialize memory. */
   init_mem();

@@ -121,33 +121,46 @@ endmenu
 
 menu "Testing and Debugging"
 
+config FTRACE
+  bool "Enable tracer for functions"
+  default y
 
-config TRACE
-  bool "Enable tracer"
+config DTRACE
+  bool "Enable tracer for devices"
+  default y
+
+config DTRACE_START
+  depends on DTRACE
+  hex "When tracing is enabled (unit: address of device)"
+  default 0x0
+
+config DTRACE_END
+  depends on DTRACE
+  hex "When tracing is disabled (unit: address of device)"
+  default 0x0
+
+config DTRACE_COND
+  depends on DTRACE
+  bool "Only trace devices when the condition is true"
+  default n
+
+config ITRACE
+  bool "Enable instruction tracer"
   default y
 
 config ITRACE_START
-  depends on TRACE
+  depends on ITRACE
   hex "When tracing is enabled (unit: PC of instructions)"
   default 0x80000000
 
 config ITRACE_END
-  depends on TRACE
+  depends on ITRACE
   hex "When tracing is disabled (unit: PC of instructions)"
   default 0x80000000
-
-config ITRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
-  bool "Enable instruction tracer"
-  default y
 
 config ITRACE_COND
   depends on ITRACE
   bool "Only trace instructions when the condition is true"
-  default y
-
-config FTRACE
-  bool "Enable tracer for functions"
   default y
 
 config MTRACE
@@ -162,16 +175,6 @@ config PMTRACE_START
 config PMTRACE_END
   depends on MTRACE
   hex "Which addresses of memory tracing are disabled (unit: end physical address of memory)"
-  default 0x0
-
-config VMTRACE_START
-  depends on MTRACE
-  hex "Which addresses of memory tracing are enabled (unit: start virtual address of memory)"
-  default 0x0
-
-config VMTRACE_END
-  depends on MTRACE
-  hex "Which addresses of memory tracing are disabled (unit: end virtual address of memory)"
   default 0x0
 
 config MTRACE_COND

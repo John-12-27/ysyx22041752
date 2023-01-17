@@ -33,6 +33,7 @@ extern void findStr(vaddr_t pc);
 extern void log_inst(Decode *s);
 extern void output_iRingBuf();
 extern void output_mRingBuf();
+extern void output_dRingBuf();
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -151,6 +152,9 @@ void cpu_exec(uint64_t n)
 #endif
 #ifdef CONFIG_MTRACE
             output_mRingBuf();
+#endif
+#ifdef CONFIG_DTRACE
+            output_dRingBuf();
 #endif
             statistic();
     }

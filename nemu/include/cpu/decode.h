@@ -27,6 +27,7 @@ typedef struct Decode {
   bool jalTag;  // a tag of "call"
   char logbuf[256];
   char mlogbuf[256];
+  char dlogbuf[256];
 } Decode;
 
 // --- pattern matching mechanism ---

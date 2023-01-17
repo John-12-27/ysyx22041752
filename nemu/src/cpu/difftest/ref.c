@@ -16,8 +16,9 @@
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <difftest-def.h>
-#include <memory/paddr.h>
+#include <memory/host.h>
 
+extern uint8_t* guest_to_host(paddr_t paddr);
 void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) 
 {
     uint8_t *m = (uint8_t*)buf;
@@ -25,7 +26,7 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
     {
         for(size_t i = 0; i < n; i++)
         {
-            paddr_write(addr+i, 1, *(m+i));
+            host_write(guest_to_host(addr+i), 1, *(m+i));
         }
     } 
     else 

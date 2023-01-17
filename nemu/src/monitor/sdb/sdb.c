@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sdb.h>
-#include <memory/paddr.h>
+#include <memory/host.h>
 #include <utils.h>
 
 static int is_batch_mode = false;
@@ -188,6 +188,7 @@ static int cmd_b(char *args)
 }
 #endif
 
+extern uint8_t* guest_to_host(paddr_t paddr);
 static int cmd_x(char *args)
 {
     char *len = strtok(NULL, " ");
@@ -234,7 +235,7 @@ static int cmd_x(char *args)
     printf("mem_addr\t\tdata\n");
     for(uint64_t i = 0; i < scanLen; i++)
     {
-        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)paddr_read(pmemAddr+i*8,8));
+        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)host_read(guest_to_host(pmemAddr+i*8),8));
     }
     printf("===========================================\n");
     return 0;

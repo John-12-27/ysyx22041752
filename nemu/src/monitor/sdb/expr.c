@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#include <memory/paddr.h>
+#include <memory/host.h>
 enum {
   TK_NOTYPE = 256, 
   TK_EQ, 
@@ -443,6 +443,7 @@ Token *check_operator(Token *p, Token *q)
     return tag;
 }
 
+extern uint8_t* guest_to_host(paddr_t paddr);
 word_t eval(Token *p, Token *q, bool *success)
 {
     if(p > q)
@@ -480,7 +481,7 @@ word_t eval(Token *p, Token *q, bool *success)
             }
             case TK_POINTER:
             {
-                return paddr_read((paddr_t)val2, 8);
+                return host_read(guest_to_host((paddr_t)val2), 8);
             } break;
             case TK_EQ: 
             {

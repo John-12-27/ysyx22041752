@@ -52,19 +52,41 @@ void init_map() {
   p_space = io_space;
 }
 
-word_t map_read(paddr_t addr, int len, IOMap *map) {
-  assert(len >= 1 && len <= 8);
-  check_bound(map, addr);
-  paddr_t offset = addr - map->low;
-  invoke_callback(map->callback, offset, len, false); // prepare data to read
-  word_t ret = host_read(map->space + offset, len);
-  return ret;
+#ifdef CONFIG_DTRACE
+extern bool dtrace_enable(const char *device);
+extern void log_device(Decode *s, const char *name, word_t data, bool read);
+extern void log_inst(Decode *s);
+#endif
+
+word_t map_read(Decode *s, paddr_t addr, int len, IOMap *map) 
+{
+    assert(len >= 1 && len <= 8);
+    check_bound(map, addr);
+    paddr_t offset = addr - map->low;
+    invoke_callback(map->callback, offset, len, false); // prepare data to read
+    word_t ret = host_read(map->space + offset, len);
+#ifdef CONFIG_DTRACE
+    if(dtrace_enable(map->name))
+    {
+        log_inst(s);
+        log_device(s, map->name, ret, true);
+    }
+#endif
+    return ret;
 }
 
-void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
-  assert(len >= 1 && len <= 8);
-  check_bound(map, addr);
-  paddr_t offset = addr - map->low;
-  host_write(map->space + offset, len, data);
-  invoke_callback(map->callback, offset, len, true);
+void map_write(Decode *s, paddr_t addr, int len, word_t data, IOMap *map) 
+{
+    assert(len >= 1 && len <= 8);
+    check_bound(map, addr);
+    paddr_t offset = addr - map->low;
+    host_write(map->space + offset, len, data);
+    invoke_callback(map->callback, offset, len, true);
+#ifdef CONFIG_DTRACE
+    if(dtrace_enable(map->name))
+    {
+        log_inst(s);
+        log_device(s, map->name, data, false);
+    }
+#endif
 }

@@ -32,15 +32,20 @@ typedef struct
 extern NEMUState nemu_state;
 
 /* tracer */
-#if ((CONFIG_TRACE_END - CONFIG_TRACE_START) <= 10)
+#if ((CONFIG_ITRACE_END - CONFIG_ITRACE_START) <= 10)
     #define IRINGBUF_DEPTH 10
 #else
-    #define IRINGBUF_DEPTH (CONFIG_TRACE_END - CONFIG_TRACE_START)
+    #define IRINGBUF_DEPTH (CONFIG_ITRACE_END - CONFIG_ITRACE_START)
 #endif
-#if ((CONFIG_VMTRACE_END - CONFIG_VMTRACE_START) <= 10)
+#if ((CONFIG_PMTRACE_END - CONFIG_PMTRACE_START) <= 10)
     #define MRINGBUF_DEPTH 10
 #else
     #define MRINGBUF_DEPTH (CONFIG_VMTRACE_END - CONFIG_VMTRACE_START)
+#endif
+#if ((CONFIG_DTRACE_END - CONFIG_DTRACE_START) <= 10)
+    #define DRINGBUF_DEPTH 10
+#else
+    #define DRINGBUF_DEPTH (CONFIG_DTRACE_END - CONFIG_DTRACE_START)
 #endif
 
 typedef struct RingBuf 
@@ -98,35 +103,35 @@ uint64_t get_time();
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
-#define flog_write(...) \
+#define ftrace_write(...) \
   { \
-    extern FILE* flog_fp; \
-      fprintf(flog_fp, __VA_ARGS__); \
-      fflush(flog_fp); \
+    extern FILE* ftrace_fp; \
+      fprintf(ftrace_fp, __VA_ARGS__); \
+      fflush(ftrace_fp); \
   } 
 
-#define mlog_write(...) \
+#define mtrace_write(...) \
   { \
     extern FILE* mtrace_fp; \
       fprintf(mtrace_fp, __VA_ARGS__); \
       fflush(mtrace_fp); \
   } 
 
-#define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+#define dtrace_write(...) \
+  { \
+    extern FILE* dtrace_fp; \
+      fprintf(dtrace_fp, __VA_ARGS__); \
+      fflush(dtrace_fp); \
+  } 
+
+#define itrace_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
-    extern FILE* log_fp; \
-      fprintf(log_fp, __VA_ARGS__); \
-      fflush(log_fp); \
+    extern FILE* itrace_fp; \
+      fprintf(itrace_fp, __VA_ARGS__); \
+      fflush(itrace_fp); \
   } while (0) \
 )
 
-/*
-#define _Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    log_write(__VA_ARGS__); \
-  } while (0)
-*/
 #define _Log(...) \
   do { \
     printf(__VA_ARGS__); \

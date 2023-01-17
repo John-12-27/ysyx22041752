@@ -16,41 +16,21 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include <cpu/decode.h>
-extern bool mtrace_enable(vaddr_t vaddr, paddr_t paddr); 
-extern void log_inst(Decode *s);
-extern void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read);
 
 word_t vaddr_ifetch(vaddr_t addr, int len) 
 {
-    return paddr_read(addr, len);
+    return paddr_ifetch(addr, len);
 }
 
 word_t vaddr_read(Decode *s, vaddr_t addr, int len) 
 {
     paddr_t paddr = addr;
-    word_t data = paddr_read(paddr, len);
-
-#ifdef CONFIG_MTRACE
-    bool status = mtrace_enable(addr, paddr);
-    if(status)
-    {
-        log_inst(s);
-        log_mem(s, addr, paddr, data, true);
-    }
-#endif
+    word_t data = paddr_read(s, paddr, len);
     return data;
 }
 
 void vaddr_write(Decode *s, vaddr_t addr, int len, word_t data) 
 {
     paddr_t paddr = addr;
-    paddr_write(paddr, len, data);
-#ifdef CONFIG_MTRACE
-    bool status = mtrace_enable(addr, paddr);
-    if(status)
-    {
-        log_inst(s);
-        log_mem(s, addr, paddr, data, false);
-    }
-#endif
+    paddr_write(s, paddr, len, data);
 }
