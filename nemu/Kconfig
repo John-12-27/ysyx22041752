@@ -129,15 +129,40 @@ config DTRACE
   bool "Enable tracer for devices"
   default y
 
-config DTRACE_START
+config SERIAL
   depends on DTRACE
-  hex "When tracing is enabled (unit: address of device)"
-  default 0x0
+  bool "Enable the tracer for serial"
+  default n
 
-config DTRACE_END
+config TIMER
   depends on DTRACE
-  hex "When tracing is disabled (unit: address of device)"
-  default 0x0
+  bool "Enable the tracer for timer"
+  default n
+
+config KEYBOARD
+  depends on DTRACE
+  bool "Enable the tracer for keyboard"
+  default n
+
+config VGA
+  depends on DTRACE
+  bool "Enable the tracer for vga"
+  default n
+
+config AUDIO
+  depends on DTRACE
+  bool "Enable the tracer for audio"
+  default n
+
+config DISK
+  depends on DTRACE
+  bool "Enable the tracer for disk"
+  default n
+
+config SDCARD
+  depends on DTRACE
+  bool "Enable the tracer for sdcard"
+  default n
 
 config DTRACE_COND
   depends on DTRACE

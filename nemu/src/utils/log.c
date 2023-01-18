@@ -29,9 +29,6 @@ bool inputD = false;
 bool inputF = false;
 
 #if (defined(CONFIG_ITRACE) || defined(CONFIG_MTRACE)) || defined(CONFIG_DTRACE)
-static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
-static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
-static RingBuf dringbuf[DRINGBUF_DEPTH] = {};
 static RingBuf *ihead = NULL;
 static RingBuf *itail = NULL;
 static RingBuf *mhead = NULL;
@@ -147,6 +144,7 @@ static void RingBufLoad(char logbuf[], uint8_t load)
 #endif
 
 #ifdef CONFIG_ITRACE
+static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
 void log_inst(Decode *s)
 {
     char *p = s->logbuf;
@@ -168,19 +166,10 @@ void log_inst(Decode *s)
     memset(p, ' ', space_len);
     p += space_len;
 
-    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
         MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
     RingBufLoad(s->logbuf, 0);
-}
-
-void output_iRingBuf()
-{
-    for(; ihead->next != itail; ihead = ihead->next)
-    {
-        itrace_write("%s\n", ihead->buf);
-    }
-    itrace_write("%s\n", ihead->buf);
 }
 
 void init_ilog(const char *file) 
@@ -194,6 +183,15 @@ void init_ilog(const char *file)
     }
     Log("Log is written to %s", file ? file : "stdout");
     init_RingBuf(iringbuf, 0);
+}
+
+void output_iRingBuf()
+{
+    for(; ihead->next != itail; ihead = ihead->next)
+    {
+        itrace_write("%s\n", ihead->buf);
+    }
+    itrace_write("%s\n", ihead->buf);
 }
 
 bool log_enable(vaddr_t pc) 
@@ -213,6 +211,17 @@ bool log_enable(vaddr_t pc)
 #endif
 
 #ifdef CONFIG_DTRACE
+static RingBuf dringbuf[DRINGBUF_DEPTH] = {};
+static DTRACE_TAB table[7] = {
+                                {"serial"  ,  MUXDEF(CONFIG_SERIAL  , true, false)},
+                                {"rtc"     ,  MUXDEF(CONFIG_TIMER   , true, false)},
+                                {"keyboard",  MUXDEF(CONFIG_KEYBOARD, true, false)},
+                                {"vgactl"  ,  MUXDEF(CONFIG_VGA     , true, false)},
+                                {"audio"   ,  MUXDEF(CONFIG_AUDIO   , true, false)},
+                                {"disk"    ,  MUXDEF(CONFIG_DISK    , true, false)},
+                                {"sdhci"   ,  MUXDEF(CONFIG_SDCARD  , true, false)},
+                             };
+
 void log_device(Decode *s, const char *name, word_t data, bool read)
 {
     char *p = s->dlogbuf;
@@ -260,7 +269,14 @@ bool dtrace_enable(const char *device)
 #ifndef CONFIG_DTRACE_COND
         status = true;
 #else
-        status = !strcmp(*device, "serial");
+        for(int i = 0; i < 7; i++)
+        {
+            if((!strcmp(device, table[i].name)) && table[i].act)
+            {
+                status = true;
+                break;
+            }
+        }
 #endif
     }
     return status;
@@ -268,6 +284,8 @@ bool dtrace_enable(const char *device)
 #endif
 
 #ifdef CONFIG_MTRACE
+static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
+
 void log_mem(Decode *s, paddr_t paddr, word_t data, bool read)
 {
     char *p = s->mlogbuf;

@@ -151,7 +151,7 @@ void init_monitor(int argc, char *argv[])
 #ifdef CONFIG_MTRACE
   init_mlog(mtrace_file);
 #endif
-#ifdef CONFIG_DEVICE
+#ifdef CONFIG_DTRACE
   init_dlog(dtrace_file);
 #endif
   /* Initialize memory. */

@@ -48,6 +48,12 @@ extern NEMUState nemu_state;
     #define DRINGBUF_DEPTH (CONFIG_DTRACE_END - CONFIG_DTRACE_START)
 #endif
 
+typedef struct DTRACE_TAB
+{
+    char name[8];
+    bool act;
+} DTRACE_TAB;
+
 typedef struct RingBuf 
 {
     int  NO;
