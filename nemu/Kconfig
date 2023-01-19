@@ -149,6 +149,11 @@ config VGA
   bool "Enable the tracer for vga"
   default n
 
+config VMEM
+  depends on DTRACE
+  bool "Enable the tracer for display memory"
+  default n
+
 config AUDIO
   depends on DTRACE
   bool "Enable the tracer for audio"
@@ -164,9 +169,9 @@ config SDCARD
   bool "Enable the tracer for sdcard"
   default n
 
-config DTRACE_COND
+config DTRACE_DIRECT
   depends on DTRACE
-  bool "Only trace devices when the condition is true"
+  bool "Trace all devices when the condition is true"
   default n
 
 config ITRACE
@@ -188,6 +193,11 @@ config ITRACE_COND
   bool "Only trace instructions when the condition is true"
   default y
 
+config ITRACE_DIRECT
+  depends on ITRACE
+  bool "Trace all instructions when the condition is true"
+  default n
+
 config MTRACE
   bool "Enable tracer for memory"
   default y
@@ -206,6 +216,11 @@ config MTRACE_COND
   depends on MTRACE
   bool "Only trace memory when the condition is true"
   default y
+
+config MTRACE_DIRECT
+  depends on MTRACE
+  bool "Trace all memory when the condition is true"
+  default n
 
 config WATCHPOINTS
   bool "Enable checking for watchpoints"

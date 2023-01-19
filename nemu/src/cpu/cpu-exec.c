@@ -31,6 +31,7 @@ extern void freeAllFunc(symFunc *p);
 extern bool log_enable(vaddr_t pc);
 extern void findStr(vaddr_t pc);
 extern void log_inst(Decode *s);
+extern void RingBufLoad(char logbuf[], uint8_t load);
 extern void output_iRingBuf();
 extern void output_mRingBuf();
 extern void output_dRingBuf();
@@ -49,7 +50,7 @@ static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc)
     if(checkChange())
     {
         nemu_state.state = NEMU_STOP;
-        findStr(_this->dnpc);
+        IFDEF(CONFIG_FTRACE,findStr(_this->dnpc));
     }
 #endif
 }
@@ -71,6 +72,11 @@ static void exec_once(Decode *s, vaddr_t pc)
     if(log_enable(pc))
     {
         log_inst(s);
+#ifdef CONFIG_ITRACE_DIRECT
+        itrace_write("%s\n", s->logbuf);
+#else
+    RingBufLoad(s->logbuf, 0);
+#endif
     }
 #endif
 }
@@ -147,13 +153,13 @@ void cpu_exec(uint64_t n)
 
       // fall through
         case NEMU_QUIT: 
-#ifdef CONFIG_ITRACE
+#if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
             output_iRingBuf(); 
 #endif
-#ifdef CONFIG_MTRACE
+#if (defined(CONFIG_MTRACE) && (!defined(CONFIG_MTRACE_DIRECT)))
             output_mRingBuf();
 #endif
-#ifdef CONFIG_DTRACE
+#if (defined(CONFIG_DTRACE) && (!defined(CONFIG_DTRACE_DIRECT)))
             output_dRingBuf();
 #endif
             statistic();

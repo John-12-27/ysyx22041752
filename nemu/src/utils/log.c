@@ -59,6 +59,8 @@ static void init_RingBuf(RingBuf f[], uint8_t init)
                 dhead = &f[0];
                 dtail = &f[0];
             } break;
+        default:
+              break;
     }
     for(int i = 0; i < maxDepth; i++)
     {
@@ -78,7 +80,8 @@ static void init_RingBuf(RingBuf f[], uint8_t init)
     }
 }
 
-static void RingBufLoad(char logbuf[], uint8_t load)
+#if (!defined(CONFIG_ITRACE_DIRECT)) || (!defined(CONFIG_DTRACE_DIRECT)) || (!defined(CONFIG_MTRACE_DIRECT))
+void RingBufLoad(char logbuf[], uint8_t load)
 {
     static bool dfull = false;
     static int dcnt = 0;
@@ -139,8 +142,11 @@ static void RingBufLoad(char logbuf[], uint8_t load)
                 dtail = dtail->next;
                 dcnt++;
             } break;
+        default:
+              break;
     }
 }
+#endif
 #endif
 
 #ifdef CONFIG_ITRACE
@@ -169,7 +175,6 @@ void log_inst(Decode *s)
    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
         MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-    RingBufLoad(s->logbuf, 0);
 }
 
 void init_ilog(const char *file) 
@@ -185,6 +190,7 @@ void init_ilog(const char *file)
     init_RingBuf(iringbuf, 0);
 }
 
+#ifndef CONFIG_ITRACE_DIRECT
 void output_iRingBuf()
 {
     for(; ihead->next != itail; ihead = ihead->next)
@@ -193,6 +199,7 @@ void output_iRingBuf()
     }
     itrace_write("%s\n", ihead->buf);
 }
+#endif
 
 bool log_enable(vaddr_t pc) 
 {
@@ -212,11 +219,12 @@ bool log_enable(vaddr_t pc)
 
 #ifdef CONFIG_DTRACE
 static RingBuf dringbuf[DRINGBUF_DEPTH] = {};
-static DTRACE_TAB table[7] = {
+static DTRACE_TAB table[8] = {
                                 {"serial"  ,  MUXDEF(CONFIG_SERIAL  , true, false)},
                                 {"rtc"     ,  MUXDEF(CONFIG_TIMER   , true, false)},
                                 {"keyboard",  MUXDEF(CONFIG_KEYBOARD, true, false)},
                                 {"vgactl"  ,  MUXDEF(CONFIG_VGA     , true, false)},
+                                {"vmem"    ,  MUXDEF(CONFIG_VMEM    , true, false)},
                                 {"audio"   ,  MUXDEF(CONFIG_AUDIO   , true, false)},
                                 {"disk"    ,  MUXDEF(CONFIG_DISK    , true, false)},
                                 {"sdhci"   ,  MUXDEF(CONFIG_SDCARD  , true, false)},
@@ -236,9 +244,14 @@ void log_device(Decode *s, const char *name, word_t data, bool read)
     {
         p += snprintf(p, sizeof(s->dlogbuf), " W");
     }
+#ifdef CONFIG_DTRACE_DIRECT
+    dtrace_write("%s\n", s->dlogbuf);
+#else
     RingBufLoad(s->dlogbuf, 2);
+#endif
 }
 
+#ifndef CONFIG_DTRACE_DIRECT
 void output_dRingBuf()
 {
     for(; dhead->next != dtail; dhead = dhead->next)
@@ -247,6 +260,7 @@ void output_dRingBuf()
     }
     dtrace_write("%s\n", dhead->buf);
 }
+#endif
 
 void init_dlog(const char *file) 
 {
@@ -266,9 +280,6 @@ bool dtrace_enable(const char *device)
     bool status = false;
     if(inputD)
     {
-#ifndef CONFIG_DTRACE_COND
-        status = true;
-#else
         for(int i = 0; i < 7; i++)
         {
             if((!strcmp(device, table[i].name)) && table[i].act)
@@ -277,7 +288,6 @@ bool dtrace_enable(const char *device)
                 break;
             }
         }
-#endif
     }
     return status;
 }
@@ -300,9 +310,13 @@ void log_mem(Decode *s, paddr_t paddr, word_t data, bool read)
     {
         p += snprintf(p, sizeof(s->mlogbuf), " W");
     }
+#ifdef CONFIG_MTRACE_DIRECT
+    mtrace_write("%s\n", s->mlogbuf);
+#else
     RingBufLoad(s->dlogbuf, 1);
+#endif
 }
-
+#ifndef CONFIG_MTRACE_DIRECT
 void output_mRingBuf()
 {
     for(; mhead->next != mtail; mhead = mhead->next)
@@ -311,6 +325,7 @@ void output_mRingBuf()
     }
     mtrace_write("%s\n", mhead->buf);
 }
+#endif
 
 void init_mlog(const char *file) 
 {

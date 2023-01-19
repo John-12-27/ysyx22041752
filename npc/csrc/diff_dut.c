@@ -82,7 +82,7 @@ static bool checkregs(CPU_state *ref, vaddr_t pc)
 		res = true;
         npc_state.state = NPC_ABORT;
         npc_state.halt_pc = pc;
-        /*reg_display();*/
+        reg_display();
     }
 	return res;
 }

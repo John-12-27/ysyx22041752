@@ -59,7 +59,7 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
     int d = 0;
     char c;
     char *s;
-    while(*fmt && !((N == true) && (n > 0)))
+    while(*fmt && !((N == true) && (n == 0)))
     {
         n--;
         if(*fmt == '%')
@@ -133,9 +133,10 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
     return res;
 }
 
+#define MAX_PRINTF_BUF 100
 int printf(const char *fmt, ...) 
 {
-    char buf[50];
+    char buf[MAX_PRINTF_BUF];
     int res;
     va_list ap;
     va_start(ap, fmt);
@@ -145,6 +146,7 @@ int printf(const char *fmt, ...)
     {
         putch(buf[i]);
     }
+    assert(res < MAX_PRINTF_BUF);
     return res;
 }
 
