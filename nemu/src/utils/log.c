@@ -18,6 +18,7 @@
 #include <cpu/decode.h>
 #include <elf.h>
 
+#ifdef OFF_LLVM
 FILE *itrace_fp = NULL;
 FILE *ftrace_fp = NULL;
 FILE *mtrace_fp = NULL;
@@ -568,4 +569,5 @@ void freeAllFunc(symFunc *p)
         free(p);
     }
 }
+#endif
 #endif

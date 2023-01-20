@@ -42,7 +42,7 @@ static bool g_print_step = false;
 
 void device_update();
 
-
+#if OFF_LLVM
 static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc) 
 {
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
@@ -56,12 +56,15 @@ static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc)
 }
 
 void call_return(vaddr_t pc, vaddr_t dnpc);
+#endif
+
 static void exec_once(Decode *s, vaddr_t pc) 
 {
     s->pc = pc;
     s->snpc = pc;
     isa_exec_once(s);
     cpu.pc = s->dnpc;
+#if OFF_LLVM
 #ifdef CONFIG_FTRACE
     if(s->jalTag || s->jalrTag)
     {
@@ -79,6 +82,7 @@ static void exec_once(Decode *s, vaddr_t pc)
 #endif
     }
 #endif
+#endif
 }
 
 static void execute(uint64_t n) 
@@ -90,9 +94,13 @@ static void execute(uint64_t n)
         g_nr_guest_inst ++;
         if (g_print_step) 
         { 
+#ifdef OFF_LLVM
             IFDEF(CONFIG_ITRACE, puts(s.logbuf)); 
+#endif
         }
+#ifdef OFF_LLVM
         difftest_and_watchpoint(&s, cpu.pc);
+#endif
         if (nemu_state.state != NEMU_RUNNING) 
         {
             break;
@@ -103,9 +111,11 @@ static void execute(uint64_t n)
 
 static void statistic() 
 {
+#ifdef OFF_LLVM
 #ifdef CONFIG_FTRACE
     freeAllStrTab();
     freeAllFunc(pFirstFunc);
+#endif
 #endif
     IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%ld", "%'ld")
@@ -153,6 +163,7 @@ void cpu_exec(uint64_t n)
 
       // fall through
         case NEMU_QUIT: 
+#ifdef OFF_LLVM
 #if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
             output_iRingBuf(); 
 #endif
@@ -161,6 +172,7 @@ void cpu_exec(uint64_t n)
 #endif
 #if (defined(CONFIG_DTRACE) && (!defined(CONFIG_DTRACE_DIRECT)))
             output_dRingBuf();
+#endif
 #endif
             statistic();
     }
