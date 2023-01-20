@@ -1,5 +1,6 @@
 #include <am.h>
 #include <nemu.h>
+#include <klib-macros.h>
 
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 
@@ -7,6 +8,7 @@ static int WIDTH;
 
 void __am_gpu_init() 
 {
+    io_read(AM_GPU_CONFIG);
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) 
