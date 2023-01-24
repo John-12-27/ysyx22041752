@@ -123,11 +123,11 @@ menu "Testing and Debugging"
 
 config FTRACE
   bool "Enable tracer for functions"
-  default y
+  default n
 
 config DTRACE
   bool "Enable tracer for devices"
-  default y
+  default n
 
 config SERIAL
   depends on DTRACE
@@ -176,7 +176,7 @@ config DTRACE_DIRECT
 
 config ITRACE
   bool "Enable instruction tracer"
-  default y
+  default n
 
 config ITRACE_START
   depends on ITRACE
@@ -200,7 +200,7 @@ config ITRACE_DIRECT
 
 config MTRACE
   bool "Enable tracer for memory"
-  default y
+  default n
 
 config PMTRACE_START
   depends on MTRACE
@@ -224,7 +224,7 @@ config MTRACE_DIRECT
 
 config WATCHPOINTS
   bool "Enable checking for watchpoints"
-  default y
+  default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

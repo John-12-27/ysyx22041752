@@ -26,10 +26,8 @@ word_t vaddr_ifetch(vaddr_t addr, int len)
 
 word_t vaddr_read(Decode *s, vaddr_t addr, int len) 
 {
-    /*paddr_t paddr = addr;*/
     TEST_VADDR = addr;
     word_t data = paddr_read(s, TEST_VADDR, len);
-    /*word_t data = paddr_read(s, paddr, len);*/
     return data;
 }
 
