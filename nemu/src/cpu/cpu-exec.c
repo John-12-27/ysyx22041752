@@ -25,6 +25,16 @@
  */
 #define MAX_INST_TO_PRINT 10
 
+extern symFunc *pFirstFunc;
+extern void freeAllStrTab();
+extern void freeAllFunc(symFunc *p);
+extern bool log_enable(vaddr_t pc);
+extern void findStr(vaddr_t pc);
+extern void log_inst(Decode *s);
+extern void RingBufLoad(char logbuf[], uint8_t load);
+extern void output_iRingBuf();
+extern void output_mRingBuf();
+extern void output_dRingBuf();
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -32,26 +42,19 @@ static bool g_print_step = false;
 
 void device_update();
 
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) 
+static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc) 
 {
-#ifdef CONFIG_ITRACE_COND
-    if (ITRACE_COND) 
-    { 
-        log_write("%s\n", _this->logbuf); 
-    }
-#endif
-    if (g_print_step) 
-    { 
-        IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); 
-    }
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-#ifdef CONFIG_ENABLE_WATCHPOINT 
+#ifdef CONFIG_WATCHPOINTS
     if(checkChange())
     {
         nemu_state.state = NEMU_STOP;
+        IFDEF(CONFIG_FTRACE,findStr(_this->dnpc));
     }
 #endif
 }
+
+void call_return(vaddr_t pc, vaddr_t dnpc);
 
 static void exec_once(Decode *s, vaddr_t pc) 
 {
@@ -59,29 +62,22 @@ static void exec_once(Decode *s, vaddr_t pc)
     s->snpc = pc;
     isa_exec_once(s);
     cpu.pc = s->dnpc;
+#ifdef CONFIG_FTRACE
+    if(s->jalTag || s->jalrTag)
+    {
+        call_return(s->snpc, s->dnpc);
+    }
+#endif
 #ifdef CONFIG_ITRACE
-    char *p = s->logbuf;
-    p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = s->snpc - s->pc;
-    int i;
-    uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-    for (i = ilen - 1; i >= 0; i --) 
+    if(log_enable(pc))
     {
-        p += snprintf(p, 4, " %02x", inst[i]);
+        log_inst(s);
+#ifdef CONFIG_ITRACE_DIRECT
+        itrace_write("%s\n", s->logbuf);
+#else
+    RingBufLoad(s->logbuf, 0);
+#endif
     }
-    int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-    int space_len = ilen_max - ilen;
-    if (space_len < 0) 
-    {
-        space_len = 0;
-    }
-    space_len = space_len * 3 + 1;
-    memset(p, ' ', space_len);
-    p += space_len;
-
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 #endif
 }
 
@@ -92,7 +88,11 @@ static void execute(uint64_t n)
     {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst ++;
-        trace_and_difftest(&s, cpu.pc);
+        if (g_print_step) 
+        { 
+            IFDEF(CONFIG_ITRACE, puts(s.logbuf)); 
+        }
+        difftest_and_watchpoint(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) 
         {
             break;
@@ -101,16 +101,24 @@ static void execute(uint64_t n)
     }
 }
 
-static void statistic() {
-  IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
+static void statistic() 
+{
+#ifdef CONFIG_FTRACE
+    freeAllStrTab();
+    freeAllFunc(pFirstFunc);
+#endif
+    IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%ld", "%'ld")
-  Log("host time spent = " NUMBERIC_FMT " us", g_timer);
-  Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
-  if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
-  else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
+    Log("host time spent = " NUMBERIC_FMT " us", g_timer);
+    Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+    if (g_timer > 0) 
+        Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
+    else 
+        Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
-void assert_fail_msg() {
+void assert_fail_msg() 
+{
   isa_reg_display();
   statistic();
 }
@@ -142,8 +150,18 @@ void cpu_exec(uint64_t n)
         case NEMU_END: 
         case NEMU_ABORT:
             Log("nemu: %s at pc = " FMT_WORD, (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), nemu_state.halt_pc);
+
       // fall through
         case NEMU_QUIT: 
+#if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
+            output_iRingBuf(); 
+#endif
+#if (defined(CONFIG_MTRACE) && (!defined(CONFIG_MTRACE_DIRECT)))
+            output_mRingBuf();
+#endif
+#if (defined(CONFIG_DTRACE) && (!defined(CONFIG_DTRACE_DIRECT)))
+            output_dRingBuf();
+#endif
             statistic();
     }
 }

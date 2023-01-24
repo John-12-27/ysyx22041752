@@ -24,21 +24,29 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
-uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
-paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
+uint8_t* guest_to_host(paddr_t paddr) 
+{ 
+    return pmem + paddr - CONFIG_MBASE; 
+}
 
-static word_t pmem_read(paddr_t addr, int len) {
-  word_t ret = host_read(guest_to_host(addr), len);
-  return ret;
+paddr_t host_to_guest(uint8_t *haddr) 
+{
+    return haddr - pmem + CONFIG_MBASE; 
+}
+
+static word_t pmem_read(paddr_t addr, int len) 
+{
+    word_t ret = host_read(guest_to_host(addr), len);
+    return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
 }
 
-static void out_of_bound(paddr_t addr) {
-  panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
-      addr, (paddr_t)CONFIG_MBASE, (paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1, cpu.pc);
+static void out_of_bound(paddr_t addr, int type) {
+  panic("err type is %s address = " FMT_PADDR " out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
+      type==0?"ifetch":type==1?"mem read":"mem write",addr, (paddr_t)CONFIG_MBASE, (paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1, cpu.pc);
 }
 
 void init_mem() {
@@ -57,15 +65,57 @@ void init_mem() {
       (paddr_t)CONFIG_MBASE, (paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1);
 }
 
-word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  out_of_bound(addr);
-  return 0;
+#ifdef CONFIG_MTRACE
+extern bool mtrace_enable(paddr_t paddr);
+extern void log_inst(Decode *s);
+extern void log_mem(Decode *s, paddr_t paddr, word_t data, bool read);
+#endif
+
+
+word_t paddr_ifetch(paddr_t addr, int len) 
+{
+    if (likely(in_pmem(addr))) 
+    {
+        word_t data = pmem_read(addr, len);
+        return data;
+    }
+    out_of_bound(addr,0);
+    return 0;
 }
 
-void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  out_of_bound(addr);
+word_t paddr_read(Decode *s, paddr_t addr, int len) 
+{
+    if (likely(in_pmem(addr))) 
+    {
+        word_t data = pmem_read(addr, len);
+#ifdef CONFIG_MTRACE
+        if(mtrace_enable(addr))
+        {
+            log_inst(s);
+            log_mem(s, addr, data, true);
+        }
+#endif
+        return data;
+    }
+    IFDEF(CONFIG_DEVICE, return mmio_read(s, addr, len));
+    out_of_bound(addr,1);
+    return 0;
+}
+
+void paddr_write(Decode *s, paddr_t addr, int len, word_t data) 
+{
+    if (likely(in_pmem(addr))) 
+    { 
+        pmem_write(addr, len, data); 
+#ifdef CONFIG_MTRACE
+        if(mtrace_enable(addr))
+        {
+            log_inst(s);
+            log_mem(s, addr, data, false);
+        }
+#endif
+        return; 
+    }
+    IFDEF(CONFIG_DEVICE, mmio_write(s, addr, len, data); return);
+    out_of_bound(addr,2);
 }

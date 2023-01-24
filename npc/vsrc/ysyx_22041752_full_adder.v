@@ -2,26 +2,28 @@
 //                 Copyright (c) 2022 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : decode.v
+// Filename      : ysyx_22041752_full_adder.v
 // Author        : Cw
-// Created On    : 2022-08-18 16:54
-// Last Modified : 2022-08-25 15:56
+// Created On    : 2022-11-29 18:50
+// Last Modified : 2022-11-29 19:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-module decode #(INPUT_LEN = 3, OUTPUT_LEN = 8)
-(
-    input  wire [INPUT_LEN-1:0]  x ,
-    input  wire                  en,
-    output reg  [OUTPUT_LEN-1:0] y
+
+module ysyx_22041752_full_adder(
+    input  wire A ,
+    input  wire B ,
+    input  wire Ci,
+    output wire S ,
+    output wire Co
 );
 
-always @(x or en) begin
-    for (int i = 0; i < OUTPUT_LEN; i++) begin
-        y[i] = x==i[INPUT_LEN-1:0] && en;
-    end
-end
+assign Co = (A & B) | (A & Ci) | (B & Ci);
+assign S  = ( A &  B &  Ci) | 
+            ( A & ~B & ~Ci) |
+            (~A &  B & ~Ci) |
+            (~A & ~B &  Ci);
 
-endmodule
+endmodule //full_adder_1

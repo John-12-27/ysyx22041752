@@ -1,8 +1,27 @@
-#Check for sanity to avoid later confusion
+######################################################################
+#
+# DESCRIPTION: Verilator Example: Small Makefile
+#
+# This calls the object directory makefile.  That allows the objects to
+# be placed in the "current directory" which simplifies the Makefile.
+#
+# This file ONLY is placed under the Creative Commons Public Domain, for
+# any use, without warranty, 2020 by Wilson Snyder.
+# SPDX-License-Identifier: CC0-1.0
+#
+######################################################################
+# Check for sanity to avoid later confusion
+
 ifneq ($(words $(CURDIR)),1)
-	$(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')
+ $(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')
 endif
 
+######################################################################
+# Set up variables
+
+# If $VERILATOR_ROOT isn't in the environment, we assume it is part of a
+# package install, and verilator is in your path. Otherwise find the
+# binary relative to $VERILATOR_ROOT (such as when inside the git sources).
 ifeq ($(VERILATOR_ROOT),)
 VERILATOR = verilator
 VERILATOR_COVERAGE = verilator_coverage
@@ -12,68 +31,79 @@ VERILATOR = $(VERILATOR_ROOT)/bin/verilator
 VERILATOR_COVERAGE = $(VERILATOR_ROOT)/bin/verilator_coverage
 endif
 
-VERILATOR_FLAGS += -cc --exe
-VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast --noassert
-VERILATOR_FLAGS += -Wall
-VERILATOR_FLAGS += --trace
-VERILATOR_FLAGS += --build
-VERILATOR_FLAGS += -MMD
-
-TOPNAME = top
-NXDC_FILES = constr/top.nxdc
-INC_PATH ?=
-BUILD_DIR = ./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir
-BIN = $(BUILD_DIR)/$(TOPNAME)
-
-#nvboard: default 
-#	@echo
-#	@echo "---- RUN ----"
-#	@rm -rf logs
-#	@mkdir -p logs
-#	$(BUILD_DIR)/top +trace
-
-sim: default 
-	@echo
-	@echo "---- RUN ----"
-	@rm -rf logs
-	@mkdir -p logs
-	$(BUILD_DIR)/top +trace
-	@echo
-	@echo "---- COMMIT ----"	
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-
-include ../Makefile
-
-default: $(BIN)
-
-$(shell mkdir -p $(BUILD_DIR))
-# constraint file
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-$(SRC_AUTO_BIND): $(NXDC_FILES)
-	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-CSRCS += $(SRC_AUTO_BIND)
-# rules for NVBoard
-include $(NVBOARD_HOME)/scripts/nvboard.mk
-# rules for verilator
-INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
-LDFLAGS += -lSDL2 -lSDL2_image
+CXXSRCS = $(shell find $(abspath ./csrc) -name "*.cpp" -or -name "*.c")
 
-$(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+TOPNAME   = top
+BUILD_DIR = ./build
+OBJ_DIR   = $(BUILD_DIR)/obj_dir
+VERILATE  = $(BUILD_DIR)/$(TOPNAME)
+# Generate C++ in executable form
+VERILATOR_FLAGS += -cc --exe
+# Generate makefile dependencies (not shown as complicates the Makefile)
+#VERILATOR_FLAGS += -MMD
+# Optimize
+VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast 
+# Warn abount lint issues; may not want this on less solid designs
+VERILATOR_FLAGS += -Wall
+# Make waveforms
+VERILATOR_FLAGS += --trace
+# Check SystemVerilog assertions
+VERILATOR_FLAGS += --assert
+# Generate coverage analysis
+VERILATOR_FLAGS += --coverage
+VERILATOR_FLAGS += -Wno-EOFNEWLINE 
+# Run Verilator in debug mode
+#VERILATOR_FLAGS += --debug
+# Add this trace to get a backtrace in gdb
+#VERILATOR_FLAGS += --gdbbt
+
+# Input files for Verilator
+#VERILATOR_INPUT = -f input.vc $(VSRCS) $(CXXSRCS)
+
+######################################################################
+default: commit
+
+$(VERILATE): $(VSRCS) $(CXXSRCS)
+	@echo
 	@rm -rf $(OBJ_DIR)
-	@echo "---- VERILATE & BUILD ----"
-	$(VERILATOR) +define+SIM $(VERILATOR_FLAGS) \
-		--top-module $(TOPNAME) $^ \
-		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+	@mkdir -p $(BUILD_DIR)
+	@echo "-- VERILATE ----------------"
+	$(VERILATOR) $(VERILATOR_FLAGS) -I./vsrc --top-module $(TOPNAME) --Mdir $(OBJ_DIR) $^
 
-run: $(BIN)
-	@$^
+#$(OBJ_DIR)/%.o: %.c 
 
-clean:
-	-rm -rf logs $(BUILD_DIR)
-.PHONY: default all clean run
+build: $(VERILATE)
+	@echo
+	@echo "-- BUILD -------------------"
+	$(MAKE) -j -C $(OBJ_DIR) -f ../../Makefile_obj
+
+commit: build 
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo
+	@echo "---- COMMITED ----"	
+include ../Makefile
+
+sim: build
+	@echo
+	@echo "---- simulating ----"
+	@rm -rf logs
+	@mkdir -p logs
+	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
+	#@gtkwave ./logs/dump.vcd
+
+batch: build
+	@echo 
+	@echo "---- running with batch mode ----"
+	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
+
+gdb: build
+	@echo
+	@echo "---- debugging ----"
+	gdb -s $(OBJ_DIR)/V$(TOPNAME) --args $(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
+
+clean :
+	-rm -rf $(BUILD_DIR) logs 
+	
+.PHONY: sim batch gdb clean build

@@ -2,28 +2,28 @@
 //                 Copyright (c) 2022 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : tff.v
+// Filename      : monitor.h
 // Author        : Cw
-// Created On    : 2022-08-25 22:38
-// Last Modified : 2022-10-10 21:17
+// Created On    : 2022-11-11 11:36
+// Last Modified : 
 // ---------------------------------------------------------------------------------
-// Description   : T flip-flop
+// Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-module tff #(RST_VALUE=0)
-(
-    input  wire rst,
-    input  wire clk,
-    input  wire t  ,
-    output reg  q
-);
+#ifndef __MONITOR_H_
+#define __MONITOR_H_
+#include <stdio.h>
+#include <stdbool.h>
 
-always @(posedge clk) begin
-    if(rst)
-        q <= RST_VALUE;
-    else
-        q <= t^q;
-end
-
-endmodule
+extern char *img_file;
+extern char *diff_so_file ;
+extern int   difftest_port;
+extern bool inputL;
+extern bool inputD;
+extern bool inputM;
+extern bool inputF;
+extern bool NVBOARD_MODE;
+extern bool BATCH_MODE;
+extern void init_monitor(int argc, char *argv[]);
+#endif

@@ -5,7 +5,7 @@
 // Filename      : barrel_shifter.v
 // Author        : Cw
 // Created On    : 2022-08-30 17:45
-// Last Modified : 2022-08-30 23:04
+// Last Modified : 2022-11-19 10:03
 // ---------------------------------------------------------------------------------
 // Description   : 
 //

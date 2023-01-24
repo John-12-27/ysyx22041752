@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sdb.h>
-#include <memory/paddr.h>
+#include <memory/host.h>
 #include <utils.h>
 
 static int is_batch_mode = false;
@@ -56,6 +56,9 @@ static int cmd_q(char *args) {
 static int cmd_help(char *args);
 static int cmd_si(char *args);
 static int cmd_info(char *args);
+#ifdef CONFIG_FTRACE
+static int cmd_b(char *args);
+#endif
 static int cmd_x(char *args);
 static int cmd_p(char *args);
 static int cmd_w(char *args);
@@ -71,6 +74,9 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "The number of instructions to execute specified by the parameter, and the default value of the parameter is 1", cmd_si },
   { "info", "Print all registers(r) or watchpoints(w)", cmd_info },
+#ifdef CONFIG_FTRACE
+  { "b", "halt at the specfical function", cmd_b },
+#endif
   { "x", "Print the specfical memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "w", "Set watchpoints", cmd_w},
@@ -160,6 +166,29 @@ static int cmd_info(char *args)
     return 0;
 }
 
+#ifdef CONFIG_FTRACE
+vaddr_t findPc(const char *s);
+static int cmd_b(char *args)
+{
+    char *arg = strtok(NULL, " ");
+    char s [30] = {"$pc==0x"}; 
+    if(arg != NULL)
+    {
+        sprintf(&s[7], "%lx", findPc(arg));
+        cmd_w(s);
+    }
+    else
+    {
+        printf(ANSI_BG_RED "=========================================\n");
+        printf("Invalid name of function.\n");
+        printf("=========================================" ANSI_NONE "\n");
+    }
+    
+    return 0;
+}
+#endif
+
+extern uint8_t* guest_to_host(paddr_t paddr);
 static int cmd_x(char *args)
 {
     char *len = strtok(NULL, " ");
@@ -206,7 +235,7 @@ static int cmd_x(char *args)
     printf("mem_addr\t\tdata\n");
     for(uint64_t i = 0; i < scanLen; i++)
     {
-        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)paddr_read(pmemAddr+i*8,8));
+        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)host_read(guest_to_host(pmemAddr+i*8),8));
     }
     printf("===========================================\n");
     return 0;
@@ -364,7 +393,8 @@ void sdb_mainloop()
     }
 }
 
-void init_sdb() {
+void init_sdb() 
+{
   /* Compile the regular expressions. */
   init_regex();
 

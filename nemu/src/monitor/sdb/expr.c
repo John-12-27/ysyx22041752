@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#include <memory/paddr.h>
+#include <memory/host.h>
 enum {
   TK_NOTYPE = 256, 
   TK_EQ, 
@@ -53,7 +53,7 @@ static struct rule {
   {"=="      , TK_EQ},       // equal
   {"!="      , TK_NEQ},      // not equal
   {"&&"      , TK_AND},      // logic and
-  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1| a0| a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
+  {"\\$\(0|ra|sp|gp|tp|t0|t1|t2|s0|s1|a0|a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc)",TK_REG}, // reg name
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -63,18 +63,21 @@ static regex_t re[NR_REGEX] = {};
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
  */
-void init_regex() {
-  int i;
-  char error_msg[128];
-  int ret;
+void init_regex() 
+{
+    int i;
+    char error_msg[128];
+    int ret;
 
-  for (i = 0; i < NR_REGEX; i ++) {
-    ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
-    if (ret != 0) {
-      regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+    for (i = 0; i < NR_REGEX; i ++) 
+    {
+        ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
+        if (ret != 0) 
+        {
+            regerror(ret, &re[i], error_msg, 128);
+            panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+        }
     }
-  }
 }
 
 #define STR_LEN 32
@@ -82,7 +85,6 @@ void init_regex() {
 
 typedef struct token {
   int type;
-  /*char str[STR_LEN];*/  //目前感觉纯数字可以直接记录数值
   word_t val;
 } Token;
 
@@ -133,7 +135,7 @@ static bool make_token(char *e, bool *success)
                         else
                         {
                             printf(ANSI_BG_RED "=========================================\n");
-                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("The number must be smaller than 10^32-1 !\n");
                             printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
@@ -154,7 +156,7 @@ static bool make_token(char *e, bool *success)
                         else
                         {
                             printf(ANSI_BG_RED "=========================================\n");
-                            printf("The number must be smaller than 2^32-1 !\n");
+                            printf("The number must be smaller than 16^32-1 !\n");
                             printf("=========================================" ANSI_NONE "\n");
                             return false;
                         }
@@ -441,6 +443,7 @@ Token *check_operator(Token *p, Token *q)
     return tag;
 }
 
+extern uint8_t* guest_to_host(paddr_t paddr);
 word_t eval(Token *p, Token *q, bool *success)
 {
     if(p > q)
@@ -478,7 +481,7 @@ word_t eval(Token *p, Token *q, bool *success)
             }
             case TK_POINTER:
             {
-                return paddr_read((paddr_t)val2, 8);
+                return host_read(guest_to_host((paddr_t)val2), 8);
             } break;
             case TK_EQ: 
             {
