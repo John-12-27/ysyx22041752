@@ -18,7 +18,6 @@
 #include <cpu/decode.h>
 #include <elf.h>
 
-#ifdef OFF_LLVM
 FILE *itrace_fp = NULL;
 FILE *ftrace_fp = NULL;
 FILE *mtrace_fp = NULL;
@@ -513,9 +512,6 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
             }
 
             ftrace_write("Call %s, pc=%lx\n", strtab.pStrStart + fstack_top->name, dnpc);
-            /*printf(ANSI_BG_GREEN "=========================================\n");*/
-            /*printf("Call %s\n", strtab.pStrStart + fstack_top->name);*/
-            /*printf("=========================================" ANSI_NONE "\n");*/
             break;
         }
         p = p->next;
@@ -524,9 +520,6 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
     {
         fStack *tmp = fstack_top;
         ftrace_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
-        /*printf(ANSI_BG_GREEN "=========================================\n");*/
-        /*printf("Return from %s\n", strtab.pStrStart + tmp->name);*/
-        /*printf("=========================================" ANSI_NONE "\n");*/
         fstack_top = fstack_top->last;
         free(tmp);
     }
@@ -569,5 +562,4 @@ void freeAllFunc(symFunc *p)
         free(p);
     }
 }
-#endif
 #endif

@@ -88,14 +88,12 @@ word_t paddr_read(Decode *s, paddr_t addr, int len)
     if (likely(in_pmem(addr))) 
     {
         word_t data = pmem_read(addr, len);
-#ifdef OFF_LLVM
 #ifdef CONFIG_MTRACE
         if(mtrace_enable(addr))
         {
             log_inst(s);
             log_mem(s, addr, data, true);
         }
-#endif
 #endif
         return data;
     }
@@ -109,14 +107,12 @@ void paddr_write(Decode *s, paddr_t addr, int len, word_t data)
     if (likely(in_pmem(addr))) 
     { 
         pmem_write(addr, len, data); 
-#ifdef OFF_LLVM
 #ifdef CONFIG_MTRACE
         if(mtrace_enable(addr))
         {
             log_inst(s);
             log_mem(s, addr, data, false);
         }
-#endif
 #endif
         return; 
     }

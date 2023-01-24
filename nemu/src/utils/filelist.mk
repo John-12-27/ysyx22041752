@@ -14,9 +14,7 @@
 #**************************************************************************************/
 
 ifdef CONFIG_ITRACE
-ifdef OFF_LLVM
 CXXSRC = src/utils/disasm.cc
 CXXFLAGS += $(shell llvm-config --cxxflags) -fPIE
 LIBS += $(shell llvm-config --libs)
-endif
 endif
