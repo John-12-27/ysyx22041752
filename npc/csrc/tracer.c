@@ -155,7 +155,7 @@ void log_inst(Decode *s)
 {
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = s->snpc - s->pc;
+    int ilen = 4;//s->snpc - s->pc;
     word_t *tmp = &(s->inst);
     uint8_t *inst = (uint8_t *)tmp;
     for (int i = ilen - 1; i >= 0; i --) 
@@ -299,8 +299,8 @@ void log_mem(Decode *s, paddr_t paddr, word_t data, bool read)
 {
     char *p = s->mlogbuf;
     p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
-    p += snprintf(p, sizeof(s->mlogbuf), " paddr:"FMT_PADDR, paddr);
-    p += snprintf(p, sizeof(s->mlogbuf), " data:"FMT_WORD , data);
+    p += snprintf(p, sizeof(s->mlogbuf), " paddr:" FMT_PADDR, paddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " data:" FMT_WORD , data);
     if(read)
     {
         p += snprintf(p, sizeof(s->mlogbuf), " R");
@@ -332,7 +332,7 @@ void init_mlog(const char *file)
     if(file != NULL) 
     {
         FILE *fp = fopen(file, "w");
-        Assert(fp, "Can not open '%s'", file);
+        assert(fp);
         mtrace_fp = fp;
     }
     Log("Mtrace is written to %s", file ? file : "stdout");

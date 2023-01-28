@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-12-14 15:34
+// Last Modified : 2023-01-28 22:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,7 +31,9 @@ module ysyx_22041752_EXU(
     output wire                     data_sram_en   ,
     output wire [`SRAM_WEN_WD -1:0] data_sram_wen  ,
     output wire [`SRAM_ADDR_WD-1:0] data_sram_addr ,
-    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata
+    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata,
+
+    output wire [`PC_WD           -1:0] debug_es_pc
     //output wire [127:0] mul_result         
 );
 
@@ -202,4 +204,7 @@ assign mem_read_after_write = (es_mem_re) && es_valid;
 assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {mem_read_after_write,es_forward_valid,alu_result,rd};
 
+
+
+assign debug_es_pc = es_pc;
 endmodule

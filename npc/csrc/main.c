@@ -5,6 +5,7 @@
 #include "npc_state.h"
 #include "diff_dut.h"
 #include "device.h"
+#include "tracer.h"
 
 //void nvboard_bind_all_pins(Vtop* top);
 

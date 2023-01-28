@@ -29,7 +29,7 @@ static inline word_t paddr_read(paddr_t paddr)
 #ifdef CONFIG_MTRACE
         if(mtrace_enable(paddr))
         {
-            log_inst(&M, false);
+            log_inst(&M);
             log_mem(&M, paddr, data, true);
         }
 #endif
@@ -57,9 +57,6 @@ static inline word_t paddr_read(paddr_t paddr)
 
 static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 {
-#ifdef CONFIG_DIFFTEST
-    difftest_skip_ref();
-#endif
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
         switch(wen)
@@ -74,13 +71,16 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 #ifdef CONFIG_MTRACE
         if(mtrace_enable(paddr))
         {
-            log_inst(&M, false);
+            log_inst(&M);
             log_mem(&M, paddr, data, false);
         }
 #endif
     }
     else if(paddr == CONFIG_SERIAL_MMIO)
     {
+#ifdef CONFIG_DIFFTEST
+        M.dnpc = M.pc; //M.dnpc记录需要越过difftest的指令pc
+#endif
         serial(data, wen);
 #ifdef CONFIG_DTRACE
         if(dtrace_enable("serial")

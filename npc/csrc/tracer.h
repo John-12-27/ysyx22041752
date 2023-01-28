@@ -21,7 +21,7 @@
 
 #define CONFIG_DIFFTEST      1
 #define CONFIG_WATCHPOINT    1
-#define CONFIG_FTRACE        1
+//#define CONFIG_FTRACE        1
 
 //#define CONFIG_DTRACE        1
 #define CONFIG_SERIAL        1
@@ -34,15 +34,15 @@
 #define CONFIG_SDCARD        1
 #define CONFIG_DTRACE_DIRECT 1
 
-//#define CONFIG_ITRACE        1
+#define CONFIG_ITRACE        1
 #define CONFIG_ITRACE_START  0x80000000
 #define CONFIG_ITRACE_END    0x80000000
-#define CONFIG_ITRACE_COND   1
-//#define CONFIG_ITRACE_DIRECT 1
+//#define CONFIG_ITRACE_COND   1
+#define CONFIG_ITRACE_DIRECT 1
 
-//#define CONFIG_MTRACE        1
-#define CONFIG_PMTRACE_START 0x80000000
-#define CONFIG_PMTRACE_END   0x80000000
+#define CONFIG_MTRACE        1
+#define CONFIG_PMTRACE_START 0x80002491
+#define CONFIG_PMTRACE_END   0x80002491
 #define CONFIG_MTRACE_COND   1
 #define CONFIG_MTRACE_DIRECT 1
 
@@ -66,6 +66,7 @@
 
 #define itrace_write(...)  \
   { \
+      extern FILE *itrace_fp; \
       fprintf(itrace_fp, __VA_ARGS__); \
       fflush(itrace_fp); \
   } 
@@ -117,6 +118,8 @@ extern void init_flog(const char *file);
 extern void init_ilog(const char *file);
 extern bool mtrace_enable(paddr_t paddr);
 extern bool log_enable(vaddr_t pc);
+extern bool dtrace_enable(const char *device);
+extern bool mtrace_enable(paddr_t paddr);
 extern void funcTabInit(const char *file);
 extern vaddr_t findPc(const char *s);
 extern void call_return(vaddr_t snpc, vaddr_t dnpc);

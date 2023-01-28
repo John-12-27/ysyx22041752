@@ -65,15 +65,18 @@ static bool trace_diff_watch()
             cpu.gpr[i] = cpu_gpr[i];
         }
         cpu.pc = S.pc;
-#ifdef CONFIG_FTRACE
-        
-#endif
 #ifdef CONFIG_ITRACE
         if(log_enable(S.pc))
         {
             log_inst(&S);
+#ifdef CONFIG_ITRACE_DIRECT
+            itrace_write("%s\n", S.logbuf);
+#else
+            RingBufLoad(S.logbuf, 0);
+#endif
         }
 #endif
+
 #ifdef CONFIG_DIFFTEST
         res = difftest_step(S.pc, S.dnpc);
 #endif
@@ -204,5 +207,6 @@ void exec(uint64_t n, bool batch)
             freeAllStrTab();
             freeAllFunc(pFirstFunc);
 #endif
+            break;
     }
 }
