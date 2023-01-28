@@ -4,6 +4,7 @@
 #include "exec.h"
 #include "npc_state.h"
 #include "diff_dut.h"
+#include "device.h"
 
 //void nvboard_bind_all_pins(Vtop* top);
 
@@ -12,8 +13,12 @@ int main(int argc, char *argv[])
     init_monitor(argc, argv);
 	cpu.pc = 0x80000000;
 
-    long img_size = load_img(img_file);
-    init_difftest(diff_so_file, img_size, difftest_port);
+    device_init();
+#ifdef CONFIG_DIFFTEST
+    init_difftest(diff_so_file, load_img(img_file), difftest_port);
+#else
+    load_img(img_file);
+#endif
 	sim_init(argc,argv);
     reset(10);
     if(!NVBOARD_MODE)

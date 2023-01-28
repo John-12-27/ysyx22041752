@@ -15,10 +15,87 @@
 #include <assert.h>
 #include "memory.h"
 #include "monitor.h"
+#include "device.h"
 #include "tracer.h"
+#include "diff_dut.h"
 
 uint8_t mem[MEMSIZE] = {};
-/*uint8_t dmem[MEMSIZE] = {};*/
+
+static inline word_t paddr_read(paddr_t paddr)
+{
+    if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
+    {
+        word_t data = *(uint64_t *)(mem + paddr - MBASEADDR);
+#ifdef CONFIG_MTRACE
+        if(mtrace_enable(paddr))
+        {
+            log_inst(&M, false);
+            log_mem(&M, paddr, data, true);
+        }
+#endif
+        return data;
+    }
+    else if((paddr >= CONFIG_RTC_MMIO) && (paddr < CONFIG_RTC_MMIO+8))
+    {
+        word_t data = getRTC_val();
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("rtc")
+        {
+            log_inst(D);
+            log_device(D, "rtc", data, true);
+        }
+#endif
+        return data;
+    }
+    else
+    {
+        printf("read addr error : %lx\n", paddr);
+        assert(0);
+    }
+    return 0;
+}
+
+static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
+{
+#ifdef CONFIG_DIFFTEST
+    difftest_skip_ref();
+#endif
+    if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
+    {
+        switch(wen)
+        {
+            case 0x01: *(uint8_t  *)(mem + paddr - MBASEADDR) = data; break;
+            case 0x03: *(uint16_t *)(mem + paddr - MBASEADDR) = data; break;
+            case 0x0f: *(uint32_t *)(mem + paddr - MBASEADDR) = data; break;
+            case 0xff: *(uint64_t *)(mem + paddr - MBASEADDR) = data; break;
+            default:   printf("wen err!!!\n");  
+                       assert(0); break;
+        }
+#ifdef CONFIG_MTRACE
+        if(mtrace_enable(paddr))
+        {
+            log_inst(&M, false);
+            log_mem(&M, paddr, data, false);
+        }
+#endif
+    }
+    else if(paddr == CONFIG_SERIAL_MMIO)
+    {
+        serial(data, wen);
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("serial")
+        {
+            log_inst(D);
+            log_device(D, "serial", data, false);
+        }
+#endif
+    }
+    else
+    {
+        printf("write addr error : 0x%lx\n", paddr);
+        assert(0);
+    }
+}
 
 long load_img(char *img)
 {
@@ -48,7 +125,7 @@ long load_img(char *img)
     return size;
 }
 
-word_t inst_fetch(paddr_t addr, uint8_t len)
+word_t vaddr_ifetch(paddr_t addr, uint8_t len)
 {
     switch(len)
     {
@@ -61,50 +138,15 @@ word_t inst_fetch(paddr_t addr, uint8_t len)
     return 0;
 }
 
-word_t read_mem(paddr_t addr)
+word_t vaddr_read(vaddr_t vaddr)
 {
-    if((addr < MBASEADDR)|| (addr >= (MEMSIZE+MBASEADDR)))
-    {
-        return 0;
-    }
-    word_t data;
-
-    /*switch(len)*/
-    /*{*/
-        /*case 1: data = *(uint8_t  *)(mem + addr - MBASEADDR); break;*/
-        /*case 2: data = *(uint16_t *)(mem + addr - MBASEADDR); break;*/
-        /*case 4: data = *(uint32_t *)(mem + addr - MBASEADDR); break;*/
-        /*case 8: data = *(uint64_t *)(mem + addr - MBASEADDR); break;*/
-        /*default: assert(0); break;*/
-    /*}*/
-
-    data = *(uint64_t *)(mem + addr - MBASEADDR);
-    /*if(mtrace_enable(addr, addr))*/
-    {
-        log_inst(&M, false);
-        log_mem(&M, addr, addr, data, true);
-    }
-    return data;
+    paddr_t paddr = vaddr;
+    return paddr_read(paddr);
 }
 
-word_t write_mem(paddr_t addr, word_t data, uint8_t wen)
+void vaddr_write(vaddr_t vaddr, word_t data, uint8_t wen)
 {
-    if((addr < MBASEADDR)|| (addr >= (MEMSIZE+MBASEADDR)))
-    {
-        return 0;
-    }
-    switch(wen)
-    {
-        case 0x01: *(uint8_t  *)(mem + addr - MBASEADDR) = data; break;
-        case 0x03: *(uint16_t *)(mem + addr - MBASEADDR) = data; break;
-        case 0x0f: *(uint32_t *)(mem + addr - MBASEADDR) = data; break;
-        case 0xff: *(uint64_t *)(mem + addr - MBASEADDR) = data; break;
-        default: assert(0); break;
-    }
-    /*if(mtrace_enable(addr, addr))*/
-    {
-        log_inst(&M, false);
-        log_mem(&M, addr, addr, data, false);
-    }
-    return 0;
+    paddr_t paddr = vaddr;
+    paddr_write(paddr, data, wen);
 }
+

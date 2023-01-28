@@ -17,8 +17,6 @@
 #include <memory/paddr.h>
 #include <cpu/decode.h>
 
-vaddr_t TEST_VADDR;
-
 word_t vaddr_ifetch(vaddr_t addr, int len) 
 {
     return paddr_ifetch(addr, len);
@@ -26,8 +24,7 @@ word_t vaddr_ifetch(vaddr_t addr, int len)
 
 word_t vaddr_read(Decode *s, vaddr_t addr, int len) 
 {
-    TEST_VADDR = addr;
-    word_t data = paddr_read(s, TEST_VADDR, len);
+    word_t data = paddr_read(s, addr, len);
     return data;
 }
 

@@ -18,33 +18,49 @@
 #include "color.h"
 #include "monitor.h"
 
-FILE *log_fp = NULL;
-FILE *flog_fp = NULL;
+FILE *itrace_fp = NULL;
+FILE *ftrace_fp = NULL;
 FILE *mtrace_fp = NULL;
+FILE *dtrace_fp = NULL;
 
-static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
-static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
+extern bool inputI;
+extern bool inputD;
+extern bool inputM;
+extern bool inputF;
+
+#if (defined(CONFIG_ITRACE) || defined(CONFIG_MTRACE)) || defined(CONFIG_DTRACE)
 static RingBuf *ihead = NULL;
 static RingBuf *itail = NULL;
 static RingBuf *mhead = NULL;
 static RingBuf *mtail = NULL;
-static fStack  *fstack_top = NULL;
-static fStack  *fstack_bottom = NULL;
+static RingBuf *dhead = NULL;
+static RingBuf *dtail = NULL;
 
-static void init_RingBuf(RingBuf f[], bool mringbuf_init)
+static void init_RingBuf(RingBuf f[], uint8_t init)
 {
     int maxDepth = 0;
-    if(mringbuf_init)
+    switch(init)
     {
-        maxDepth = MRINGBUF_DEPTH;
-        mhead = &f[0];
-        mtail = &f[0];
-    }
-    else
-    {
-        maxDepth = IRINGBUF_DEPTH;
-        ihead = &f[0];
-        itail = &f[0];
+        case 0:
+            {
+                maxDepth = IRINGBUF_DEPTH;
+                ihead = &f[0];
+                itail = &f[0];
+            } break;
+        case 1:
+            {
+                maxDepth = MRINGBUF_DEPTH;
+                mhead = &f[0];
+                mtail = &f[0];
+            } break;
+        case 2:
+            {
+                maxDepth = DRINGBUF_DEPTH;
+                dhead = &f[0];
+                dtail = &f[0];
+            } break;
+        default:
+              break;
     }
     for(int i = 0; i < maxDepth; i++)
     {
@@ -64,75 +80,85 @@ static void init_RingBuf(RingBuf f[], bool mringbuf_init)
     }
 }
 
-static void RingBufLoad(char logbuf[], bool mload)
+#if (!defined(CONFIG_ITRACE_DIRECT)) || (!defined(CONFIG_DTRACE_DIRECT)) || (!defined(CONFIG_MTRACE_DIRECT))
+void RingBufLoad(char logbuf[], uint8_t load)
 {
+    static bool dfull = false;
+    static int dcnt = 0;
     static bool mfull = false;
     static int mcnt = 0;
     static bool ifull = false;
     static int icnt = 0;
-    if(!mload)
+    switch(load)
     {
-        if(!ifull && icnt == IRINGBUF_DEPTH)
-        {
-            ifull = true;
-        }
-        if(ifull)
-        {
-            ihead = ihead->next;
-        }
-        for(int j = 0; j < 256; j++)
-        {
-            itail->buf[j] = logbuf[j];
-        }
-        itail = itail->next;
-        icnt++;
-    }
-    else
-    {
-        if(!mfull && mcnt == MRINGBUF_DEPTH)
-        {
-            mfull = true;
-        }
-        if(mfull)
-        {
-            mhead = mhead->next;
-        }
-        for(int j = 0; j < 256; j++)
-        {
-            mtail->buf[j] = logbuf[j];
-        }
-        mtail = mtail->next;
-        mcnt++;
+        case 0:
+            {
+                if(!ifull && icnt == IRINGBUF_DEPTH)
+                {
+                    ifull = true;
+                }
+                if(ifull)
+                {
+                    ihead = ihead->next;
+                }
+                for(int j = 0; j < 256; j++)
+                {
+                    itail->buf[j] = logbuf[j];
+                }
+                itail = itail->next;
+                icnt++;
+            } break;
+        case 1:
+            {
+                if(!mfull && mcnt == MRINGBUF_DEPTH)
+                {
+                    mfull = true;
+                }
+                if(mfull)
+                {
+                    mhead = mhead->next;
+                }
+                for(int j = 0; j < 256; j++)
+                {
+                    mtail->buf[j] = logbuf[j];
+                }
+                mtail = mtail->next;
+                mcnt++;
+            } break;
+        case 2:
+            {
+                if(!dfull && dcnt == DRINGBUF_DEPTH)
+                {
+                    dfull = true;
+                }
+                if(dfull)
+                {
+                    dhead = dhead->next;
+                }
+                for(int j = 0; j < 256; j++)
+                {
+                    dtail->buf[j] = logbuf[j];
+                }
+                dtail = dtail->next;
+                dcnt++;
+            } break;
+        default:
+              break;
     }
 }
+#endif
+#endif
 
-void log_mem(Decode *s, vaddr_t vaddr, paddr_t paddr, word_t data, bool read)
-{
-    char *p = s->mlogbuf;
-    p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
-    p += snprintf(p, sizeof(s->mlogbuf), "vaddr:" FMT_WORD , vaddr);
-    p += snprintf(p, sizeof(s->mlogbuf), " paddr:" FMT_PADDR, paddr);
-    p += snprintf(p, sizeof(s->mlogbuf), " data:" FMT_WORD , data);
-    if(read)
-    {
-        p += snprintf(p, sizeof(s->mlogbuf), " R");
-    }
-    else
-    {
-        p += snprintf(p, sizeof(s->mlogbuf), " W");
-    }
-    RingBufLoad(s->mlogbuf, true);
-}
-
-extern void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-void log_inst(Decode *s, bool inst_l)
+#ifdef CONFIG_ITRACE
+static RingBuf iringbuf[IRINGBUF_DEPTH] = {};
+void log_inst(Decode *s)
 {
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = 4;//s->snpc - s->pc;
-    int i;
-    uint8_t *inst = (uint8_t *)&s->inst;
-    for (i = ilen - 1; i >= 0; i --) 
+    int ilen = s->snpc - s->pc;
+    word_t *tmp = &(s->inst);
+    uint8_t *inst = (uint8_t *)tmp;
+    for (int i = ilen - 1; i >= 0; i --) 
     {
         p += snprintf(p, 4, " %02x", inst[i]);
     }
@@ -145,32 +171,160 @@ void log_inst(Decode *s, bool inst_l)
     space_len = space_len * 3 + 1;
     memset(p, ' ', space_len);
     p += space_len;
-
+   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-         s->pc, (uint8_t *)&s->inst, ilen);
-    if(inst_l)
-    {
-        RingBufLoad(s->logbuf, false);
-    }
+        s->pc, (uint8_t *)&s->inst, ilen);
 }
 
-void output_mRingBuf()
+void init_ilog(const char *file) 
 {
-    for(; mhead->next != mtail; mhead = mhead->next)
+    itrace_fp = stdout;
+    if(file != NULL) 
     {
-        mlog_write("%s\n", mhead->buf);
+        FILE *fp = fopen(file, "w");
+        assert(fp);
+        itrace_fp = fp;
     }
-    mlog_write("%s\n", mhead->buf);
+    Log("itrace is written to %s", file ? file : "stdout");
+    init_RingBuf(iringbuf, 0);
 }
 
+#ifndef CONFIG_ITRACE_DIRECT
 void output_iRingBuf()
 {
     for(; ihead->next != itail; ihead = ihead->next)
     {
-        log_write("%s\n", ihead->buf);
+        itrace_write("%s\n", ihead->buf);
     }
-    log_write("%s\n", ihead->buf);
+    itrace_write("%s\n", ihead->buf);
 }
+#endif
+
+bool log_enable(vaddr_t pc) 
+{
+    bool status = false;
+    if(inputI)
+    {
+#if CONFIG_ITRACE_COND
+        if((pc >= CONFIG_ITRACE_START) && (pc <= CONFIG_ITRACE_END))
+#endif
+        {
+            status = true;
+        }
+    }
+    return status;
+}
+#endif
+
+#ifdef CONFIG_DTRACE
+static RingBuf dringbuf[DRINGBUF_DEPTH] = {};
+static DTRACE_TAB table[8] = {
+                                {"serial"  ,  MUXDEF(CONFIG_SERIAL  , true, false)},
+                                {"rtc"     ,  MUXDEF(CONFIG_TIMER   , true, false)},
+                                {"keyboard",  MUXDEF(CONFIG_KEYBOARD, true, false)},
+                                {"vgactl"  ,  MUXDEF(CONFIG_VGA     , true, false)},
+                                {"vmem"    ,  MUXDEF(CONFIG_VMEM    , true, false)},
+                                {"audio"   ,  MUXDEF(CONFIG_AUDIO   , true, false)},
+                                {"disk"    ,  MUXDEF(CONFIG_DISK    , true, false)},
+                                {"sdhci"   ,  MUXDEF(CONFIG_SDCARD  , true, false)},
+                             };
+
+void log_device(Decode *s, const char *name, word_t data, bool read)
+{
+    char *p = s->dlogbuf;
+    p += snprintf(p, sizeof(s->dlogbuf), "%s\t", s->logbuf);
+    p += snprintf(p, sizeof(s->dlogbuf), " device: %s", name);
+    p += snprintf(p, sizeof(s->dlogbuf), " data:"FMT_WORD , data);
+    if(read)
+    {
+        p += snprintf(p, sizeof(s->dlogbuf), " R");
+    }
+    else
+    {
+        p += snprintf(p, sizeof(s->dlogbuf), " W");
+    }
+#ifdef CONFIG_DTRACE_DIRECT
+    dtrace_write("%s\n", s->dlogbuf);
+#else
+    RingBufLoad(s->dlogbuf, 2);
+#endif
+}
+
+#ifndef CONFIG_DTRACE_DIRECT
+void output_dRingBuf()
+{
+    for(; dhead->next != dtail; dhead = dhead->next)
+    {
+        dtrace_write("%s\n", dhead->buf);
+    }
+    dtrace_write("%s\n", dhead->buf);
+}
+#endif
+
+void init_dlog(const char *file) 
+{
+    dtrace_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        assert(fp);
+        dtrace_fp = fp;
+    }
+    Log("Dtrace is written to %s", file ? file : "stdout");
+    init_RingBuf(dringbuf, 2);
+}
+
+bool dtrace_enable(const char *device) 
+{
+    bool status = false;
+    if(inputD)
+    {
+        for(int i = 0; i < 7; i++)
+        {
+            if((!strcmp(device, table[i].name)) && table[i].act)
+            {
+                status = true;
+                break;
+            }
+        }
+    }
+    return status;
+}
+#endif
+
+#ifdef CONFIG_MTRACE
+static RingBuf mringbuf[MRINGBUF_DEPTH] = {};
+
+void log_mem(Decode *s, paddr_t paddr, word_t data, bool read)
+{
+    char *p = s->mlogbuf;
+    p += snprintf(p, sizeof(s->mlogbuf), "%s\t", s->logbuf);
+    p += snprintf(p, sizeof(s->mlogbuf), " paddr:"FMT_PADDR, paddr);
+    p += snprintf(p, sizeof(s->mlogbuf), " data:"FMT_WORD , data);
+    if(read)
+    {
+        p += snprintf(p, sizeof(s->mlogbuf), " R");
+    }
+    else
+    {
+        p += snprintf(p, sizeof(s->mlogbuf), " W");
+    }
+#ifdef CONFIG_MTRACE_DIRECT
+    mtrace_write("%s\n", s->mlogbuf);
+#else
+    RingBufLoad(s->dlogbuf, 1);
+#endif
+}
+#ifndef CONFIG_MTRACE_DIRECT
+void output_mRingBuf()
+{
+    for(; mhead->next != mtail; mhead = mhead->next)
+    {
+        mtrace_write("%s\n", mhead->buf);
+    }
+    mtrace_write("%s\n", mhead->buf);
+}
+#endif
 
 void init_mlog(const char *file) 
 {
@@ -178,76 +332,57 @@ void init_mlog(const char *file)
     if(file != NULL) 
     {
         FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
         mtrace_fp = fp;
-        assert(mtrace_fp != NULL);
     }
     Log("Mtrace is written to %s", file ? file : "stdout");
-    init_RingBuf(mringbuf, true);
+    init_RingBuf(mringbuf, 1);
 }
 
-void init_flog(const char *file) 
-{
-    flog_fp = stdout;
-    if(file != NULL) 
-    {
-        FILE *fp = fopen(file, "w");
-        flog_fp = fp;
-        assert(flog_fp != NULL);
-    }
-    Log("ftrace is written to %s", file ? file : "stdout");
-}
-
-void init_log(const char *file) 
-{
-    log_fp = stdout;
-    if(file != NULL) 
-    {
-        FILE *fp = fopen(file, "w");
-        log_fp = fp;
-        assert(log_fp != NULL);
-    }
-    Log("Log is written to %s", file ? file : "stdout");
-    init_RingBuf(iringbuf, false);
-}
-
-bool mtrace_enable(vaddr_t vaddr, paddr_t paddr) 
+bool mtrace_enable(paddr_t paddr) 
 {
     bool status = false;
     if(inputM)
     {
-        if(((vaddr >= CONFIG_VMTRACE_START) && (vaddr <= CONFIG_VMTRACE_END)) || ((paddr >= CONFIG_PMTRACE_START) && (paddr <= CONFIG_PMTRACE_END )))
+#ifdef CONFIG_MTRACE_COND
+        if((paddr >= CONFIG_PMTRACE_START) && (paddr <= CONFIG_PMTRACE_END ))
+#endif
         {
             status = true;
         }
     }
     return status;
 }
+#endif
 
-bool log_enable(vaddr_t pc) 
-{
-    bool status = false;
-    if(inputL)
-    {
-        if((pc >= CONFIG_TRACE_START) && (pc <= CONFIG_TRACE_END))
-        {
-            status = true;
-        }
-    }
-    return status;
-}
-
+#ifdef CONFIG_FTRACE
+static fStack  *fstack_top = NULL;
+static fStack  *fstack_bottom = NULL;
 symFunc *pFirstFunc = NULL;
 static symFunc *pLastFunc  = NULL;
 strTab strtab;
 static char *shstrtab;
+
+void init_flog(const char *file) 
+{
+    ftrace_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        assert(fp);
+        ftrace_fp = fp;
+    }
+    Log("ftrace is written to %s", file ? file : "stdout");
+}
+
 void funcTabInit(const char *file)
 {
     if(file != NULL)
     {
         Elf64_Ehdr elf64_ehdr;
         FILE *fp = fopen(file, "rb");
-        assert(fp != NULL);
-        
+        assert(fp);
+
         Log("There are %lu bytes in ELF header.\n",fread(&elf64_ehdr, sizeof(char), sizeof(elf64_ehdr), fp));
         if(elf64_ehdr.e_shoff)
         {
@@ -288,7 +423,7 @@ void funcTabInit(const char *file)
                         {
                             if(pFirstFunc == NULL)
                             {
-                                pFirstFunc = (symFunc*)malloc(sizeof(symFunc));
+                                pFirstFunc = (symFunc *)malloc(sizeof(symFunc));
                                 pLastFunc = pFirstFunc;
                                 pLastFunc->baseAddr = elf64_sym.st_value;
                                 pLastFunc->size     = elf64_sym.st_size;
@@ -296,7 +431,7 @@ void funcTabInit(const char *file)
                             }
                             else
                             {
-                                pLastFunc->next = (symFunc*)malloc(sizeof(symFunc));
+                                pLastFunc->next = (symFunc *)malloc(sizeof(symFunc));
                                 pLastFunc = pLastFunc->next;
                                 pLastFunc->baseAddr = elf64_sym.st_value;
                                 pLastFunc->size     = elf64_sym.st_size;
@@ -359,7 +494,7 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
         {
             if(fstack_bottom == NULL)
             {
-                fstack_bottom = (fStack*)malloc(sizeof(fStack));
+                fstack_bottom = (fStack *)malloc(sizeof(fStack));
                 fstack_bottom->last = NULL;
                 fstack_top = fstack_bottom;
                 fstack_top->return_pc = snpc;
@@ -368,17 +503,14 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
             else
             {
                 fStack *tmp;
-                tmp = (fStack*)malloc(sizeof(fStack));
+                tmp = (fStack *)malloc(sizeof(fStack));
                 tmp->last = fstack_top;
                 tmp->return_pc = snpc;
                 tmp->name = p->name;
                 fstack_top = tmp;
             }
 
-            flog_write("Call %s, pc=%lx\n", strtab.pStrStart + fstack_top->name, dnpc);
-            /*printf(ANSI_BG_GREEN "=========================================\n");*/
-            /*printf("Call %s\n", strtab.pStrStart + fstack_top->name);*/
-            /*printf("=========================================" ANSI_NONE "\n");*/
+            ftrace_write("Call %s, pc=%lx\n", strtab.pStrStart + fstack_top->name, dnpc);
             break;
         }
         p = p->next;
@@ -386,10 +518,7 @@ void call_return(vaddr_t snpc, vaddr_t dnpc)
     if(dnpc == fstack_top->return_pc)
     {
         fStack *tmp = fstack_top;
-        flog_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
-        /*printf(ANSI_BG_GREEN "=========================================\n");*/
-        /*printf("Return from %s\n", strtab.pStrStart + tmp->name);*/
-        /*printf("=========================================" ANSI_NONE "\n");*/
+        ftrace_write("Return from %s to %lx\n", strtab.pStrStart + tmp->name, dnpc);
         fstack_top = fstack_top->last;
         free(tmp);
     }
@@ -432,3 +561,4 @@ void freeAllFunc(symFunc *p)
         free(p);
     }
 }
+#endif

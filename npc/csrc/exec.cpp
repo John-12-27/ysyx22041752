@@ -60,21 +60,29 @@ static bool trace_diff_watch()
     bool res = false;
     if(valid_flag)
     {
-        //printf("pc=0x%lx\t\tinst=0x%lx\n", S.pc, S.inst);
         for(int i = 0; i < 32; i++)
         {
             cpu.gpr[i] = cpu_gpr[i];
         }
         cpu.pc = S.pc;
+#ifdef CONFIG_FTRACE
+        
+#endif
+#ifdef CONFIG_ITRACE
         if(log_enable(S.pc))
         {
-            log_inst(&S, true);
+            log_inst(&S);
         }
+#endif
+#ifdef CONFIG_DIFFTEST
         res = difftest_step(S.pc, S.dnpc);
+#endif
+#ifdef CONFIG_WATCHPOINT
         if(!res)
         {
             res = checkChange();
         }
+#endif
     }
     return res;
 }
@@ -94,30 +102,18 @@ static bool halt()
 
 static void exec_once()
 {
-    //vaddr_t d_addr;
-    //uint8_t d_wen = 0;
-    //bool    d_en  = false;
-    //word_t  d_wdata;
-    //top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
-    //if(top->data_sram_en)
-    //{
-        //d_en    = top->data_sram_en;
-        //d_addr  = top->data_sram_addr;
-        //d_wen   = top->data_sram_wen;
-        //d_wdata = top->data_sram_wdata;
-    //}
     single_cycle();
 
-    top->inst_sram_rdata = inst_fetch(top->inst_sram_addr, 4);
+    top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
     if(top->data_sram_en && (top->data_sram_wen == 0))
     {
-        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));
-        top->data_sram_rdata = read_mem(top->data_sram_addr);
+        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        top->data_sram_rdata = vaddr_read(top->data_sram_addr);
     }
     else if(top->data_sram_en && (top->data_sram_wen != 0))
     {
-        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));
-        write_mem(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
+        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        vaddr_write(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
     }
 
     record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
@@ -188,13 +184,25 @@ void exec(uint64_t n, bool batch)
     }
     switch (npc_state.state) 
     {
-        case NPC_RUNNING: npc_state.state = NPC_STOP; output_iRingBuf(); break;
+        case NPC_RUNNING: npc_state.state = NPC_STOP; break;
         case NPC_END: 
         case NPC_ABORT:
             Log("npc: %s at pc = " FMT_WORD, (npc_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), npc_state.halt_pc);
       // fall through
         case NPC_QUIT: 
+
+#if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
             output_iRingBuf();
+#endif
+#if (defined(CONFIG_MTRACE) && (!defined(CONFIG_MTRACE_DIRECT)))
             output_mRingBuf();
+#endif
+#if (defined(CONFIG_DTRACE) && (!defined(CONFIG_DTRACE_DIRECT)))
+            output_dRingBuf();
+#endif
+#ifdef CONFIG_FTRACE
+            freeAllStrTab();
+            freeAllFunc(pFirstFunc);
+#endif
     }
 }

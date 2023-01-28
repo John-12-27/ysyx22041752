@@ -126,7 +126,7 @@ static int cmd_x(char *args)
     printf("mem_addr\t\tdata\n");
     for(uint64_t i = 0; i < scanLen; i++)
     {
-        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,(word_t)read_mem(pmemAddr+i*8));
+        printf("0x%lx\t\t0x%lx\n",pmemAddr+i*8,*(word_t *)(mem + (pmemAddr+i*8) - MBASEADDR));
     }
     printf("===========================================\n");
     return 0;

@@ -48,6 +48,7 @@ typedef struct
 
 extern Decode S;
 extern Decode M;
+extern Decode D;
 extern CPU_state cpu;
 extern NPCState npc_state;
 extern const char *regs[];
