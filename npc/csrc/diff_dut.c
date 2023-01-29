@@ -21,7 +21,7 @@
 #include "monitor.h"
 
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
-void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
+void (*ref_difftest_regcpy)(vaddr_t *pc, word_t *gpr, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
@@ -103,7 +103,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
 	
     assert(ref_difftest_memcpy);
 
-    ref_difftest_regcpy = (void (*)(void *, bool))dlsym(handle, "difftest_regcpy");
+    ref_difftest_regcpy = (void (*)(vaddr_t *, word_t *, bool))dlsym(handle, "difftest_regcpy");
 
     assert(ref_difftest_regcpy);
 
@@ -122,7 +122,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
         "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
     ref_difftest_init(port);
     ref_difftest_memcpy(0x80000000, mem, img_size, DIFFTEST_TO_REF);
-    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+    ref_difftest_regcpy(&cpu.pc, cpu.gpr, DIFFTEST_TO_REF);
 }
 
 bool difftest_step(vaddr_t pc, vaddr_t npc) 
@@ -131,7 +131,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
 
     if (skip_dut_nr_inst > 0) 
     {
-        ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
+        ref_difftest_regcpy(&ref_r.pc, ref_r.gpr, DIFFTEST_TO_DUT);
         if (ref_r.pc == npc) 
         {
             skip_dut_nr_inst = 0;
@@ -149,13 +149,13 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
     if (M.dnpc == S.pc) 
     {
         // to skip the checking of an instruction, just copy the reg state to reference design
-        ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+        ref_difftest_regcpy(&S.dnpc, cpu.gpr,DIFFTEST_TO_REF);
         /*is_skip_ref = false;*/
         return false;
     }
 
     ref_difftest_exec(1);
-    ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
+    ref_difftest_regcpy(&ref_r.pc, ref_r.gpr,DIFFTEST_TO_DUT);
 
     return checkregs(&ref_r, npc);
 }

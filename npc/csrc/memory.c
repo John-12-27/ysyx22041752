@@ -39,10 +39,10 @@ static inline word_t paddr_read(paddr_t paddr)
     {
         word_t data = getRTC_val();
 #ifdef CONFIG_DTRACE
-        if(dtrace_enable("rtc")
+        if(dtrace_enable("rtc"))
         {
-            log_inst(D);
-            log_device(D, "rtc", data, true);
+            log_inst(&D);
+            log_device(&D, "rtc", data, true);
         }
 #endif
         return data;
@@ -83,10 +83,10 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 #endif
         serial(data, wen);
 #ifdef CONFIG_DTRACE
-        if(dtrace_enable("serial")
+        if(dtrace_enable("serial"))
         {
-            log_inst(D);
-            log_device(D, "serial", data, false);
+            log_inst(&D);
+            log_device(&D, "serial", data, false);
         }
 #endif
     }

@@ -111,11 +111,15 @@ static void exec_once()
     if(top->data_sram_en && (top->data_sram_wen == 0))
     {
         mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        D.pc = M.pc;
+        D.inst = M.inst;
         top->data_sram_rdata = vaddr_read(top->data_sram_addr);
     }
     else if(top->data_sram_en && (top->data_sram_wen != 0))
     {
         mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        D.pc = M.pc;
+        D.inst = M.inst;
         vaddr_write(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
     }
 

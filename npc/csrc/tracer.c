@@ -219,14 +219,62 @@ bool log_enable(vaddr_t pc)
 #ifdef CONFIG_DTRACE
 static RingBuf dringbuf[DRINGBUF_DEPTH] = {};
 static DTRACE_TAB table[8] = {
-                                {"serial"  ,  MUXDEF(CONFIG_SERIAL  , true, false)},
-                                {"rtc"     ,  MUXDEF(CONFIG_TIMER   , true, false)},
-                                {"keyboard",  MUXDEF(CONFIG_KEYBOARD, true, false)},
-                                {"vgactl"  ,  MUXDEF(CONFIG_VGA     , true, false)},
-                                {"vmem"    ,  MUXDEF(CONFIG_VMEM    , true, false)},
-                                {"audio"   ,  MUXDEF(CONFIG_AUDIO   , true, false)},
-                                {"disk"    ,  MUXDEF(CONFIG_DISK    , true, false)},
-                                {"sdhci"   ,  MUXDEF(CONFIG_SDCARD  , true, false)},
+                                {"serial"  ,  
+#ifdef CONFIG_SERIAL  
+                                  true
+#else 
+                                  false 
+#endif
+                                },
+                                {"rtc"     ,  
+#ifdef CONFIG_TIMER    
+                                  true
+#else 
+                                  false 
+#endif
+                                },
+                                {"keyboard",  
+#ifdef CONFIG_KEYBOARD 
+                                  true
+#else 
+                                  false 
+#endif
+                                },
+                                {"vgactl"  ,  
+#ifdef CONFIG_VGA     
+                                  true 
+#else 
+                                  false 
+#endif
+                                },
+                                {"vmem"    ,  
+#ifdef CONFIG_VMEM    
+                                  true 
+#else 
+                                  false 
+#endif
+                                },
+                                {"audio"   ,  
+#ifdef CONFIG_AUDIO   
+                                  true
+#else 
+                                  false 
+#endif
+                                },
+                                {"disk"    ,  
+#ifdef CONFIG_DISK    
+                                  true
+#else 
+                                  false 
+#endif
+                                },
+                                {"sdhci"   ,  
+#ifdef CONFIG_SDCARD  
+                                  true 
+#else 
+                                  false 
+#endif
+                                },
                              };
 
 void log_device(Decode *s, const char *name, word_t data, bool read)
@@ -234,7 +282,7 @@ void log_device(Decode *s, const char *name, word_t data, bool read)
     char *p = s->dlogbuf;
     p += snprintf(p, sizeof(s->dlogbuf), "%s\t", s->logbuf);
     p += snprintf(p, sizeof(s->dlogbuf), " device: %s", name);
-    p += snprintf(p, sizeof(s->dlogbuf), " data:"FMT_WORD , data);
+    p += snprintf(p, sizeof(s->dlogbuf), " data:" FMT_WORD , data);
     if(read)
     {
         p += snprintf(p, sizeof(s->dlogbuf), " R");
@@ -283,8 +331,7 @@ bool dtrace_enable(const char *device)
         {
             if((!strcmp(device, table[i].name)) && table[i].act)
             {
-                status = true;
-                break;
+                return true;
             }
         }
     }

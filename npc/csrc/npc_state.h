@@ -22,6 +22,7 @@ typedef struct Decode {
     word_t inst;
     char logbuf[256];
     char mlogbuf[256];
+    char dlogbuf[256];
 } Decode;
 
 typedef struct CPU_state {

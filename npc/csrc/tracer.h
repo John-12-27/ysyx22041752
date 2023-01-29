@@ -21,9 +21,9 @@
 
 #define CONFIG_DIFFTEST      1
 #define CONFIG_WATCHPOINT    1
-//#define CONFIG_FTRACE        1
+#define CONFIG_FTRACE        1
 
-//#define CONFIG_DTRACE        1
+#define CONFIG_DTRACE        1
 #define CONFIG_SERIAL        1
 #define CONFIG_TIMER         1
 #define CONFIG_KEYBOARD      1
@@ -43,7 +43,7 @@
 #define CONFIG_MTRACE        1
 #define CONFIG_PMTRACE_START 0x80002491
 #define CONFIG_PMTRACE_END   0x80002491
-#define CONFIG_MTRACE_COND   1
+//#define CONFIG_MTRACE_COND   1
 #define CONFIG_MTRACE_DIRECT 1
 
 
@@ -106,15 +106,24 @@ typedef struct strTab
     char *pStrStart;
 } strTab;
 
+typedef struct DTRACE_TAB
+{
+    char name[9];
+    bool act;
+} DTRACE_TAB;
+
 extern strTab strtab;
 extern symFunc *pFirstFunc;
 
+extern void log_device(Decode *s, const char *name, word_t data, bool read);
 extern void log_mem(Decode *s, paddr_t paddr, word_t data, bool read);
 extern void log_inst(Decode *s);
 extern void output_mRingBuf();
 extern void output_iRingBuf();
+extern void output_dRingBuf();
 extern void init_mlog(const char *file);
 extern void init_flog(const char *file);
+extern void init_dlog(const char *file);
 extern void init_ilog(const char *file);
 extern bool mtrace_enable(paddr_t paddr);
 extern bool log_enable(vaddr_t pc);
