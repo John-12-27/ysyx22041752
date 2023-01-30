@@ -1,10 +1,16 @@
 #include <am.h>
+#include <klib-macros.h>
+#include "../riscv.h"
+#include "npc.h"
 
-void __am_timer_init() {
+void __am_timer_init() 
+{
+    io_read(AM_TIMER_RTC);
 }
 
-void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-  uptime->us = 0;
+void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) 
+{
+    uptime->us = (uint64_t)((uint64_t)inl(RTC_ADDR+4) << 32) + inl(RTC_ADDR);
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {

@@ -35,8 +35,11 @@ static inline word_t paddr_read(paddr_t paddr)
 #endif
         return data;
     }
-    else if((paddr >= CONFIG_RTC_MMIO) && (paddr < CONFIG_RTC_MMIO+8))
+    else if((paddr >= CONFIG_RTC_MMIO) && (paddr < (CONFIG_RTC_MMIO+8)))
     {
+#ifdef CONFIG_DIFFTEST
+        D.dnpc = D.pc; //M.dnpc记录需要越过difftest的指令pc
+#endif
         word_t data = getRTC_val();
 #ifdef CONFIG_DTRACE
         if(dtrace_enable("rtc"))
@@ -79,7 +82,7 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
     else if(paddr == CONFIG_SERIAL_MMIO)
     {
 #ifdef CONFIG_DIFFTEST
-        M.dnpc = M.pc; //M.dnpc记录需要越过difftest的指令pc
+        D.dnpc = D.pc; //M.dnpc记录需要越过difftest的指令pc
 #endif
         serial(data, wen);
 #ifdef CONFIG_DTRACE

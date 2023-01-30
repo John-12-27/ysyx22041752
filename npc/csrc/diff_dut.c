@@ -146,7 +146,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
         return false;
     }
 
-    if (M.dnpc == S.pc) 
+    if (D.dnpc == S.pc) 
     {
         // to skip the checking of an instruction, just copy the reg state to reference design
         ref_difftest_regcpy(&S.dnpc, cpu.gpr,DIFFTEST_TO_REF);
