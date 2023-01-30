@@ -27,10 +27,10 @@ nvboard: image
 NEMU_SO = $(NEMU_HOME)/build/riscv64-nemu-interpreter-so
 #NEMU_SO = $(NEMU_HOME)/tools/spike-diff/build/riscv64-spike-so
 
-override RUN_SIMFLAGS += -i $(shell dirname $(IMAGE).elf)/npc-itrace.txt -m $(shell dirname $(IMAGE).elf)/npc-mtrace.txt -e $(shell dirname $(IMAGE).elf)/npc-dtrace.txt -f $(shell dirname $(IMAGE).elf)/npc-ftrace.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
+override NPCFLAGS += -i $(shell dirname $(IMAGE).elf)/npc-itrace.txt -m $(shell dirname $(IMAGE).elf)/npc-mtrace.txt -e $(shell dirname $(IMAGE).elf)/npc-dtrace.txt -f $(shell dirname $(IMAGE).elf)/npc-ftrace.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
 
 run: image
-	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(RUN_SIMFLAGS)" IMG_BIN=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(NPCFLAGS)" IMG_BIN=$(IMAGE).bin
 
 gdb: image
-	$(MAKE) -C $(NPC_HOME) gdb OPTIONS="$(RUN_SIMFLAGS)" IMG_BIN=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) gdb OPTIONS="$(NPCFLAGS)" IMG_BIN=$(IMAGE).bin

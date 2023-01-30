@@ -35,11 +35,23 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
     }
 }
 
-void difftest_regcpy(vaddr_t *pc, word_t *gpr, bool direction) 
+void difftest_pc_cpy(vaddr_t *pc, bool direction) 
 {
     if(direction == DIFFTEST_TO_REF) 
     {
         cpu.pc = *pc;
+    } 
+    else 
+    {
+        *pc = cpu.pc;
+    }
+}
+
+void difftest_gpr_cpy(word_t *gpr, bool direction) 
+{
+    if(direction == DIFFTEST_TO_REF) 
+    {
+        /*cpu.pc = *pc;*/
         for(int i = 0; i < 32; i++)
         {
             cpu.gpr[i] = gpr[i];
@@ -47,7 +59,7 @@ void difftest_regcpy(vaddr_t *pc, word_t *gpr, bool direction)
     } 
     else 
     {
-        *pc = cpu.pc;
+        /**pc = cpu.pc;*/
         for(int i = 0; i < 32; i++)
         {
             gpr[i] = cpu.gpr[i];
