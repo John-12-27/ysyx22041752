@@ -93,11 +93,6 @@ sim: build
 	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) +trace
 	#@gtkwave ./logs/dump.vcd
 
-batch: build
-	@echo 
-	@echo "---- running with batch mode ----"
-	$(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
-
 gdb: build
 	@echo
 	@echo "---- debugging ----"

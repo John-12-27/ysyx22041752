@@ -12,11 +12,4 @@ void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd)
     {
         kbd->keycode -= KEYDOWN_MASK;
     }
-
-    /*if(kbd->keycode != AM_KEY_NONE)*/
-    /*{*/
-    /*printf("keycode is %x\n", kbd->keycode);*/
-    /*printf("keydown is %x\n", kbd->keydown);*/
-    /*}*/
-
 }

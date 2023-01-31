@@ -17,6 +17,7 @@
 
 Decode S; //record for every inst
 Decode M; //record for the inst which is accessing memory
+Decode D; //record for the inst which is accessing devices
 CPU_state cpu;
 uint64_t *cpu_gpr = NULL;
 

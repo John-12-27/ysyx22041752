@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2022-12-14 15:34
+// Last Modified : 2023-01-29 23:38
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,7 +31,9 @@ module ysyx_22041752_EXU(
     output wire                     data_sram_en   ,
     output wire [`SRAM_WEN_WD -1:0] data_sram_wen  ,
     output wire [`SRAM_ADDR_WD-1:0] data_sram_addr ,
-    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata
+    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata,
+
+    output wire [`PC_WD           -1:0] debug_es_pc
     //output wire [127:0] mul_result         
 );
 
@@ -187,7 +189,7 @@ ysyx_22041752_alu U_ALU_0(
     .mem_result      ( data_sram_addr )
 );
 
-assign data_sram_en  = es_mem_re | es_mem_we;
+assign data_sram_en  = (es_mem_re | es_mem_we) & es_valid;
 assign data_sram_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                        es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
                        es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
@@ -202,4 +204,7 @@ assign mem_read_after_write = (es_mem_re) && es_valid;
 assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {mem_read_after_write,es_forward_valid,alu_result,rd};
 
+
+
+assign debug_es_pc = es_pc;
 endmodule

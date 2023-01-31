@@ -1,26 +1,22 @@
 // +FHDR----------------------------------------------------------------------------
-//                 Copyright (c) 2022 
+//                 Copyright (c) 2023 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : memory.h
+// Filename      : device.h
 // Author        : Cw
-// Created On    : 2022-11-11 11:24
+// Created On    : 2023-01-27 21:34
 // Last Modified : 
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-#ifndef __MEMORY_H_
-#define __MEMORY_H_
 #include "typedef.h"
 
-#define MEMSIZE   0x8000000
-#define MBASEADDR 0x80000000
-extern uint8_t mem[MEMSIZE];
+#define CONFIG_SERIAL_MMIO 0xa00003f8
+#define CONFIG_RTC_MMIO    0xa0000048
 
-extern long load_img(char *img);
-extern word_t vaddr_read(vaddr_t vaddr);
-extern word_t vaddr_ifetch(vaddr_t addr, uint8_t len);
-extern void vaddr_write(vaddr_t addr, word_t data, uint8_t wen);
-#endif
+
+extern word_t getRTC_val();
+extern void device_init();
+extern void serial(word_t data, uint8_t wen);

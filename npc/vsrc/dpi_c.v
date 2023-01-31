@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2022-11-28 21:55
+// Last Modified : 2023-01-30 21:56
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,7 +19,7 @@ module dpi_c (
     input  wire                  ws_valid         ,
     input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0]  ,
     input  wire[`PC_WD     -1:0] debug_wb_pc      ,
-    input  wire[`PC_WD     -1:0] debug_ms_pc      ,
+    input  wire[`PC_WD     -1:0] debug_es_pc      ,
     input  wire[`INST_WD   -1:0] debug_wb_inst    ,
     input  wire                  debug_wb_rf_wen  ,
     input  wire[`RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
@@ -99,8 +99,9 @@ export "DPI-C" function mem_inst;
 function void mem_inst();
     output longint pc   ;
     output int     inst ;
-    pc    = debug_ms_pc;
-    inst  = inst_r1 ;
+    pc    = debug_es_pc;
+
+    inst  = inst_r0 ;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
