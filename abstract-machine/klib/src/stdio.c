@@ -133,7 +133,7 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
     return res;
 }
 
-#define MAX_PRINTF_BUF 100
+#define MAX_PRINTF_BUF 500
 int printf(const char *fmt, ...) 
 {
     char buf[MAX_PRINTF_BUF];
