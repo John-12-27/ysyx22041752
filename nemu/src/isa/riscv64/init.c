@@ -16,6 +16,13 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
+static paddr_t csr_addr[NUM_CSR] = {
+                                       0x300, //mstatus
+                                       0x305, //mtvec
+                                       0x341, //mepc
+                                       0x342, //mcause
+                                   };
+
 // this is not consistent with uint8_t
 // but it is ok since we do not access the array directly
 static const uint32_t img [] = {
@@ -29,6 +36,13 @@ static const uint32_t img [] = {
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
+
+  /* Set the initial CSR register addr. */
+  for(int i = 0; i < NUM_CSR; i++)
+  {
+    cpu.csr[i].addr = csr_addr[i];
+  }
+  cpu.csr[0].val = 0xa00001800;
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;

@@ -18,8 +18,16 @@
 
 #include <common.h>
 
+#define NUM_CSR 4
+
+typedef struct {
+    word_t  val;
+    vaddr_t addr;
+} riscv_CSR;
+
 typedef struct {
   word_t gpr[32];
+  riscv_CSR csr[NUM_CSR];
   vaddr_t pc;
 } riscv64_CPU_state;
 
