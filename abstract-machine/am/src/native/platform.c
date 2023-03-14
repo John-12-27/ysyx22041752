@@ -14,11 +14,12 @@
 static int pmem_fd = 0;
 static void *pmem = NULL;
 static ucontext_t uc_example = {};
+static int sys_pgsz;
 static void *(*memcpy_libc)(void *, const void *, size_t) = NULL;
 sigset_t __am_intr_sigmask = {};
 __am_cpu_t *__am_cpu_struct = NULL;
 int __am_ncpu = 0;
-int __am_pgsize = 0;
+int __am_pgsize;
 
 static void save_context_handler(int sig, siginfo_t *info, void *ucontext) {
   memcpy_libc(&uc_example, ucontext, sizeof(uc_example));
@@ -77,7 +78,7 @@ static void init_platform() {
   thiscpu->vm_head = NULL;
 
   // create trap page to receive syscall and yield by SIGSEGV
-  int sys_pgsz = sysconf(_SC_PAGESIZE);
+  sys_pgsz = sysconf(_SC_PAGESIZE);
   void *ret = mmap(TRAP_PAGE_START, sys_pgsz, PROT_NONE,
       MAP_SHARED | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
   assert(ret != (void *)-1);

@@ -20,3 +20,17 @@ image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
+
+nvboard: image
+	$(MAKE) -C $(NPC_HOME) nvboard IMG_BIN=$(IMAGE).bin
+
+NEMU_SO = $(NEMU_HOME)/build/riscv64-nemu-interpreter-so
+#NEMU_SO = $(NEMU_HOME)/tools/spike-diff/build/riscv64-spike-so
+
+override NPCFLAGS += -i $(shell dirname $(IMAGE).elf)/npc-itrace.txt -m $(shell dirname $(IMAGE).elf)/npc-mtrace.txt -e $(shell dirname $(IMAGE).elf)/npc-dtrace.txt -f $(shell dirname $(IMAGE).elf)/npc-ftrace.txt -f $(shell dirname $(IMAGE).elf)/$(NAME)-$(ARCH).elf -d $(NEMU_SO)
+
+run: image
+	$(MAKE) -C $(NPC_HOME) sim OPTIONS="$(NPCFLAGS)" IMG_BIN=$(IMAGE).bin
+
+gdb: image
+	$(MAKE) -C $(NPC_HOME) gdb OPTIONS="$(NPCFLAGS)" IMG_BIN=$(IMAGE).bin

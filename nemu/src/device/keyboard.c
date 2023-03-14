@@ -33,11 +33,6 @@ f(UP) f(DOWN) f(LEFT) f(RIGHT) f(INSERT) f(DELETE) f(HOME) f(END) f(PAGEUP) f(PA
 
 #define _KEY_NAME(k) _KEY_##k,
 
-// It's conflicted on macos with sys/_types/_key_t.h
-#ifdef __APPLE__
-  #undef _KEY_T 
-#endif
-
 enum {
   _KEY_NONE = 0,
   MAP(_KEYS, _KEY_NAME)
@@ -54,6 +49,7 @@ static void init_keymap() {
 static int key_queue[KEY_QUEUE_LEN] = {};
 static int key_f = 0, key_r = 0;
 
+static uint32_t key_dequeue();
 static void key_enqueue(uint32_t am_scancode) {
   key_queue[key_r] = am_scancode;
   key_r = (key_r + 1) % KEY_QUEUE_LEN;

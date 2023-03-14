@@ -23,7 +23,11 @@ typedef struct Decode {
   vaddr_t snpc; // static next pc
   vaddr_t dnpc; // dynamic next pc
   ISADecodeInfo isa;
-  IFDEF(CONFIG_ITRACE, char logbuf[128]);
+  bool jalrTag; // a tag of "return"
+  bool jalTag;  // a tag of "call"
+  char logbuf[256];
+  char mlogbuf[256];
+  char dlogbuf[256];
 } Decode;
 
 // --- pattern matching mechanism ---
@@ -90,7 +94,7 @@ finish:
 #define INSTPAT(pattern, ...) do { \
   uint64_t key, mask, shift; \
   pattern_decode(pattern, STRLEN(pattern), &key, &mask, &shift); \
-  if ((((uint64_t)INSTPAT_INST(s) >> shift) & mask) == key) { \
+  if (((INSTPAT_INST(s) >> shift) & mask) == key) { \
     INSTPAT_MATCH(s, ##__VA_ARGS__); \
     goto *(__instpat_end); \
   } \
