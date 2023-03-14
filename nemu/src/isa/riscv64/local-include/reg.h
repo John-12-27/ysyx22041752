@@ -17,6 +17,7 @@
 #define __RISCV64_REG_H__
 
 #include <common.h>
+#include <isa.h>
 
 static inline int check_reg_idx(int idx) {
   IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < 32));
@@ -28,6 +29,29 @@ static inline int check_reg_idx(int idx) {
 static inline const char* reg_name(int idx, int width) {
   extern const char* regs[];
   return regs[check_reg_idx(idx)];
+}
+
+static inline void csrw(paddr_t addr, word_t data) 
+{
+    for(int i =0; i < NUM_CSR; i++) 
+    {
+        if(addr == cpu.csr[i].addr) 
+        {
+            cpu.csr[i].val = data; 
+        } 
+    } 
+}
+
+static inline word_t csrrd(paddr_t addr) 
+{
+    for(int i =0; i < NUM_CSR; i++) 
+    {
+        if(addr == cpu.csr[i].addr) 
+        {
+            return cpu.csr[i].val;
+        } 
+    } 
+    return 0;
 }
 
 #endif

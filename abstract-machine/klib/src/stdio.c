@@ -52,7 +52,7 @@ static inline char *s2num(int d, char *dst, int hexadecimal, bool U, bool X)
     return p;
 }
 
-static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list ap) 
+static inline int MyPrint(bool is_printf, char *out, size_t n, bool N, const char *fmt, va_list ap) 
 {
     int res = 0;
     char *dst = out;
@@ -72,8 +72,15 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
                     s = va_arg(ap, char *);
                     while(*s != '\0')
                     {
-                        *dst = *s;
-                        dst++;
+                        if(!is_printf)
+                        {
+                            *dst = *s;
+                            dst++;
+                        }
+                        else
+                        {
+                            putch(*s);
+                        }
                         s++;
                     }
                     fmt++;
@@ -81,38 +88,110 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
                 case 'c':
                 {
                     c = va_arg(ap, int);
-                    *dst = c;
-                    dst++;
+                    if(!is_printf)
+                    {
+                        *dst = c;
+                        dst++;
+                    }
+                    else
+                    {
+                        putch(c);
+                    }
                     fmt++;
                 } break;
                 case 'd':
                 {
                     d = va_arg(ap, int); 
-                    dst = s2num(d, dst, 10, false, false);
+                    if(!is_printf)
+                    {
+                        dst = s2num(d, dst, 10, false, false);
+                    }
+                    else
+                    {
+                        uint8_t i;
+                        char buf[32] = {0,};
+                        s2num(d, buf, 10, false, false);
+                        for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
+                        {
+                            putch(buf[i]);
+                        }
+                    }
                     fmt++;
                 } break;
                 case 'u':
                 {
                     d = va_arg(ap, int); 
-                    dst = s2num(d, dst, 10, true, false);
+                    if(!is_printf)
+                    {
+                        dst = s2num(d, dst, 10, true, false);
+                    }
+                    else
+                    {
+                        uint8_t i;
+                        char buf[32] = {0,};
+                        s2num(d, buf, 10, true, false);
+                        for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
+                        {
+                            putch(buf[i]);
+                        }
+                    }
                     fmt++;
                 } break;
                 case 'o':
                 {
                     d = va_arg(ap, int); 
-                    dst = s2num(d, dst, 8, true, false);
+                    if(!is_printf)
+                    {
+                        dst = s2num(d, dst, 8, true, false);
+                    }
+                    else
+                    {
+                        uint8_t i;
+                        char buf[32] = {0,};
+                        s2num(d, buf, 8, true, false);
+                        for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
+                        {
+                            putch(buf[i]);
+                        }
+                    }
                     fmt++;
                 } break;
                 case 'x':
                 {
                     d = va_arg(ap, int); 
-                    dst = s2num(d, dst, 16, true, false);
+                    if(!is_printf)
+                    {
+                        dst = s2num(d, dst, 16, true, false);
+                    }
+                    else
+                    {
+                        uint8_t i;
+                        char buf[32] = {0,};
+                        s2num(d, dst, 16, true, false);
+                        for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
+                        {
+                            putch(buf[i]);
+                        }
+                    }
                     fmt++;
                 } break;
                 case 'X':
                 {
                     d = va_arg(ap, int); 
-                    dst = s2num(d, dst, 16, true, true);
+                    if(!is_printf)
+                    {
+                        dst = s2num(d, dst, 16, true, true);
+                    }
+                    else
+                    {
+                        uint8_t i;
+                        char buf[32] = {0,};
+                        s2num(d, buf, 16, true, true);
+                        for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
+                        {
+                            putch(buf[i]);
+                        }
+                    }
                     fmt++;
                 } break;
                 default:
@@ -123,30 +202,34 @@ static inline int MyPrint(char *out, size_t n, bool N, const char *fmt, va_list 
         }
         else
         {
-            *dst = *fmt;
-            dst++;
+            if(!is_printf)
+            {
+                *dst = *fmt;
+                dst++;
+            }
+            else
+            {
+                putch(*fmt);
+            }
             fmt++;
         }
     }
-    *dst= '\0';
-    res = strlen(out);
+    if(!is_printf)
+    {
+        *dst= '\0';
+        res = strlen(out);
+    }
     return res;
 }
 
-#define MAX_PRINTF_BUF 100
 int printf(const char *fmt, ...) 
 {
-    char buf[MAX_PRINTF_BUF];
+    char *buf = NULL;
     int res;
     va_list ap;
     va_start(ap, fmt);
-    res = MyPrint(buf, 0, false, fmt, ap);
+    res = MyPrint(true, buf, 0, false, fmt, ap);
     va_end(ap);
-    for(int i = 0; buf[i] != '\0'; i++)
-    {
-        putch(buf[i]);
-    }
-    assert(res < MAX_PRINTF_BUF);
     return res;
 }
 
@@ -160,7 +243,7 @@ int sprintf(char *out, const char *fmt, ...)
     int res;
     va_list ap;
     va_start(ap, fmt);
-    res = MyPrint(out, 0, false, fmt, ap);
+    res = MyPrint(false, out, 0, false, fmt, ap);
     va_end(ap);
     return res;
 }
@@ -170,7 +253,7 @@ int snprintf(char *out, size_t n, const char *fmt, ...)
     int res;
     va_list ap;
     va_start(ap, fmt);
-    res = MyPrint(out, n, true, fmt, ap);
+    res = MyPrint(false, out, n, true, fmt, ap);
     va_end(ap);
     return res;
 }
