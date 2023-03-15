@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-01-30 21:21
+// Last Modified : 2023-03-15 10:06
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -508,7 +508,7 @@ assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst
 ysyx_22041752_aser64 U_ASER64_1(
     .a          ( bt_a      ),
     .b          ( bt_b      ),
-    .sub        ( 1'0       ),
+    .sub        ( 1'b0      ),
     .cout       (           ),
     .result     ( br_target )
 );
