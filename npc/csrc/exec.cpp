@@ -34,24 +34,32 @@ Vtop* top;
 uint8_t halt_flag  = 0;
 uint8_t valid_flag = 0;
 
-//static void step_and_dump_wave()
-//{
-    //top->eval();
-    //contextp->timeInc(1);
-    //tfp->dump(contextp->time());
-//};
+#ifdef DUMP_WAVE
+static void step_and_dump_wave()
+{
+    top->eval();
+    contextp->timeInc(1);
+    tfp->dump(contextp->time());
+};
+#endif
 
 static void single_cycle()
 {
     top->clk = 1; top->eval();	
-    //step_and_dump_wave();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
     top->clk = 0; top->eval();
-    //step_and_dump_wave();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
 }
 
 void sim_exit()
 {
-    //step_and_dump_wave();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
     tfp->close();
 }
 

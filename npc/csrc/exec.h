@@ -15,6 +15,7 @@
 #define _EXEC_H_
 #include <stdbool.h>
 #include "typedef.h"
+//#define DUMP_WAVE 1
 
 extern uint8_t halt_flag ;
 extern uint8_t valid_flag;
