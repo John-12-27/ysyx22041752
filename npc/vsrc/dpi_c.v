@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-03-17 18:19
+// Last Modified : 2023-03-18 13:30
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -21,9 +21,12 @@ module dpi_c (
     input  wire[`PC_WD     -1:0] debug_wb_pc      ,
     input  wire[`PC_WD     -1:0] debug_es_pc      ,
     input  wire[`INST_WD   -1:0] debug_wb_inst    ,
+
     input  wire                  debug_wb_rf_wen  ,
     input  wire[`RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
+    /* verilator lint_off UNUSEDSIGNAL */
     input  wire[`RF_DATA_WD-1:0] debug_wb_rf_wdata
+    /* verilator lint_on UNUSEDSIGNAL */
 );
 
 reg [63:0] rf[31:0];
@@ -80,17 +83,29 @@ reg [`PC_WD-1:0] current_pc;
 always @(posedge clk) begin
 	current_pc <= debug_wb_pc;
 end
+reg                   wb_rf_wen  ;
+reg [`RF_ADDR_WD-1:0] wb_rf_wnum ;
+always @(posedge clk) begin
+	wb_rf_wen <= debug_wb_rf_wen;
+end
+always @(posedge clk) begin
+	wb_rf_wnum <= debug_wb_rf_wnum;
+end
 
 export "DPI-C" function record;
 function void record();
     output bit     halt ;
     output bit     valid;
     output longint pc   ;
+    output bit     wen  ;
+    output int     wnum ;
     output longint dnpc ;
     output int     inst ;
-    halt  = stop_r3 ;
+    halt  = stop_r3;
     valid = valid_r;
     pc    = current_pc;
+    wen   = wb_rf_wen;
+    wnum  = {27'b0, wb_rf_wnum};
     dnpc  = debug_wb_pc;
     inst  = inst_r3 ;
 endfunction

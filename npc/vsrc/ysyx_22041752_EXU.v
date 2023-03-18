@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-03-17 18:21
+// Last Modified : 2023-03-17 21:46
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -42,6 +42,7 @@ wire        es_ready_go   ;
 
 reg  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;  
 
+/* verilator lint_off UNUSEDSIGNAL */
 wire mul_u  ;
 wire mul_su ;
 wire mul_h  ;

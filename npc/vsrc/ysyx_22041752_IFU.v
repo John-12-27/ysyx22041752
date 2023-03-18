@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-03-17 18:21
+// Last Modified : 2023-03-18 14:05
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,7 +26,9 @@ module ysyx_22041752_IFU (
     // inst sram interface
     output wire                         inst_en   ,
     output wire [`SRAM_ADDR_WD-1:0]     inst_addr ,
+/* verilator lint_off UNUSEDSIGNAL */
     input  wire [`SRAM_DATA_WD-1:0]     inst_rdata
+/* verilator lint_on UNUSEDSIGNAL */
 );
 
 reg         fs_valid;
@@ -41,16 +43,14 @@ wire              br_taken;
 wire [`PC_WD-1:0] br_target;
 assign {br_taken,br_target} = br_bus;
 
-//wire [`INST_WD-1:0] fs_inst;
-reg [`INST_WD-1:0] fs_inst;
-reg [`PC_WD-1:0]   fs_pc;
+wire [`INST_WD-1:0] fs_inst;
+//reg  [`INST_WD-1:0] fs_inst;
+reg  [`PC_WD-1:0]   fs_pc;
 assign fs_to_ds_bus = {fs_inst, fs_pc};
 
 // pre-IF stage
-//assign to_fs_valid  = ~reset;
-always @(posedge clk) begin
-    to_fs_valid <= ~reset;
-end
+assign to_fs_valid  = ~reset;
+
 assign seq_pc       = fs_pc + 4;
 assign nextpc       = br_taken ? br_target : seq_pc; 
 
@@ -78,10 +78,15 @@ end
 
 assign inst_en    = to_fs_valid && fs_allowin;
 assign inst_addr  = nextpc;
-//assign fs_inst    = inst_rdata[`INST_WD-1:0];
-always @(posedge clk) begin
-    if(fs_allowin)
-        fs_inst <= inst_rdata[`INST_WD-1:0];
-end
+assign fs_inst    = inst_rdata[`INST_WD-1:0];
+
+
+
+//always @(posedge clk) begin
+    //if (to_fs_valid && fs_allowin) begin
+        //fs_inst <= inst_rdata[31:0];
+    //end
+//end
 
 endmodule
+

@@ -9,7 +9,7 @@ enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
                                                    //
 extern void record_skip_pc(vaddr_t pc);
 extern void init_difftest(char *ref_so_file, long img_size, int port) ;
-extern bool difftest_step(vaddr_t pc, vaddr_t npc);
+extern bool difftest_step(vaddr_t pc, vaddr_t npc, bool wen, int wnum);
 extern void difftest_skip_ref();
 extern void difftest_skip_dut(int nr_ref, int nr_dut);
 #endif

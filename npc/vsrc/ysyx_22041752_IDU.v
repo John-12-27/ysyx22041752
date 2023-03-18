@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-03-17 18:21
+// Last Modified : 2023-03-17 21:46
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -477,6 +477,7 @@ wire bc_co      ;
 wire [`RF_DATA_WD-1:0] bt_a;
 wire [`RF_DATA_WD-1:0] bt_b;
 
+/* verilator lint_off UNUSEDSIGNAL */
 wire [`RF_DATA_WD-1:0] bc_r;
 
 assign rs1u_l_rs2u=~bc_co;
