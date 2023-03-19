@@ -34,24 +34,34 @@ Vtop* top;
 uint8_t halt_flag  = 0;
 uint8_t valid_flag = 0;
 
-//static void step_and_dump_wave()
-//{
+#ifdef DUMP_WAVE
+static void step_and_dump_wave()
+{
     //top->eval();
-    //contextp->timeInc(1);
-    //tfp->dump(contextp->time());
-//};
+    contextp->timeInc(1);
+    tfp->dump(contextp->time());
+};
+#endif
 
 static void single_cycle()
 {
-    top->clk = 1; top->eval();	
-    //step_and_dump_wave();
     top->clk = 0; top->eval();
-    //step_and_dump_wave();
+    //top->clk = 1; top->eval();	
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
+    //top->clk = 0; top->eval();
+    top->clk = 1; top->eval();	
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
 }
 
 void sim_exit()
 {
-    //step_and_dump_wave();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
     tfp->close();
 }
 
@@ -103,27 +113,80 @@ static bool halt()
     return res;
 }
 
+bool inst_ract = false;
+bool mem_ract  = false;
+paddr_t fetch_addr;
+paddr_t mem_addr;
+word_t  mem_wdata;
+uint8_t mem_wen;
 static void exec_once()
 {
-    single_cycle();
+    top->clk = 0; 
 
-    top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
-    if(top->data_sram_en && (top->data_sram_wen == 0))
+    if(inst_ract)
     {
+        inst_ract = false;
+        top->inst_sram_rdata = vaddr_ifetch(fetch_addr, 4);
+    }
+
+    if(top->inst_sram_en)
+    {
+        fetch_addr = top->inst_sram_addr;
+        inst_ract = true;
+    }
+
+    if(mem_ract)
+    {
+        mem_ract = false;
+        if(!mem_wen)
+        {
+            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+            //D.pc = M.pc;
+            //D.inst = M.inst;
+            top->data_sram_rdata = vaddr_read(mem_addr);
+        }
+        else
+        {
+            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+            //D.pc = M.pc;
+            //D.inst = M.inst;
+            vaddr_write(mem_addr, mem_wdata, mem_wen);
+        }
+    }
+
+    if(top->data_sram_en)
+    {
+        mem_ract = true;
+        mem_wdata  = top->data_sram_wdata;
+        mem_addr   = top->data_sram_addr;
+        mem_wen    = top->data_sram_wen;
         mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
         D.pc = M.pc;
         D.inst = M.inst;
-        top->data_sram_rdata = vaddr_read(top->data_sram_addr);
-    }
-    else if(top->data_sram_en && (top->data_sram_wen != 0))
-    {
-        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-        D.pc = M.pc;
-        D.inst = M.inst;
-        vaddr_write(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
     }
 
-    record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+
+    //if(mem_en && (mem_wen == 0))
+    //{
+        ////mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        ////D.pc = M.pc;
+        ////D.inst = M.inst;
+        //top->data_sram_rdata = vaddr_read(mem_addr);
+    //}
+    //else if(mem_en && (mem_wen != 0))
+    //{
+        ////mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        ////D.pc = M.pc;
+        ////D.inst = M.inst;
+        //vaddr_write(mem_addr, mem_wdata, mem_wen);
+    //}
+
+    top->eval();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
+
+
 }
 
 void reset(int n)
@@ -134,6 +197,7 @@ void reset(int n)
         single_cycle();
     }
     top->reset = 0;
+    top->eval();
 }
 
 void sim_init(int argc, char** argv)
@@ -164,6 +228,27 @@ void exec(uint64_t n, bool batch)
         while(1)
         {
             exec_once();
+
+    top->clk = 1;
+
+    if(top->inst_sram_en)
+    {
+        fetch_addr = top->inst_sram_addr;
+        inst_ract = true;
+    }
+
+    if(top->data_sram_en)
+    {
+        mem_ract = true;
+        mem_wdata  = top->data_sram_wdata;
+        mem_addr   = top->data_sram_addr;
+        mem_wen    = top->data_sram_wen;
+        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+        D.pc = M.pc;
+        D.inst = M.inst;
+    }
+
+    record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
             if(halt())
             {
                 break;
@@ -172,6 +257,12 @@ void exec(uint64_t n, bool batch)
             {
                 break;
             }
+
+    top->eval();
+#ifdef DUMP_WAVE
+    step_and_dump_wave();
+#endif
+
         }
     }
     else

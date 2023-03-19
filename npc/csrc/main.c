@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     load_img(img_file);
 #endif
 	sim_init(argc,argv);
-    reset(10);
+    reset(3);
     if(!NVBOARD_MODE)
     {
         sdb_mainloop();
