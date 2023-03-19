@@ -5,7 +5,10 @@
 !*.mk
 !*.[cSh]
 !*.v
+!*.vh
 !*.cc
+!*.c
+!*.h
 !*.cpp
 !.gitignore
 !README.md

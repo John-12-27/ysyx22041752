@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-01-29 23:38
+// Last Modified : 2023-03-18 17:22
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -28,10 +28,10 @@ module ysyx_22041752_EXU(
 	//forward_bus
 	output wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus,
     // data sram interface
-    output wire                     data_sram_en   ,
-    output wire [`SRAM_WEN_WD -1:0] data_sram_wen  ,
-    output wire [`SRAM_ADDR_WD-1:0] data_sram_addr ,
-    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata,
+    output wire                           data_sram_en   ,
+    output wire [`SRAM_WEN_WD -1:0]       data_sram_wen  ,
+    output wire [`SRAM_ADDR_WD-1:0]       data_sram_addr ,
+    output wire [`SRAM_DATA_WD-1:0]       data_sram_wdata,
 
     output wire [`PC_WD           -1:0] debug_es_pc
     //output wire [127:0] mul_result         
@@ -42,6 +42,7 @@ wire        es_ready_go   ;
 
 reg  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;  
 
+/* verilator lint_off UNUSEDSIGNAL */
 wire mul_u  ;
 wire mul_su ;
 wire mul_h  ;

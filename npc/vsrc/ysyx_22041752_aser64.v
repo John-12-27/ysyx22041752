@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_aser64.v
 // Author        : Cw
 // Created On    : 2022-08-24 09:46
-// Last Modified : 2022-11-29 13:35
+// Last Modified : 2023-03-18 16:20
 // ---------------------------------------------------------------------------------
 // Description   : 64-bit adder with 4 16-bit carry lookahead adders
 //
@@ -30,7 +30,6 @@ wire [63:0] x  ;
 wire [63:0] y  ;
 
 assign x = a;
-assign y = b;
 assign y = sub ? ~b : b;
 
 ysyx_22041752_adder_p16 #(
@@ -73,10 +72,10 @@ u_adder_p_3(
     .sum                            ( r[63:48]                      )
 );
 
-always @(a or b or sub) begin
+always @(*) begin
     cout = c3;    
 end
-always @(a or b or sub) begin
+always @(*) begin
     result = r; 
 end
 
