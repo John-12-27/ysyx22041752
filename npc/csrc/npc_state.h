@@ -17,8 +17,6 @@
 
 typedef struct Decode {
     vaddr_t pc; 
-    uint8_t wen;
-    int     wnum;
     vaddr_t snpc; // static next pc
     vaddr_t dnpc; // dynamic next pc
     word_t inst;

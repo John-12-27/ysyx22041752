@@ -47,7 +47,7 @@ void difftest_skip_dut(int nr_ref, int nr_dut)
     }
 }
 
-static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, bool wen, int wnum)
+static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
 {
     if((ref_r->pc != pc) && cpu.pc != pc)
     {
@@ -61,29 +61,29 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, bool wen, int w
     }
 
 
-    /*for(int i = 0; i < 32; i++)*/
-    /*{*/
-        if(wen && (ref_r->gpr[wnum] != cpu.gpr[wnum]))
+    for(int i = 0; i < 32; i++)
+    {
+        if(ref_r->gpr[i] != cpu.gpr[i])
         {
             printf(ANSI_BG_RED "=========================================\n");
             printf("ERROR_PC\t0x%lx\n",cpu.pc);
             /*printf("REF_PC\t0x%lx\n",ref_r->pc);*/
-            printf("REF_GPR[%d]\t0x%lx\n",wnum,ref_r->gpr[wnum]);
+            printf("REF_GPR[%d]\t0x%lx\n",i,ref_r->gpr[i]);
             /*printf("NPC_PC\t0x%lx\n",pc);*/
-            printf("NPC_GPR[%d]\t0x%lx\n",wnum,cpu.gpr[wnum]);
+            printf("NPC_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);
             printf("=========================================" ANSI_NONE "\n");
             /*assert(0);*/
             return false;
         }
-    /*}*/
+    }
 
     return true;
 }
 
-static bool checkregs(CPU_state *ref, vaddr_t pc, bool wen, int wnum) 
+static bool checkregs(CPU_state *ref, vaddr_t pc) 
 {
 	bool res = false;
-    if (!isa_difftest_checkregs(ref, pc, wen, wnum)) 
+    if (!isa_difftest_checkregs(ref, pc)) 
     {
 		res = true;
         npc_state.state = NPC_ABORT;
@@ -141,7 +141,7 @@ void record_skip_pc(vaddr_t pc)
     skip_pc[0] = pc;
 }
 
-bool difftest_step(vaddr_t pc, vaddr_t npc, bool wen, int wnum) 
+bool difftest_step(vaddr_t pc, vaddr_t npc) 
 {
     CPU_state ref_r;
 
@@ -152,7 +152,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc, bool wen, int wnum)
         if (ref_r.pc == npc) 
         {
             skip_dut_nr_inst = 0;
-            return checkregs(&ref_r, npc, wen, wnum);
+            return checkregs(&ref_r, npc);
         }
         skip_dut_nr_inst --;
         if (skip_dut_nr_inst == 0)
@@ -187,5 +187,5 @@ bool difftest_step(vaddr_t pc, vaddr_t npc, bool wen, int wnum)
     ref_difftest_pc_cpy(&ref_r.pc, DIFFTEST_TO_DUT);
     ref_difftest_gpr_cpy(ref_r.gpr,DIFFTEST_TO_DUT);
 
-    return checkregs(&ref_r, npc, wen, wnum);
+    return checkregs(&ref_r, npc);
 }

@@ -19,7 +19,7 @@
 #include "typedef.h"
 #include "npc_state.h"
 
-#define CONFIG_DIFFTEST      1
+//#define CONFIG_DIFFTEST      1
 //#define CONFIG_WATCHPOINT    1
 //#define CONFIG_FTRACE        1
 
@@ -45,7 +45,6 @@
 #define CONFIG_PMTRACE_END   0x80002491
 //#define CONFIG_MTRACE_COND   1
 #define CONFIG_MTRACE_DIRECT 1
-
 
 
 #define IRINGBUF_DEPTH 10
