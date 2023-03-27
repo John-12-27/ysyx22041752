@@ -21,18 +21,22 @@
 FILE *itrace_fp = NULL;
 FILE *ftrace_fp = NULL;
 FILE *mtrace_fp = NULL;
+FILE *etrace_fp = NULL;
 FILE *dtrace_fp = NULL;
 
 bool inputI = false;
+bool inputX = false;
 bool inputM = false;
 bool inputD = false;
 bool inputF = false;
 
-#if (defined(CONFIG_ITRACE) || defined(CONFIG_MTRACE)) || defined(CONFIG_DTRACE)
+#if defined(CONFIG_ITRACE) || defined(CONFIG_MTRACE) || defined(CONFIG_DTRACE) || defined(CONFIG_ETRACE)
 static RingBuf *ihead = NULL;
 static RingBuf *itail = NULL;
 static RingBuf *mhead = NULL;
 static RingBuf *mtail = NULL;
+static RingBuf *ehead = NULL;
+static RingBuf *etail = NULL;
 static RingBuf *dhead = NULL;
 static RingBuf *dtail = NULL;
 
@@ -58,6 +62,12 @@ static void init_RingBuf(RingBuf f[], uint8_t init)
                 maxDepth = DRINGBUF_DEPTH;
                 dhead = &f[0];
                 dtail = &f[0];
+            } break;
+        case 3:
+            {
+                maxDepth = ERINGBUF_DEPTH;
+                ehead = &f[0];
+                etail = &f[0];
             } break;
         default:
               break;
@@ -85,6 +95,8 @@ void RingBufLoad(char logbuf[], uint8_t load)
 {
     static bool dfull = false;
     static int dcnt = 0;
+    static bool efull = false;
+    static int ecnt = 0;
     static bool mfull = false;
     static int mcnt = 0;
     static bool ifull = false;
@@ -141,6 +153,23 @@ void RingBufLoad(char logbuf[], uint8_t load)
                 }
                 dtail = dtail->next;
                 dcnt++;
+            } break;
+        case 3:
+            {
+                if(!efull && ecnt == ERINGBUF_DEPTH)
+                {
+                    efull = true;
+                }
+                if(efull)
+                {
+                    ehead = ehead->next;
+                }
+                for(int j = 0; j < 256; j++)
+                {
+                    etail->buf[j] = logbuf[j];
+                }
+                etail = etail->next;
+                ecnt++;
             } break;
         default:
               break;
@@ -286,6 +315,63 @@ bool dtrace_enable(const char *device)
                 status = true;
                 break;
             }
+        }
+    }
+    return status;
+}
+#endif
+
+
+#ifdef CONFIG_ETRACE
+static RingBuf eringbuf[ERINGBUF_DEPTH] = {};
+
+void log_except(Decode *s, paddr_t epc, word_t mcause)
+{
+    char *p = s->elogbuf;
+    p += snprintf(p, sizeof(s->elogbuf), "%s\t", s->logbuf);
+    p += snprintf(p, sizeof(s->elogbuf), " mepc:"FMT_PADDR, epc);
+    p += snprintf(p, sizeof(s->elogbuf), " mcause:"FMT_WORD , mcause);
+#ifdef CONFIG_ETRACE_DIRECT
+    etrace_write("%s\n", s->elogbuf);
+#else
+    RingBufLoad(s->elogbuf, 3);
+#endif
+}
+#ifndef CONFIG_ETRACE_DIRECT
+void output_eRingBuf()
+{
+    for(; ehead->next != etail; ehead = ehead->next)
+    {
+        etrace_write("%s\n", ehead->buf);
+    }
+    etrace_write("%s\n", ehead->buf);
+}
+#endif
+
+void init_elog(const char *file) 
+{
+    etrace_fp = stdout;
+    if(file != NULL) 
+    {
+        FILE *fp = fopen(file, "w");
+        Assert(fp, "Can not open '%s'", file);
+        etrace_fp = fp;
+    }
+    Log("Etrace is written to %s", file ? file : "stdout");
+    init_RingBuf(eringbuf, 3);
+}
+
+bool etrace_enable(paddr_t paddr, word_t mcause) 
+{
+    bool status = false;
+    if(inputX)
+    {
+#ifdef CONFIG_ETRACE_COND
+        if(mcause == 0xb && CONFIG_ECALL_CAUSE || 
+                ((paddr >= CONFIG_ETRACE_START) && (paddr <= CONFIG_ETRACE_END )))
+#endif
+        {
+            status = true;
         }
     }
     return status;

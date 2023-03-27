@@ -34,6 +34,7 @@ extern void log_inst(Decode *s);
 extern void RingBufLoad(char logbuf[], uint8_t load);
 extern void output_iRingBuf();
 extern void output_mRingBuf();
+extern void output_eRingBuf();
 extern void output_dRingBuf();
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
@@ -158,6 +159,9 @@ void cpu_exec(uint64_t n)
 #endif
 #if (defined(CONFIG_MTRACE) && (!defined(CONFIG_MTRACE_DIRECT)))
             output_mRingBuf();
+#endif
+#if (defined(CONFIG_ETRACE) && (!defined(CONFIG_ETRACE_DIRECT)))
+            output_eRingBuf();
 #endif
 #if (defined(CONFIG_DTRACE) && (!defined(CONFIG_DTRACE_DIRECT)))
             output_dRingBuf();

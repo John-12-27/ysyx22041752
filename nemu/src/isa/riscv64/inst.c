@@ -168,7 +168,8 @@ static int decode_exec(Decode *s)
   INSTPAT("??????? ????? ????? 010 ????? 1110011", csrrs  ,  C, R(dest) = srccsr; csrw(csraddr, src1 | csrrd(csraddr)););
   INSTPAT("??????? ????? ????? 011 ????? 1110011", csrrc  ,  C, R(dest) = srccsr; csrw(csraddr, src1 & (~csrrd(csraddr))););
                                                                                                          
-  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall  ,  I, s->dnpc = isa_raise_intr(11, s->pc);); //ecall from M-mode
+  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall  ,  I, s->dnpc = isa_raise_intr(s, 11, s->pc);); //ecall from M-mode
+  INSTPAT("0011000 00010 00000 000 00000 1110011", mret   ,  I, s->dnpc = csrrd(0x341));               //return to mepc
 
   INSTPAT("0000000 00001 00000 000 00000 1110011", ebreak ,  N, NEMUTRAP(s->pc, R(10)); s->jalTag = false; s->jalrTag = false); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ???????", inv    ,  N, INV(s->pc); s->jalTag = false; s->jalrTag = false);

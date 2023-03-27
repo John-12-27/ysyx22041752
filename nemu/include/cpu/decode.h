@@ -28,6 +28,7 @@ typedef struct Decode {
   char logbuf[256];
   char mlogbuf[256];
   char dlogbuf[256];
+  char elogbuf[256];
 } Decode;
 
 // --- pattern matching mechanism ---
