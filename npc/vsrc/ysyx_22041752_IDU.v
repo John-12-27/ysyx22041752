@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-03-18 17:21
+// Last Modified : 2023-03-28 22:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -245,6 +245,12 @@ wire inst_rem    ;
 wire inst_remu   ;
 wire inst_remw   ;
 wire inst_remuw  ;
+wire inst_csrw   ;
+wire inst_csrr   ;
+wire inst_csrrs  ;
+wire inst_csrrc  ;
+wire inst_ecall  ;
+wire inst_mret   ;
 wire inst_ebreak ;
 wire inst_invalid;
 assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
@@ -310,7 +316,13 @@ assign inst_invalid = !(inst_lui   ||
                         inst_rem   || 
                         inst_remu  || 
                         inst_remw  || 
-                        inst_remuw || 
+                        inst_remuw ||
+                        inst_csrw  ||
+                        inst_csrr  ||
+                        inst_csrrs ||
+                        inst_csrrc ||
+                        inst_ecall ||
+                        inst_mret  ||
                         inst_ebreak); 
 
 assign opcode    = ds_inst[ 6: 0];
@@ -355,6 +367,13 @@ assign inst_rem    = funct7 == 7'b0000001 && funct3 == 3'b110 && opcode == 7'b01
 assign inst_remu   = funct7 == 7'b0000001 && funct3 == 3'b111 && opcode == 7'b0110011; 
 assign inst_remw   = funct7 == 7'b0000001 && funct3 == 3'b110 && opcode == 7'b0111011; 
 assign inst_remuw  = funct7 == 7'b0000001 && funct3 == 3'b111 && opcode == 7'b0111011; 
+
+assign inst_csrw   = funct3 == 3'b001 && rd == 5'b00000 && opcode == 7'b1110011;
+assign inst_csrr   = funct3 == 3'b001                   && opcode == 7'b1110011;
+assign inst_csrrs  = funct3 == 3'b010                   && opcode == 7'b1110011;
+assign inst_csrrc  = funct3 == 3'b011                   && opcode == 7'b1110011;
+assign inst_ecall  = funct7 == 7'b0000000 && rs2 == 5'b00000 && rs1 == 5'b00000 && funct3 == 3'b000 && rd == 5'b00000 && opcode == 7'b1110011;
+assign inst_mret   = funct7 == 7'b0011000 && rs2 == 5'b00010 && rs1 == 5'b00000 && funct3 == 3'b000 && rd == 5'b00000 && opcode == 7'b1110011;
 assign inst_ebreak = funct7 == 7'b0000000 && funct3 == 3'b000 && opcode == 7'b1110011 && 
                      rs2    == 5'b00001   && rs1    == 5'b00000 && rd   == 5'b00000;
 
@@ -493,7 +512,7 @@ assign br_taken = (   inst_beq  &&  rs1_eq_rs2
 				   || inst_jalr
                   ) && ds_valid;
 
-ysyx_22041752_aser64 U_ASER64_0(
+ysyx_22041752_aser U_ASER_0(
     .a          ( rs1_value   ),
     .b          ( rs2_value   ),
     .sub        ( 1'b1        ),
@@ -507,7 +526,7 @@ assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst
                                                                                          {{43{imm_j[20]}},imm_j} ;
 
 /* verilator lint_off PINCONNECTEMPTY */
-ysyx_22041752_aser64 U_ASER64_1(
+ysyx_22041752_aser U_ASER_1(
     .a          ( bt_a      ),
     .b          ( bt_b      ),
     .sub        ( 1'b0      ),
