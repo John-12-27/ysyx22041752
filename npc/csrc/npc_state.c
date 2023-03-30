@@ -56,7 +56,7 @@ void reg_display()
         printf("%s\t\t%d\t0x%lx\n",regs[i],i,cpu_gpr[i]);
     }
     printf("======================================\n");
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < NUM_CSR; i++)
     {
         printf("%s\t\t%d\t0x%lx\n",csrs[i],i,cpu_csr[i]);
     }

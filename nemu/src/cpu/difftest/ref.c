@@ -67,23 +67,24 @@ void difftest_gpr_cpy(word_t *gpr, bool direction)
     }
 }
 
-void difftest_csr_cpy(riscv_CSR *csr, bool direction) 
-{
-    if(direction == DIFFTEST_TO_REF) 
-    {
-        for(int i = 0; i < 4; i++)
-        {
-            cpu.csr[i] = csr[i];
-        }
-    } 
-    else 
-    {
-        for(int i = 0; i < 4; i++)
-        {
-            csr[i] = cpu.csr[i];
-        }
-    }
-}
+/*word_t test_csr [NUM_CSR];*/
+/*void difftest_csr_cpy(word_t *CSR, bool direction) */
+/*{*/
+    /*if(direction == DIFFTEST_TO_REF) */
+    /*{*/
+        /*for(int i = 0; i < NUM_CSR; i++)*/
+        /*{*/
+            /*test_csr[i] = CSR[i];*/
+        /*}*/
+    /*} */
+    /*else */
+    /*{*/
+        /*for(int i = 0; i < NUM_CSR; i++)*/
+        /*{*/
+            /*CSR[i] = cpu.csr[i].val;*/
+        /*}*/
+    /*}*/
+/*}*/
 
 extern void cpu_exec(uint64_t n);
 void difftest_exec(uint64_t n) 

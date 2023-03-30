@@ -85,6 +85,10 @@ static bool trace_diff_watch()
         {
             cpu.gpr[i] = cpu_gpr[i];
         }
+        for(int i = 0; i < NUM_CSR; i++)
+        {
+            cpu.csr[i] = cpu_csr[i];
+        }
         cpu.pc = S.pc;
 #ifdef CONFIG_ITRACE
         if(log_enable(S.pc))
