@@ -25,9 +25,15 @@ typedef struct Decode {
     char dlogbuf[256];
 } Decode;
 
+#define NUM_CSR 4
+typedef struct {
+    word_t  val;
+    vaddr_t addr;
+} riscv_CSR;
 typedef struct CPU_state {
-    word_t gpr[32];
     vaddr_t pc; 
+    word_t gpr[32];
+    riscv_CSR csr[NUM_CSR];
 } CPU_state;
 
 enum 

@@ -33,6 +33,8 @@ Vtop* top;
 
 uint8_t halt_flag  = 0;
 uint8_t valid_flag = 0;
+uint8_t exp_flag   = 0;
+uint8_t mret_flag  = 0;
 
 #ifdef DUMP_WAVE
 static void step_and_dump_wave()
@@ -65,9 +67,18 @@ void sim_exit()
     tfp->close();
 }
 
+extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET);
 static bool trace_diff_watch()
 {
     bool res = false;
+    if(exp_flag)
+    {
+        ref_difftest_raise_intr(11, false);
+    }
+    else if(mret_flag)
+    {
+        ref_difftest_raise_intr(0, true);
+    }
     if(valid_flag)
     {
         for(int i = 0; i < 32; i++)
@@ -119,12 +130,22 @@ paddr_t fetch_addr;
 paddr_t mem_addr;
 word_t  mem_wdata;
 uint8_t mem_wen;
+paddr_t fspc;
+paddr_t espc;
 static void exec_once()
 {
     top->clk = 0; 
 
     if(inst_ract)
     {
+        if(fetch_addr == 0)
+        {
+            printf("%lx\n", S.pc);
+            printf("%lx\n", fspc);
+            printf("%lx\n", espc);
+
+            assert(0);
+        }
         inst_ract = false;
         top->inst_sram_rdata = vaddr_ifetch(fetch_addr, 4);
     }
@@ -140,16 +161,10 @@ static void exec_once()
         mem_ract = false;
         if(!mem_wen)
         {
-            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-            //D.pc = M.pc;
-            //D.inst = M.inst;
             top->data_sram_rdata = vaddr_read(mem_addr);
         }
         else
         {
-            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-            //D.pc = M.pc;
-            //D.inst = M.inst;
             vaddr_write(mem_addr, mem_wdata, mem_wen);
         }
     }
@@ -165,28 +180,10 @@ static void exec_once()
         D.inst = M.inst;
     }
 
-
-    //if(mem_en && (mem_wen == 0))
-    //{
-        ////mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-        ////D.pc = M.pc;
-        ////D.inst = M.inst;
-        //top->data_sram_rdata = vaddr_read(mem_addr);
-    //}
-    //else if(mem_en && (mem_wen != 0))
-    //{
-        ////mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-        ////D.pc = M.pc;
-        ////D.inst = M.inst;
-        //vaddr_write(mem_addr, mem_wdata, mem_wen);
-    //}
-
     top->eval();
 #ifdef DUMP_WAVE
     step_and_dump_wave();
 #endif
-
-
 }
 
 void reset(int n)
@@ -248,7 +245,7 @@ void exec(uint64_t n, bool batch)
         D.inst = M.inst;
     }
 
-    record(&halt_flag, &valid_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+    record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
             if(halt())
             {
                 break;

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-03-18 19:27
+// Last Modified : 2023-03-29 21:45
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -24,11 +24,16 @@ module ysyx_22041752_IFU (
     output wire                         fs_to_ds_valid ,
     output wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     // inst sram interface
-    output wire                         inst_en   ,
-    output wire [`SRAM_ADDR_WD-1:0]     inst_addr ,
+    output wire                         inst_en        ,
+    output wire [`SRAM_ADDR_WD-1:0]     inst_addr      ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [`SRAM_DATA_WD-1:0]     inst_rdata
+    input  wire [`SRAM_DATA_WD-1:0]     inst_rdata     ,
 /* verilator lint_on UNUSEDSIGNAL */
+
+    input  wire                         flush          , 
+    input  wire [`PC_WD-1:0]            flush_pc       ,
+
+    output wire [`PC_WD-1:0]            debug_fs_pc
 );
 
 reg         fs_valid;
@@ -44,7 +49,6 @@ wire [`PC_WD-1:0] br_target;
 assign {br_taken,br_target} = br_bus;
 
 wire [`INST_WD-1:0] fs_inst;
-//reg  [`INST_WD-1:0] fs_inst;
 reg  [`PC_WD-1:0]   fs_pc;
 assign fs_to_ds_bus = {fs_inst, fs_pc};
 
@@ -52,12 +56,14 @@ assign fs_to_ds_bus = {fs_inst, fs_pc};
 assign to_fs_valid  = ~reset;
 
 assign seq_pc       = fs_pc + 4;
-assign nextpc       = br_taken ? br_target : seq_pc; 
+assign nextpc       = flush    ? flush_pc  :
+                      br_taken ? br_target : 
+                                 seq_pc    ; 
 
 // IF stage
 assign fs_ready_go    = 1'b1;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
-assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~br_taken;
+assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~br_taken && ~flush;
 always @(posedge clk) begin
     if (reset) begin
         fs_valid <= 1'b0;
@@ -80,13 +86,6 @@ assign inst_en    = to_fs_valid && fs_allowin;
 assign inst_addr  = nextpc;
 assign fs_inst    = inst_rdata[`INST_WD-1:0];
 
-
-
-//always @(posedge clk) begin
-    //if (to_fs_valid && fs_allowin) begin
-        //fs_inst <= inst_rdata[31:0];
-    //end
-//end
-
+assign debug_fs_pc = fs_pc;
 endmodule
 

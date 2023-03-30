@@ -23,8 +23,9 @@
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
 void (*ref_difftest_pc_cpy)(vaddr_t *pc, bool direction) = NULL;
 void (*ref_difftest_gpr_cpy)(word_t *gpr, bool direction) = NULL;
+/*void (*ref_difftest_csr_cpy)(riscv_CSR *csr, bool direction) = NULL;*/
 void (*ref_difftest_exec)(uint64_t n) = NULL;
-void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
+void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET) = NULL;
 
 static bool skipped = false;
 static int  skip_dut_nr_inst = 0;
@@ -114,13 +115,15 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     assert(ref_difftest_pc_cpy);
 
     ref_difftest_gpr_cpy = (void (*)(word_t *, bool))dlsym(handle, "difftest_gpr_cpy");
+    /*ref_difftest_csr_cpy = (void (*)(riscv_CSR *, bool))dlsym(handle, "difftest_csr_cpy");*/
 
     assert(ref_difftest_gpr_cpy);
+    /*assert(ref_difftest_csr_cpy);*/
 
     ref_difftest_exec = (void (*)(uint64_t))dlsym(handle, "difftest_exec");
     assert(ref_difftest_exec);
     
-    ref_difftest_raise_intr = (void (*)(uint64_t))dlsym(handle, "difftest_raise_intr");
+    ref_difftest_raise_intr = (void (*)(uint64_t, bool))dlsym(handle, "difftest_raise_intr");
     assert(ref_difftest_raise_intr);
     
     void (*ref_difftest_init)(int) = (void (*)(int))dlsym(handle, "difftest_init");
@@ -133,6 +136,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_init(port);
     ref_difftest_memcpy(0x80000000, mem, img_size, DIFFTEST_TO_REF);
     ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
+    /*ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);*/
     ref_difftest_pc_cpy(&cpu.pc, DIFFTEST_TO_REF);
 }
 
@@ -141,6 +145,8 @@ void record_skip_pc(vaddr_t pc)
     skip_pc[0] = pc;
 }
 
+extern uint8_t exp_flag;
+extern uint8_t mret_flag;
 bool difftest_step(vaddr_t pc, vaddr_t npc) 
 {
     CPU_state ref_r;
@@ -149,6 +155,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
     {
         ref_difftest_pc_cpy(&ref_r.pc, DIFFTEST_TO_DUT);
         ref_difftest_gpr_cpy(ref_r.gpr, DIFFTEST_TO_DUT);
+        /*ref_difftest_csr_cpy(ref_r.csr, DIFFTEST_TO_DUT);*/
         if (ref_r.pc == npc) 
         {
             skip_dut_nr_inst = 0;
@@ -180,12 +187,14 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
         // to skip the checking of an instruction, just copy the reg state to reference design
         skipped = true;
         ref_difftest_gpr_cpy(cpu.gpr,DIFFTEST_TO_REF);
+        /*ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);*/
         return false;
     }
 
     ref_difftest_exec(1);
     ref_difftest_pc_cpy(&ref_r.pc, DIFFTEST_TO_DUT);
     ref_difftest_gpr_cpy(ref_r.gpr,DIFFTEST_TO_DUT);
+    /*ref_difftest_csr_cpy(ref_r.csr,DIFFTEST_TO_DUT);*/
 
     return checkregs(&ref_r, npc);
 }

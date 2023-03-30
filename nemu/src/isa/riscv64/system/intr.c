@@ -34,8 +34,12 @@ word_t isa_raise_intr(Decode *s, word_t NO, vaddr_t epc)
         log_except(s, epc, NO);
     }
 #endif
-                      
     return csrrd(0x305); //read from mtvec
+}
+
+word_t isa_mret_intr()
+{
+    return csrrd(0x341);
 }
 
 word_t isa_query_intr() {

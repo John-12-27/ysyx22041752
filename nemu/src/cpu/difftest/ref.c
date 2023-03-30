@@ -16,7 +16,9 @@
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <difftest-def.h>
+#include <cpu/decode.h>
 #include <memory/host.h>
+#include "../../isa/riscv64/include/isa-def.h"
 
 extern uint8_t* guest_to_host(paddr_t paddr);
 void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) 
@@ -51,7 +53,6 @@ void difftest_gpr_cpy(word_t *gpr, bool direction)
 {
     if(direction == DIFFTEST_TO_REF) 
     {
-        /*cpu.pc = *pc;*/
         for(int i = 0; i < 32; i++)
         {
             cpu.gpr[i] = gpr[i];
@@ -59,10 +60,27 @@ void difftest_gpr_cpy(word_t *gpr, bool direction)
     } 
     else 
     {
-        /**pc = cpu.pc;*/
         for(int i = 0; i < 32; i++)
         {
             gpr[i] = cpu.gpr[i];
+        }
+    }
+}
+
+void difftest_csr_cpy(riscv_CSR *csr, bool direction) 
+{
+    if(direction == DIFFTEST_TO_REF) 
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            cpu.csr[i] = csr[i];
+        }
+    } 
+    else 
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            csr[i] = cpu.csr[i];
         }
     }
 }
@@ -73,11 +91,13 @@ void difftest_exec(uint64_t n)
     cpu_exec(n);
 }
 
-void difftest_raise_intr(word_t NO) 
+extern Decode s;
+void difftest_raise_intr(word_t NO, bool MRET) 
 {
-    printf("\n");
-    printf("No implement\n");
-    printf("\n");
+    if(MRET)
+        cpu.pc = isa_mret_intr();
+    else
+        cpu.pc = isa_raise_intr(&s, NO, cpu.pc);
 }
 
 void difftest_init(int port) 

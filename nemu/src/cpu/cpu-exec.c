@@ -41,6 +41,7 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+Decode s;
 void device_update();
 
 static void difftest_and_watchpoint(Decode *_this, vaddr_t dnpc) 
@@ -84,7 +85,6 @@ static void exec_once(Decode *s, vaddr_t pc)
 
 static void execute(uint64_t n) 
 {
-    Decode s;
     for (;n > 0; n --) 
     {
         exec_once(&s, cpu.pc);

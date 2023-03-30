@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-03-17 21:45
+// Last Modified : 2023-03-30 15:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,6 +31,9 @@ module top (
     input  wire [`SRAM_DATA_WD-1:0] data_sram_rdata
 );
    
+wire              flush     ;
+wire [`PC_WD-1:0] flush_pc  ;
+
 wire         ds_allowin;
 wire         es_allowin;
 wire         ms_allowin;
@@ -56,14 +59,18 @@ wire [63:0] div_complete;
 
 
 // trace debug interface
+wire [`PC_WD       -1:0] debug_fs_pc      ;
 wire [`PC_WD       -1:0] debug_wb_pc      ;
 wire [`PC_WD       -1:0] debug_es_pc      ;
+wire                     debug_es_exp     ;
+wire                     debug_es_mret    ;
 wire                     debug_ws_valid   ;
-wire [`INST_WD     -1:0] debug_wb_inst    ;
+wire [`INST_WD     -1:0] debug_ds_inst    ;
 wire                     debug_wb_rf_wen  ;
 wire [`RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
 wire [`RF_DATA_WD  -1:0] debug_wb_rf_wdata;
 wire [`RF_DATA_WD-1:0]    dpi_regs [`RF_NUM-1:0];
+wire [`RF_DATA_WD-1:0]    dpi_csrs [3:0];
 wire [            0:0]    stop;
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -79,7 +86,12 @@ ysyx_22041752_IFU U_IFU_0(
 
     .inst_en        (inst_sram_en   ),
     .inst_addr      (inst_sram_addr ),
-    .inst_rdata     (inst_sram_rdata)
+    .inst_rdata     (inst_sram_rdata),
+
+    .flush          (flush          ),
+    .flush_pc       (flush_pc       ),
+
+    .debug_fs_pc    (debug_fs_pc    )
 );
 
 // ID stage
@@ -97,9 +109,10 @@ ysyx_22041752_IDU U_IDU_0(
     .es_forward_bus ( es_forward_bus ),
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
+    .flush          ( flush          ),
     .dpi_regs       ( dpi_regs       ),
     .stop           ( stop           ),
-    .debug_wb_inst  ( debug_wb_inst  ) 
+    .debug_ds_inst  ( debug_ds_inst  ) 
 );
 
 // EXE stage
@@ -117,7 +130,12 @@ ysyx_22041752_EXU U_EXU_0(
     .data_sram_wen  ( data_sram_wen   ),
     .data_sram_addr ( data_sram_addr  ),
     .data_sram_wdata( data_sram_wdata ),
+    .flush          ( flush           ),
+    .flush_pc       ( flush_pc        ),
 
+    .dpi_csrs       ( dpi_csrs        ),
+    .es_exp         ( debug_es_exp    ),
+    .es_mret        ( debug_es_mret   ),
     .debug_es_pc    ( debug_es_pc     )
 );
 
@@ -156,12 +174,16 @@ dpi_c u_dpi_c(
     .stop              ( stop              ),
     .ws_valid          ( debug_ws_valid    ),
     .dpi_regs          ( dpi_regs          ),
+    .dpi_csrs          ( dpi_csrs          ),
     .debug_wb_pc       ( debug_wb_pc       ),
     .debug_es_pc       ( debug_es_pc       ),
-    .debug_wb_inst     ( debug_wb_inst     ),
+    .debug_es_exp      ( debug_es_exp      ),
+    .debug_es_mret     ( debug_es_mret     ),
+    .debug_ds_inst     ( debug_ds_inst     ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
+    .debug_wb_rf_wdata ( debug_wb_rf_wdata ),
+    .debug_fs_pc       ( debug_fs_pc       )
 );
 
 endmodule
