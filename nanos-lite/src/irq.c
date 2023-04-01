@@ -4,9 +4,11 @@ static Context* do_event(Event e, Context* c)
 {
     switch (e.event) 
     {
-        case EVENT_YIELD : printf("There is an ecall request!\n"); 
-                           /*c->mepc += 4;*/
+
+        case EVENT_YIELD : printf("There is an ecall request!\n");
+                           c->mepc += 4;
                            break;
+
         default: panic("Unhandled event ID = %d", e.event);
     }
 

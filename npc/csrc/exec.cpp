@@ -71,6 +71,7 @@ extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET);
 static bool trace_diff_watch()
 {
     bool res = false;
+#ifdef CONFIG_DIFFTEST
     if(exp_flag)
     {
         ref_difftest_raise_intr(11, false);
@@ -79,6 +80,7 @@ static bool trace_diff_watch()
     {
         ref_difftest_raise_intr(0, true);
     }
+#endif
     if(valid_flag)
     {
         for(int i = 0; i < 32; i++)
