@@ -5,50 +5,68 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-static inline char *s2num(int d, char *dst, int hexadecimal, bool U, bool X) 
+static inline char *s2num(unsigned int ud, char *dst, int hexadecimal, bool U, bool X) 
 {
     int i = 0; 
     char *p = dst; 
-    if(d == 0) 
+    if(ud == 0) 
     { 
         *p = '0'; 
         return (p+1); 
     } 
     if(!U) 
     { 
+        int d = (int)ud;
         if(d < 0) 
         { 
             *p = '-'; 
             p++; 
             d = -d; 
         } 
-    } 
-	for(int cnt = d; cnt != 0; cnt = cnt / hexadecimal)
-	{ 
-		i++; 
-	} 
-    p += i; 
-    for(int m = -1; i > 0; i--) 
-    { 
-        int t = d % hexadecimal; 
-        if(t >= 10) 
+	    for(int cnt = d; cnt != 0; cnt = cnt / hexadecimal)
+	    { 
+	    	i++; 
+	    } 
+        p += i; 
+        for(int m = -1; i > 0; i--) 
         { 
-            if(X) 
+            int t = d % hexadecimal; 
+            p[m] = (char)(t + '0'); 
+            m--;
+            d = d / hexadecimal; 
+        } 
+    } 
+    
+    else
+    {
+	    for(unsigned int cnt = ud; cnt != 0; cnt = cnt / hexadecimal)
+	    { 
+	    	i++; 
+	    } 
+        p += i; 
+        for(int m = -1; i > 0; i--) 
+        { 
+            int t = ud % hexadecimal; 
+            if(t >= 10) 
             { 
-                p[m] = (char)(t - 10) + 'A'; 
+                if(X) 
+                { 
+                    p[m] = (char)(t - 10) + 'A'; 
+                } 
+                else 
+                { 
+                    p[m] = (char)(t - 10) + 'a'; 
+                } 
             } 
             else 
             { 
-                p[m] = (char)(t - 10) + 'a'; 
+                p[m] = (char)(t + '0'); 
             } 
+            m--;
+            ud = ud / hexadecimal; 
         } 
-        else 
-        { 
-            p[m] = (char)(t + '0'); 
-        } 
-        m--;
-        d = d / hexadecimal; 
-    } 
+    }
+
     return p;
 }
 
@@ -137,6 +155,7 @@ static inline int MyPrint(bool is_printf, char *out, size_t n, bool N, const cha
                     }
                     fmt++;
                 } break;
+
                 case 'o':
                 {
                     d = va_arg(ap, int); 
@@ -156,6 +175,7 @@ static inline int MyPrint(bool is_printf, char *out, size_t n, bool N, const cha
                     }
                     fmt++;
                 } break;
+
                 case 'x':
                 {
                     d = va_arg(ap, int); 
@@ -167,7 +187,7 @@ static inline int MyPrint(bool is_printf, char *out, size_t n, bool N, const cha
                     {
                         uint8_t i;
                         char buf[32] = {0,};
-                        s2num(d, dst, 16, true, false);
+                        s2num(d, buf, 16, true, false);
                         for(i = 0; (i < 20) && (buf[i] != '\0'); i++)
                         {
                             putch(buf[i]);
