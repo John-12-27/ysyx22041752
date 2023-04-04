@@ -47,6 +47,11 @@ extern NEMUState nemu_state;
 #else
     #define DRINGBUF_DEPTH (CONFIG_DTRACE_END - CONFIG_DTRACE_START)
 #endif
+#if ((CONFIG_ETRACE_END - CONFIG_ETRACE_START) <= 10)
+    #define ERINGBUF_DEPTH 10
+#else
+    #define ERINGBUF_DEPTH (CONFIG_ETRACE_END - CONFIG_ETRACE_START)
+#endif
 
 typedef struct DTRACE_TAB
 {
@@ -114,6 +119,13 @@ uint64_t get_time();
     extern FILE* ftrace_fp; \
       fprintf(ftrace_fp, __VA_ARGS__); \
       fflush(ftrace_fp); \
+  } 
+
+#define etrace_write(...) \
+  { \
+    extern FILE* etrace_fp; \
+      fprintf(etrace_fp, __VA_ARGS__); \
+      fflush(etrace_fp); \
   } 
 
 #define mtrace_write(...) \

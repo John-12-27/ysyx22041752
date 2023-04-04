@@ -198,6 +198,35 @@ config ITRACE_DIRECT
   bool "Trace all instructions when the condition is true"
   default n
 
+config ETRACE
+  bool "Enable tracer for exceptions"
+  default n
+
+config ECALL_CAUSE
+  depends on ETRACE
+  bool "Enable the tracer for ecall"
+  default y
+
+config ETRACE_START
+  depends on ETRACE
+  hex "Which insts' exception tracing are enabled"
+  default 0x0
+
+config ETRACE_END
+  depends on ETRACE
+  hex "Which insts' exceptions tracing are disabled"
+  default 0x0
+
+config ETRACE_COND
+  depends on ETRACE
+  bool "Only trace exceptions when the condition is true"
+  default y
+
+config ETRACE_DIRECT
+  depends on ETRACE
+  bool "Trace all insts when the condition is true"
+  default n
+
 config MTRACE
   bool "Enable tracer for memory"
   default n

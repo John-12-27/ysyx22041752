@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-03-18 17:07
+// Last Modified : 2023-03-30 16:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -18,16 +18,21 @@ module dpi_c (
     input  wire                  stop             ,
     input  wire                  ws_valid         ,
     input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0]  ,
+    input  wire[63:0]            dpi_csrs [3:0]   ,
     input  wire[`PC_WD     -1:0] debug_wb_pc      ,
     input  wire[`PC_WD     -1:0] debug_es_pc      ,
-    input  wire[`INST_WD   -1:0] debug_wb_inst    ,
+    input  wire                  debug_es_exp     ,
+    input  wire                  debug_es_mret    ,
+    input  wire[`INST_WD   -1:0] debug_ds_inst    ,
 
+    input  wire[`PC_WD     -1:0] debug_fs_pc      ,
     /* verilator lint_off UNUSEDSIGNAL */
     input  wire                  debug_wb_rf_wen  ,
     input  wire[`RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
     input  wire[`RF_DATA_WD-1:0] debug_wb_rf_wdata
     /* verilator lint_on UNUSEDSIGNAL */
 );
+
 
 reg [63:0] rf[31:0];
 genvar i;
@@ -36,6 +41,16 @@ generate
         :regfiles
         always @(*) begin
             rf[i] = dpi_regs[i];
+        end
+    end
+endgenerate
+
+reg [63:0] csr[3:0];
+generate
+    for (i = 0; i < 4; i=i+1) begin
+        :csr_regs
+        always @(*) begin
+            csr[i] = dpi_csrs[i];
         end
     end
 endgenerate
@@ -67,7 +82,7 @@ reg [`INST_WD-1:0] inst_r1;
 reg [`INST_WD-1:0] inst_r2;
 reg [`INST_WD-1:0] inst_r3;
 always @(posedge clk) begin
-    inst_r0 <= debug_wb_inst;   //exe_stage
+    inst_r0 <= debug_ds_inst;   //exe_stage
 end
 always @(posedge clk) begin
     inst_r1 <= inst_r0;         //mem_stage
@@ -77,6 +92,34 @@ always @(posedge clk) begin
 end
 always @(posedge clk) begin     
     inst_r3 <= inst_r2;         //done
+end
+
+reg exp_es1, exp_es2, exp_ms, exp_ws, exp_cmt;
+always @(posedge clk) begin
+    exp_es1 <= debug_es_exp;
+end
+always @(posedge clk) begin
+    exp_es2 <= exp_es1;
+end
+always @(posedge clk) begin
+    exp_ms <= exp_es2;
+end
+always @(posedge clk) begin
+    exp_ws <= exp_ms;
+end
+always @(posedge clk) begin
+    exp_cmt <= exp_ws;
+end
+
+reg mret_ms, mret_ws, mret_cmt;
+always @(posedge clk) begin
+    mret_ms <= debug_es_mret;
+end
+always @(posedge clk) begin
+    mret_ws <= mret_ms;
+end
+always @(posedge clk) begin
+    mret_cmt <= mret_ws;
 end
 
 reg [`PC_WD-1:0] current_pc;
@@ -89,12 +132,20 @@ export "DPI-C" function record;
 function void record();
     output bit     halt ;
     output bit     valid;
+    output bit     exp;
+    output bit     mret;
     output longint pc   ;
+    output longint fspc ;
+    output longint espc ;
     output longint dnpc ;
     output int     inst ;
     halt  = stop_r3;
     valid = valid_r;
+    exp   = exp_cmt;
+    mret  = mret_cmt;
     pc    = current_pc;
+    fspc  = debug_fs_pc;
+    espc  = debug_es_pc;
     dnpc  = debug_wb_pc;
     inst  = inst_r3 ;
 endfunction
@@ -109,6 +160,9 @@ function void mem_inst();
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
+import "DPI-C" context function void set_csr_ptr(input logic [63:0] a[]);
 initial set_gpr_ptr(rf);
+initial set_csr_ptr(csr);
 
 endmodule
+

@@ -1,11 +1,16 @@
 #include <common.h>
 
-static Context* do_event(Event e, Context* c) {
-  switch (e.event) {
-    default: panic("Unhandled event ID = %d", e.event);
-  }
+extern void do_syscall(Context *c);
+static Context* do_event(Event e, Context* c) 
+{
+    switch (e.event) 
+    {
+        case EVENT_YIELD   : printf("There is an yield request!\n"); c->mepc += 4; break;
+        case EVENT_SYSCALL : do_syscall(c); c->mepc += 4; break;
 
-  return c;
+        default: panic("Unhandled event ID = %d", e.event);
+    }
+    return c;
 }
 
 void init_irq(void) {
