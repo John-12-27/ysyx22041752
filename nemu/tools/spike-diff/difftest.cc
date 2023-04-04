@@ -38,9 +38,16 @@ static debug_module_config_t difftest_dm_config = {
   .support_impebreak = true
 };
 
+#define NUM_CSR 4
+typedef struct {
+    word_t  val;
+    vaddr_t addr;
+} riscv_CSR;
+
 struct diff_context_t {
-  word_t gpr[32];
   word_t pc;
+  word_t gpr[32];
+  riscv_CSR csr[NUM_CSR];
 };
 
 static sim_t* s = NULL;

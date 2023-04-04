@@ -14,13 +14,32 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <cpu/decode.h>
 #include "../local-include/reg.h"
 
-word_t isa_raise_intr(word_t NO, vaddr_t epc) 
+#ifdef CONFIG_ETRACE
+extern bool etrace_enable(paddr_t epc, word_t mcause);
+extern void log_inst(Decode *s);
+extern void log_except(Decode *s, paddr_t epc, word_t mcause);
+#endif
+
+word_t isa_raise_intr(Decode *s, word_t NO, vaddr_t epc) 
 {
     csrw(0x341, epc); //write to mepc
     csrw(0x342, NO);  //write to mcause
+#ifdef CONFIG_ETRACE 
+    if(etrace_enable(s->pc, NO))
+    {
+        log_inst(s);
+        log_except(s, epc, NO);
+    }
+#endif
     return csrrd(0x305); //read from mtvec
+}
+
+word_t isa_mret_intr()
+{
+    return csrrd(0x341);
 }
 
 word_t isa_query_intr() {

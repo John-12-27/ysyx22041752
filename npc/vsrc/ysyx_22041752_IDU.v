@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-03-18 17:21
+// Last Modified : 2023-03-30 15:23
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -33,9 +33,12 @@ module ysyx_22041752_IDU (
 	input  wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus,
 	input  wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus,
 
+    input  wire                           flush         ,
+
+    //used to dpi-c debug
     output wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0],
     output wire [                 0:0]    stop,
-    output wire [`INST_WD        -1:0]    debug_wb_inst
+    output wire [`INST_WD        -1:0]    debug_ds_inst
 );
 
 reg  ds_valid   ;
@@ -64,6 +67,9 @@ wire mul_h  ;
 wire op_mul ;
 wire op_div ;
 wire op_rem ;
+
+wire csrrs  ;
+wire csrrc  ;
 wire op_add ;
 wire op_sub ;
 wire op_slt ;
@@ -84,6 +90,8 @@ wire        src_4       ;
 wire        src_0       ;
 wire        src_imm_i   ;
 wire        src_imm_s   ;
+wire        src_csr     ;
+wire        id_csr_we   ;
 wire        id_rf_we    ;
 wire        id_mem_we   ;
 wire        id_mem_re   ;
@@ -94,6 +102,7 @@ wire [20:0] imm_j;
 wire [11:0] imm_i;
 wire [11:0] imm_s;
 wire [12:0] imm_b;
+wire [11:0] rscsr;
 
 wire [ 6:0] opcode;
 wire [ 4:0] rd;
@@ -126,7 +135,9 @@ wire [`RF_DATA_WD-1:0] rs1_value;
 wire [`RF_DATA_WD-1:0] rs2_value;
 assign br_bus       = {br_taken,br_target};
 
-assign ds_to_es_bus = {mul_u         ,
+assign ds_to_es_bus = {inst_ecall    ,
+                       inst_mret     ,
+                       mul_u         ,
                        mul_su        ,
                        mul_h         ,
                        op_mul        ,
@@ -152,6 +163,11 @@ assign ds_to_es_bus = {mul_u         ,
                        src_0         ,
                        src_imm_i     ,  
                        src_imm_s     ,  
+                       src_csr       ,
+                       rscsr         ,
+                       id_csr_we     ,
+                       csrrc         ,
+                       csrrs         ,
                        id_rf_we      ,  
                        id_mem_we     ,
                        id_mem_re     ,
@@ -166,7 +182,7 @@ assign ds_to_es_bus = {mul_u         ,
                       };
 
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
-assign ds_to_es_valid = ds_valid && ds_ready_go;
+assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
 assign ds_ready_go = ~(lw_read_after_write && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
 	if(reset)begin
@@ -245,10 +261,16 @@ wire inst_rem    ;
 wire inst_remu   ;
 wire inst_remw   ;
 wire inst_remuw  ;
+wire inst_csrw   ;
+wire inst_csrr   ;
+wire inst_csrrs  ;
+wire inst_csrrc  ;
+wire inst_ecall  ;
+wire inst_mret   ;
 wire inst_ebreak ;
 wire inst_invalid;
 assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
-assign debug_wb_inst = ds_inst;
+assign debug_ds_inst = ds_inst;
 assign inst_invalid = !(inst_lui   || 
                         inst_auipc || 
                         inst_jal   || 
@@ -310,7 +332,13 @@ assign inst_invalid = !(inst_lui   ||
                         inst_rem   || 
                         inst_remu  || 
                         inst_remw  || 
-                        inst_remuw || 
+                        inst_remuw ||
+                        inst_csrw  ||
+                        inst_csrr  ||
+                        inst_csrrs ||
+                        inst_csrrc ||
+                        inst_ecall ||
+                        inst_mret  ||
                         inst_ebreak); 
 
 assign opcode    = ds_inst[ 6: 0];
@@ -321,6 +349,7 @@ assign rs2       = ds_inst[24:20];
 assign funct7    = ds_inst[31:25];
 assign sh_funct6 = funct7 [ 6: 1];
 assign shamt     = ds_inst[25:20];
+assign rscsr     = ds_inst[31:20];
 assign imm_u     = ds_inst[31:12];
 assign imm_j     = {ds_inst[31], ds_inst[19:12], ds_inst[20], ds_inst[30:21], 1'b0}; 
 assign imm_i     = ds_inst[31:20]; 
@@ -355,6 +384,13 @@ assign inst_rem    = funct7 == 7'b0000001 && funct3 == 3'b110 && opcode == 7'b01
 assign inst_remu   = funct7 == 7'b0000001 && funct3 == 3'b111 && opcode == 7'b0110011; 
 assign inst_remw   = funct7 == 7'b0000001 && funct3 == 3'b110 && opcode == 7'b0111011; 
 assign inst_remuw  = funct7 == 7'b0000001 && funct3 == 3'b111 && opcode == 7'b0111011; 
+
+assign inst_csrw   = funct3 == 3'b001 && rd == 5'b00000 && opcode == 7'b1110011;
+assign inst_csrr   = funct3 == 3'b001                   && opcode == 7'b1110011;
+assign inst_csrrs  = funct3 == 3'b010                   && opcode == 7'b1110011;
+assign inst_csrrc  = funct3 == 3'b011                   && opcode == 7'b1110011;
+assign inst_ecall  = funct7 == 7'b0000000 && rs2 == 5'b00000 && rs1 == 5'b00000 && funct3 == 3'b000 && rd == 5'b00000 && opcode == 7'b1110011;
+assign inst_mret   = funct7 == 7'b0011000 && rs2 == 5'b00010 && rs1 == 5'b00000 && funct3 == 3'b000 && rd == 5'b00000 && opcode == 7'b1110011;
 assign inst_ebreak = funct7 == 7'b0000000 && funct3 == 3'b000 && opcode == 7'b1110011 && 
                      rs2    == 5'b00001   && rs1    == 5'b00000 && rd   == 5'b00000;
 
@@ -402,7 +438,11 @@ assign op_rem = inst_rem  | inst_remu  | inst_remw  | inst_remuw ;
 assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | inst_sd   | 
                 inst_lb   | inst_lh    | inst_lw    | inst_lbu   | inst_lhu  | inst_addi | 
                 inst_lwu  | inst_ld    | inst_sb    | inst_sh    | inst_sw   | inst_addiw|
-                inst_lui;
+                inst_lui  | inst_csrr  | inst_csrrs | inst_csrrc ;
+
+assign csrrs  = inst_csrrs;
+assign csrrc  = inst_csrrc;
+
 assign op_sub = inst_sub  | inst_subw;
 assign op_slt = inst_slti | inst_slt;
 assign op_sltu= inst_sltiu| inst_sltu;
@@ -412,18 +452,21 @@ assign op_xor = inst_xori | inst_xor;
 assign op_sll = inst_slli | inst_slliw | inst_sll | inst_sllw;
 assign op_srl = inst_srli | inst_srliw | inst_srl | inst_srlw;
 assign op_sra = inst_srai | inst_sraiw | inst_sra | inst_sraw;
+assign id_csr_we = inst_csrw || inst_csrr  || inst_csrrs|| inst_csrrc ;
 assign id_rf_we  = !(inst_sb || inst_sh    || inst_sw   || inst_sd    || inst_beq  || 
-                    inst_bne || inst_blt   || inst_bge  || inst_bltu  || inst_bgeu );
+                    inst_bne || inst_blt   || inst_bge  || inst_bltu  || inst_bgeu ||
+                    inst_csrw|| inst_ecall || inst_mret );
 assign id_mem_we = inst_sb   || inst_sh    || inst_sw   || inst_sd;
 assign id_mem_re = inst_lb   || inst_lh    || inst_lw   || inst_lbu   || inst_lhu  || inst_lwu   || inst_ld;
 assign src_shamt = inst_slli || inst_slliw || inst_srli || inst_srliw || inst_srai || inst_sraiw; 
 assign src_pc    = inst_jal  || inst_jalr  || inst_auipc;
 assign src_imm_u = inst_lui  || inst_auipc;
 assign src_4     = inst_jal  || inst_jalr;
-assign src_0     = inst_lui;
+assign src_0     = inst_lui  || inst_csrr  || inst_csrrs|| inst_csrrc ;
 assign src_imm_i = inst_lb   || inst_lh    || inst_lw   || inst_lbu   || inst_lhu  || inst_lwu  ||
                    inst_ld   || inst_addi  || inst_addiw|| inst_slti  || inst_sltiu|| inst_xori || inst_ori || inst_andi;
 assign src_imm_s = inst_sb   || inst_sh    || inst_sw   || inst_sd;
+assign src_csr   = inst_csrr || inst_csrrs || inst_csrrc;
 assign res_sext  = inst_lb   || inst_lh    || inst_lw   ||
                    inst_addiw|| inst_slliw || inst_srliw|| inst_sraiw || inst_addw || inst_subw || inst_sllw||
                    inst_srlw || inst_sraw  || inst_mulw || inst_divw  || inst_divuw|| inst_remw || inst_remuw;
@@ -493,7 +536,7 @@ assign br_taken = (   inst_beq  &&  rs1_eq_rs2
 				   || inst_jalr
                   ) && ds_valid;
 
-ysyx_22041752_aser64 U_ASER64_0(
+ysyx_22041752_aser U_ASER_0(
     .a          ( rs1_value   ),
     .b          ( rs2_value   ),
     .sub        ( 1'b1        ),
@@ -507,7 +550,7 @@ assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst
                                                                                          {{43{imm_j[20]}},imm_j} ;
 
 /* verilator lint_off PINCONNECTEMPTY */
-ysyx_22041752_aser64 U_ASER64_1(
+ysyx_22041752_aser U_ASER_1(
     .a          ( bt_a      ),
     .b          ( bt_b      ),
     .sub        ( 1'b0      ),

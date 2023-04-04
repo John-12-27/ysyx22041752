@@ -20,12 +20,18 @@ Decode M; //record for the inst which is accessing memory
 Decode D; //record for the inst which is accessing devices
 CPU_state cpu;
 uint64_t *cpu_gpr = NULL;
+uint64_t *cpu_csr = NULL;
 
 NPCState npc_state = { .state = NPC_STOP, .halt_pc = 0, .halt_ret = 0};
 
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
 {
     cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+
+extern "C" void set_csr_ptr(const svOpenArrayHandle r)
+{
+    cpu_csr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
 
 const char *regs[] = 
@@ -36,6 +42,11 @@ const char *regs[] =
   "$s8", "$s9", "$s10","$s11","$t3", "$t4", "$t5", "$t6"
 };
 
+const char *csrs[] = 
+{
+  "mstatus", "mtvec",  "mepc", "mcause" 
+};
+
 void reg_display()
 {
     printf("======================================\n");
@@ -43,6 +54,11 @@ void reg_display()
     for(int i = 0; i < 32; i++)
     {
         printf("%s\t\t%d\t0x%lx\n",regs[i],i,cpu_gpr[i]);
+    }
+    printf("======================================\n");
+    for(int i = 0; i < NUM_CSR; i++)
+    {
+        printf("%s\t\t%d\t0x%lx\n",csrs[i],i,cpu_csr[i]);
     }
     printf("======================================\n");
     printf("PC\t0x%lx\n",S.pc);

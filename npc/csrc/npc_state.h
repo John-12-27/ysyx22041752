@@ -25,9 +25,18 @@ typedef struct Decode {
     char dlogbuf[256];
 } Decode;
 
+#define NUM_CSR 4
+
+//typedef struct {
+    //word_t  val;
+    //vaddr_t addr;
+//} riscv_CSR;
+
 typedef struct CPU_state {
-    word_t gpr[32];
     vaddr_t pc; 
+    word_t gpr[32];
+    word_t csr[NUM_CSR];
+    //riscv_CSR csr[NUM_CSR];
 } CPU_state;
 
 enum 
@@ -54,6 +63,7 @@ extern CPU_state cpu;
 extern NPCState npc_state;
 extern const char *regs[];
 extern uint64_t *cpu_gpr;
+extern uint64_t *cpu_csr;
 extern void reg_display();
 extern int is_exit_status_bad();
 

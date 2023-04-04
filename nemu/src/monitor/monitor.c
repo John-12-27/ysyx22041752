@@ -19,6 +19,7 @@
 void init_rand();
 void init_ilog(const char *file);
 void init_mlog(const char *file);
+void init_elog(const char *file);
 void init_dlog(const char *file);
 void init_flog(const char *file);
 void funcTabInit(const char *file);
@@ -44,6 +45,7 @@ static void welcome()
 
 void sdb_set_batch_mode();
 
+static char *etrace_file = NULL;
 static char *itrace_file = NULL;
 static char *mtrace_file = NULL;
 static char *dtrace_file = NULL;
@@ -75,6 +77,7 @@ static long load_img() {
   return size;
 }
 
+extern bool inputX;
 extern bool inputI;
 extern bool inputM;
 extern bool inputD;
@@ -85,6 +88,7 @@ static int parse_args(int argc, char *argv[])
     {
         {"batch"    , no_argument      , NULL, 'b'},
         {"mtrace"   , required_argument, NULL, 'm'},
+        {"etrace"   , required_argument, NULL, 'x'},
         {"device"   , required_argument, NULL, 'e'},
         {"ftrace"   , required_argument, NULL, 'f'},
         {"itrace"   , required_argument, NULL, 'i'},
@@ -94,13 +98,14 @@ static int parse_args(int argc, char *argv[])
         {0          , 0                , NULL,  0 },
     };
     int o;
-    while ( (o = getopt_long(argc, argv, "-bhm:e:f:i:d:p:", table, NULL)) != -1) 
+    while ( (o = getopt_long(argc, argv, "-bhm:x:e:f:i:d:p:", table, NULL)) != -1) 
     {
         switch (o) 
         {
             case 'b': sdb_set_batch_mode(); break;
             case 'p': sscanf(optarg, "%d", &difftest_port); break;
             case 'm': mtrace_file = optarg; inputM = true; break;
+            case 'x': etrace_file = optarg; inputX = true; break;
             case 'e': dtrace_file = optarg; inputD = true; break;
             case 'f': if(ftrace_file == NULL)
                       {
@@ -118,6 +123,7 @@ static int parse_args(int argc, char *argv[])
                 printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
                 printf("\t-b,--batch              run with batch mode\n");
                 printf("\t-m,--mtrace=FILE        output mtrace to FILE\n");
+                printf("\t-x,--etrace=FILE        output etrace to FILE\n");
                 printf("\t-e,--dtrace=FILE        output dtrace to FILE\n");
                 printf("\t-f,--ftrace=FILE        input a FILE and enable the tracer of functions\n");
                 printf("\t-i,--itrace=FILE        output itrace to FILE\n");
@@ -147,6 +153,9 @@ void init_monitor(int argc, char *argv[])
 #ifdef CONFIG_FTRACE
   init_flog(ftrace_file);
   funcTabInit(elfInput_file);
+#endif
+#ifdef CONFIG_ETRACE
+  init_elog(etrace_file);
 #endif
 #ifdef CONFIG_MTRACE
   init_mlog(mtrace_file);
