@@ -56,9 +56,9 @@ void _exit(int status) {
   while (1);
 }
 
-int _open(const char *path, int flags, mode_t mode) {
-  _exit(SYS_open);
-  return 0;
+int _open(const char *path, int flags, mode_t mode) 
+{
+    return _syscall_(SYS_open);
 }
 
 int _write(int fd, void *buf, size_t count) 

@@ -55,7 +55,7 @@ uintptr_t do_syscall(Context *c)
         case SYS_exit : halt(0); break;
         case SYS_write: c->GPRx = sys_write(a); break;
         case SYS_brk  : c->GPRx = sys_brk(a); break;
-        default: printf("Unhandled syscall ID = %ld", a[0]); assert(0); /*panic("Unhandled syscall ID = %d", a[0]);*/
+        default: panic("Unhandled syscall ID = %d", a[0]);
     }
 
 #if CONFIG_STRACE

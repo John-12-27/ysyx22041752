@@ -19,7 +19,8 @@ Context* __am_irq_handle(Context *c) {
                  }
                  else if((c->GPR1 == 0) ||  //sys_exit
                          (c->GPR1 == 4) ||  //sys_write
-                         (c->GPR1 == 9)     //sys_brk
+                         (c->GPR1 == 9) ||  //sys_brk
+                         (c->GPR1 == 2)     //sys_open
                         )
                  {
                      ev.event = EVENT_SYSCALL;
