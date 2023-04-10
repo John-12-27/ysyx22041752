@@ -24,11 +24,12 @@ size_t invalid_write(const void *buf, size_t offset, size_t len) {
   return 0;
 }
 
+extern size_t serial_write(const void *buf, size_t offset, size_t len);
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin",  0, 0, 0, invalid_read, invalid_write},
-  [FD_STDOUT] = {"stdout", 0, 0, 0, invalid_read, invalid_write},
-  [FD_STDERR] = {"stderr", 0, 0, 0, invalid_read, invalid_write},
+  [FD_STDOUT] = {"stdout", 0, 0, 0, invalid_read, serial_write},
+  [FD_STDERR] = {"stderr", 0, 0, 0, invalid_read, serial_write},
 #include "files.h"
 };
 
@@ -71,23 +72,29 @@ size_t fs_read(int fd, void *buf, size_t len)
 extern size_t ramdisk_write(const void *buf, size_t offset, size_t len); 
 size_t fs_write(int fd, const void *buf, size_t len)
 {
-    assert(buf);
-    if(len && (file_table[fd].open_offset < file_table[fd].size))
+    if(file_table[fd].write == NULL)
     {
-        size_t writelen = 0;
-        if((file_table[fd].open_offset+len) <= file_table[fd].size)
+        if(len && (file_table[fd].open_offset < file_table[fd].size))
         {
-            writelen = len;
+            size_t writelen = 0;
+            if((file_table[fd].open_offset+len) <= file_table[fd].size)
+            {
+                writelen = len;
+            }
+            else
+            {
+                writelen = file_table[fd].size - file_table[fd].open_offset;
+            }
+            size_t ret = ramdisk_write(buf, file_table[fd].disk_offset+file_table[fd].open_offset, writelen);
+            file_table[fd].open_offset += writelen;
+            return ret;
         }
-        else
-        {
-            writelen = file_table[fd].size - file_table[fd].open_offset;
-        }
-        size_t ret = ramdisk_write(buf, file_table[fd].disk_offset+file_table[fd].open_offset, writelen);
-        file_table[fd].open_offset += writelen;
-        return ret;
+        return -1;
     }
-    return -1;
+    else
+    {
+        return file_table[fd].write(buf, 0, len);
+    }
 }
 
 size_t fs_lseek(int fd, size_t offset, int whence)
@@ -109,5 +116,10 @@ int fs_close(int fd)
 
 void init_fs() 
 {
-    //TODO :
+    for(int i = 3; i < (sizeof(file_table) / sizeof(file_table[0])); i++)
+    {
+        file_table[i].open_offset = 0;
+        file_table[i].read        = NULL;
+        file_table[i].write       = NULL;
+    }
 }

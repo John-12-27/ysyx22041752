@@ -31,21 +31,7 @@ extern size_t fs_write(int fd, const void *buf, size_t len);
 static uintptr_t sys_write(uintptr_t a[])
 {
     assert(a[0] == SYS_write);
-    char *buf = (char *)a[2];
-    if((a[1] == 1) || (a[1] == 2))  //fd is stdout or stderr
-    {
-        uintptr_t i=0;
-        for(; i < a[3]; i++)
-        {
-            putch(buf[i]);
-        }
-        return i;
-    }
-    else if(a[1] > 0)
-    {
-        return fs_write((int)a[1], (const void *)a[2], (size_t)a[3]);
-    }
-    return -1;
+    return fs_write((int)a[1], (const void *)a[2], (size_t)a[3]);
 }
 
 extern size_t fs_read(int fd, void *buf, size_t len);
@@ -88,6 +74,15 @@ static uintptr_t sys_brk(uintptr_t a[])
     return 0;
 }
 
+static uintptr_t sys_gettimeofday(uintptr_t a[])
+{
+    assert(a[0] == SYS_gettimeofday);
+    uintptr_t *tmp = (uintptr_t*)a[1];
+    tmp[1] = io_read(AM_TIMER_UPTIME).us;
+    tmp[0] = tmp[1] / 1000000;
+    return 0;
+}
+
 uintptr_t do_syscall(Context *c) 
 {
     uintptr_t a[4];
@@ -98,13 +93,14 @@ uintptr_t do_syscall(Context *c)
 
     switch (a[0]) 
     {
-        case SYS_exit : halt(0); break;
-        case SYS_open : c->GPRx = sys_open(a);  break;
-        case SYS_read : c->GPRx = sys_read(a);  break;
-        case SYS_write: c->GPRx = sys_write(a); break;
-        case SYS_close: c->GPRx = sys_close(a); break;
-        case SYS_lseek: c->GPRx = sys_lseek(a); break;
-        case SYS_brk  : c->GPRx = sys_brk(a);   break;
+        case SYS_exit :        halt(0); break;
+        case SYS_open :        c->GPRx = sys_open(a);         break;
+        case SYS_read :        c->GPRx = sys_read(a);         break;
+        case SYS_write:        c->GPRx = sys_write(a);        break;
+        case SYS_close:        c->GPRx = sys_close(a);        break;
+        case SYS_lseek:        c->GPRx = sys_lseek(a);        break;
+        case SYS_brk  :        c->GPRx = sys_brk(a);          break;
+        case SYS_gettimeofday: c->GPRx = sys_gettimeofday(a); break;
         default: panic("Unhandled syscall ID = %d", a[0]);
     }
 

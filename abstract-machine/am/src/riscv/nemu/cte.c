@@ -23,7 +23,8 @@ Context* __am_irq_handle(Context *c) {
                          (c->GPR1 == 4) ||  //sys_write
                          (c->GPR1 == 7) ||  //sys_close
                          (c->GPR1 == 8) ||  //sys_lseek
-                         (c->GPR1 == 9)     //sys_brk
+                         (c->GPR1 == 9) ||  //sys_brk
+                         (c->GPR1 ==19)     //sys_gettimeofday
                         )
                  {
                      ev.event = EVENT_SYSCALL;
