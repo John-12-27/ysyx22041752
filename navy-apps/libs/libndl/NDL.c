@@ -16,8 +16,11 @@ uint32_t NDL_GetTicks()
     return tv.tv_usec/1000;
 }
 
-int NDL_PollEvent(char *buf, int len) {
-  return 0;
+extern int _open(const char *path, int flags, mode_t mode);
+extern int _read(int fd, void *buf, size_t count); 
+int NDL_PollEvent(char *buf, int len) 
+{
+    return _read(_open("/dev/events", 0, 0), buf, len);
 }
 
 void NDL_OpenCanvas(int *w, int *h) {

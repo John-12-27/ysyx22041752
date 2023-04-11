@@ -25,8 +25,27 @@ size_t serial_write(const void *buf, size_t offset, size_t len)
     return i;
 }
 
-size_t events_read(void *buf, size_t offset, size_t len) {
-  return 0;
+size_t events_read(void *buf, size_t offset, size_t len) 
+{
+    AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
+    if(ev.keycode == AM_KEY_NONE)
+    {
+        return 0;
+    }
+    else
+    {
+        char *tmp = (char *)buf;
+        tmp[0] = 'k';
+        if(ev.keydown)
+            tmp[1] = 'd';
+        else
+            tmp[1] = 'u';
+        tmp[2] = ' ';
+        strncpy(&tmp[3], keyname[ev.keycode], len-1);
+        uint8_t i = strlen(keyname[ev.keycode]);
+        tmp[i+1+2] = '\n';
+        return i+1+2;
+    }
 }
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len) {
