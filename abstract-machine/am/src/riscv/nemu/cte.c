@@ -8,20 +8,28 @@ Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
 
-            /*printf("type is %d\n", c->GPR1);*/
+    /*printf("type is %d\n", c->GPR1);*/
 
     switch (c->mcause) 
     {
         case 11: 
-                 if((c->GPR1 == -1) || (c->GPR1 == 1))
+                 if((c->GPR1 == 1) || (c->GPR1 == -1))
                  {
                      ev.event = EVENT_YIELD;
                  }
-                 else 
+                 else if((c->GPR1 == 0) ||  //sys_exit
+                         (c->GPR1 == 2) ||  //sys_open
+                         (c->GPR1 == 3) ||  //sys_read
+                         (c->GPR1 == 4) ||  //sys_write
+                         (c->GPR1 == 7) ||  //sys_close
+                         (c->GPR1 == 8) ||  //sys_lseek
+                         (c->GPR1 == 9) ||  //sys_brk
+                         (c->GPR1 ==19)     //sys_gettimeofday
+                        )
                  {
                      ev.event = EVENT_SYSCALL;
                  } break;
-      default:   ev.event = EVENT_ERROR; break;
+        default:   ev.event = EVENT_ERROR; break;
     }
 
     c = user_handler(ev, c);
