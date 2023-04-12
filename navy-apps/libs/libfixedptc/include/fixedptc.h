@@ -126,36 +126,66 @@ typedef	__uint128_t fixedptud;
 #define fixedpt_tofloat(T) ((float) ((T)*((float)(1)/(float)(1L << FIXEDPT_FBITS))))
 
 /* Multiplies a fixedpt number with an integer, returns the result. */
-static inline fixedpt fixedpt_muli(fixedpt A, int B) {
-	return 0;
+static inline fixedpt fixedpt_muli(fixedpt A, int B) 
+{
+    fixedpt C = fixedpt_rconst(B); 
+	return (A*C) / FIXEDPT_ONE;
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
-static inline fixedpt fixedpt_divi(fixedpt A, int B) {
-	return 0;
+static inline fixedpt fixedpt_divi(fixedpt A, int B) 
+{
+    fixedpt C = fixedpt_rconst(B); 
+	return (A/C) * FIXEDPT_ONE;
 }
 
 /* Multiplies two fixedpt numbers, returns the result. */
-static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B) {
-	return 0;
+static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B) 
+{
+	return (A*B) / FIXEDPT_ONE;
 }
 
 
 /* Divides two fixedpt numbers, returns the result. */
-static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) {
-	return 0;
+static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) 
+{
+	return (A/B) * FIXEDPT_ONE;
 }
 
-static inline fixedpt fixedpt_abs(fixedpt A) {
-	return 0;
+static inline fixedpt fixedpt_abs(fixedpt A) 
+{
+    if(A>=0)
+	    return A;
+    else
+        return -A;
 }
 
-static inline fixedpt fixedpt_floor(fixedpt A) {
-	return 0;
+static inline fixedpt fixedpt_floor(fixedpt A) 
+{
+    if(A>=0)
+	    return fixedpt_rconst(A/FIXEDPT_ONE);
+    else
+    {
+        fixedpt fraction = (uint8_t)A;
+        if(fraction == 0)
+            return A;
+        else
+            return -fixedpt_rconst(-A/FIXEDPT_ONE)-fixedpt_rconst(1);
+    }
 }
 
-static inline fixedpt fixedpt_ceil(fixedpt A) {
-	return 0;
+static inline fixedpt fixedpt_ceil(fixedpt A) 
+{
+    if(A<=0)
+	    return fixedpt_rconst(A/FIXEDPT_ONE);
+    else
+    {
+        fixedpt fraction = (uint8_t)A;
+        if(fraction == 0)
+            return A;
+        else
+            return fixedpt_rconst(A/FIXEDPT_ONE)+fixedpt_rconst(1);
+    }
 }
 
 /*

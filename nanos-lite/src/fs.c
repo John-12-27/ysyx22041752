@@ -106,7 +106,7 @@ size_t fs_write(int fd, const void *buf, size_t len)
     }
     else
     {
-        return file_table[fd].write(buf, 0, len);
+        return file_table[fd].write(buf, file_table[fd].open_offset, len);
     }
 }
 
@@ -124,12 +124,13 @@ size_t fs_lseek(int fd, size_t offset, int whence)
 
 int fs_close(int fd)
 {
+	file_table[fd].open_offset = 0;
     return 0;
 }
 
 void init_fs() 
 {
-    file_table[FD_FB].size = io_read(AM_GPU_CONFIG).height * io_read(AM_GPU_CONFIG).width;
+    file_table[FD_FB].size = 4 * io_read(AM_GPU_CONFIG).height * io_read(AM_GPU_CONFIG).width;
     for(int i = FD_EVENT+1; i < (sizeof(file_table) / sizeof(file_table[0]) - 1); i++) 
     {
         file_table[i].open_offset = 0;

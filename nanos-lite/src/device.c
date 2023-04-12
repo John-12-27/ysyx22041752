@@ -52,32 +52,38 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len)
 {
     assert(buf);
     assert(len >= 22);
-    char *w = "WIDTH :";
-    char *h = "HEIGHT:";
+    char *w = "WIDTH: ";
+    char *h = "HEIGHT: ";
     char *tmp = (char*)buf;
     strncpy(tmp, w, 7);
-    strncpy(tmp+7+3+1, h, 7); //eg. WIDTH :400\nHEIGHT:300\n
+    strncpy(tmp+7+3+1, h, 8); //eg. WIDTH: 400\nHEIGHT: 300\n
     if(io_read(AM_GPU_CONFIG).width == 800)
         strncpy(&tmp[7], "800\n", 4);
     else if(io_read(AM_GPU_CONFIG).width == 400)
         strncpy(&tmp[7], "400\n", 4);
     if(io_read(AM_GPU_CONFIG).height == 600)
-        strncpy(&tmp[18], "600\n", 4);
+        strncpy(&tmp[19], "600\n", 4);
     else if(io_read(AM_GPU_CONFIG).height == 300)
-        strncpy(&tmp[18], "300\n", 4);
-    return 22;
+        strncpy(&tmp[19], "300\n", 4);
+    return len;
 }
 
+extern int SCREEN_WIDTH;
 size_t fb_write(const void *buf, size_t offset, size_t len) 
 {
-    uintptr_t *p = (uintptr_t*)buf;
-    uintptr_t FB[6];
-    for(int i = 0; i < 6; i++)
-    {
-        FB[i] = p[i];
-    }
-    io_write(AM_GPU_FBDRAW, FB[0], FB[1], (void*)FB[2], FB[3], FB[4], FB[5]);
-    return 0;
+    /*uintptr_t *p = (uintptr_t*)buf;*/
+    /*uintptr_t FB[6];*/
+    /*for(int i = 0; i < 6; i++)*/
+    /*{*/
+        /*FB[i] = p[i];*/
+    /*}*/
+    /*io_write(AM_GPU_FBDRAW, FB[0], FB[1], (void*)FB[2], FB[3], FB[4], FB[5]);*/
+
+	int y = offset/(4*SCREEN_WIDTH);
+	int x = offset/4-y*SCREEN_WIDTH;
+    io_write(AM_GPU_FBDRAW, x, y, (void*)buf, len/4, 1, 1);
+
+    return len;
 }
 
 void init_device() {

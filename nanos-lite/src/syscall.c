@@ -79,7 +79,12 @@ static uintptr_t sys_gettimeofday(uintptr_t a[])
     assert(a[0] == SYS_gettimeofday);
     uintptr_t *tmp = (uintptr_t*)a[1];
     tmp[1] = io_read(AM_TIMER_UPTIME).us;
-    tmp[0] = tmp[1] / 1000000;
+	if(tmp[1] >= 1000000)
+	{
+		tmp[0]++;
+		tmp[1] = 0;
+	}
+
     return 0;
 }
 
