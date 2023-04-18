@@ -10,15 +10,50 @@ static const char *keyname[] = {
   _KEYS(keyname)
 };
 
+extern int NDL_PollEvent(char *buf, int len); 
+
 int SDL_PushEvent(SDL_Event *ev) {
   return 0;
 }
 
-int SDL_PollEvent(SDL_Event *ev) {
-  return 0;
+int SDL_PollEvent(SDL_Event *ev) 
+{
+    char buf [64] = {'\0', };
+    NDL_PollEvent(buf, sizeof(buf));
+
+    if(buf[0] == '\0')
+    {
+        return 0;
+    }
+    else
+    {
+        assert(buf[0] == 'k');
+        switch(buf[1])
+        {
+            case 'd': ev->type = SDL_KEYDOWN; break;
+            case 'u': ev->type = SDL_KEYUP;   break;
+            default :
+                      printf("Err event type\n");
+                      assert(0);
+        }
+    }
+
+    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+    {
+        bool equal;
+        if((strlen(&buf[3])-1) > strlen(keyname[i]))
+            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(&buf[3])-1);
+        else
+            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(keyname[i]));
+        if(equal)
+        {
+            ev->key.keysym.sym = i;
+        }
+    }
+
+    return 1;
 }
 
-extern int NDL_PollEvent(char *buf, int len); 
 int SDL_WaitEvent(SDL_Event *event) 
 {
     char buf [64] = {'\0', };
@@ -44,21 +79,17 @@ int SDL_WaitEvent(SDL_Event *event)
 
     for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
     {
-
-        /*printf("keyname[%d] is %s\n", i, keyname[i]);*/
-        /*printf("strlen keyname[%d] is %d\n", i, strlen(keyname[i]));*/
-        /*printf("buf[3] is %s\n", &buf[3]);*/
-        /*printf("strlen buf[3] is %d\n", strlen(&buf[3]));*/
-
-        bool equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(&buf[3])-1);
-        /*printf("strcmp is %d\n", equal);*/
-
+        bool equal;
+        if((strlen(&buf[3])-1) > strlen(keyname[i]))
+            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(&buf[3])-1);
+        else
+            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(keyname[i]));
         if(equal)
         {
             event->key.keysym.sym = i;
-            /*printf("sym = %d\n", i);*/
         }
     }
+
     return 1;
 }
 

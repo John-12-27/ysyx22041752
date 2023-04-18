@@ -20,21 +20,34 @@ extern ssize_t write (int fd, const void *buf, size_t cnt);
 extern __off_t lseek(int fd, __off_t pos, int whence);
 extern int close (int fd);
 
+/*uint32_t NDL_GetTicks() */
+/*{*/
+    /*static bool first_flag = false;*/
+    /*static struct timeval tv_init;*/
+    /*struct timeval tv;*/
+    /*gettimeofday(&tv, NULL);*/
+    /*if(!first_flag)*/
+    /*{*/
+        /*first_flag = true;*/
+        /*tv_init = tv;*/
+    /*}*/
+    /*if(tv.tv_usec >= tv_init.tv_usec)*/
+        /*return (tv.tv_usec-tv_init.tv_usec)/1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
+    /*else*/
+        /*return (1000000 - tv_init.tv_usec + tv.tv_usec) / 1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
+/*}*/
+
 uint32_t NDL_GetTicks() 
 {
-    static bool first_flag = false;
-    static struct timeval tv_init;
+    static uint64_t boot_time = 0;
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    if(!first_flag)
-    {
-        first_flag = true;
-        tv_init = tv;
-    }
-    if(tv.tv_usec >= tv_init.tv_usec)
-        return (tv.tv_usec-tv_init.tv_usec)/1000 + 1000*(tv.tv_sec - tv_init.tv_sec);
-    else
-        return (1000000 - tv_init.tv_usec + tv.tv_usec) / 1000 + 1000*(tv.tv_sec - tv_init.tv_sec);
+    uint64_t us = tv.tv_usec + tv.tv_sec * 1000000;
+
+    if(boot_time == 0)
+        boot_time = us;
+
+    return (us-boot_time) / 1000;
 }
 
 int NDL_PollEvent(char *buf, int len) 

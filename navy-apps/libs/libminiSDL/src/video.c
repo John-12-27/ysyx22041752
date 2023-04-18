@@ -4,15 +4,58 @@
 #include <string.h>
 #include <stdlib.h>
 
-void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-  assert(dst && src);
-  assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
-}
-
-void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
-}
-
 extern void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h);
+void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+    assert(dst && src);
+    assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+
+    if(srcrect)
+    {
+        int d_x = 0; 
+        int d_y = 0;
+        assert((srcrect->w > 0) && (srcrect->h > 0));
+
+        if(dstrect != NULL)
+        {
+            d_x = dstrect->x;
+            d_y = dstrect->y;
+        }
+
+        for(int i = 0; i < srcrect->h; i++)
+        {
+            memcpy(dst->pixels + 4*((d_y+i)*dst->w+d_x), src->pixels + 4*((srcrect->y+i)*src->w+srcrect->x), 4 * srcrect->w);
+        }
+
+        /*NDL_DrawRect((uint32_t*)dst->pixels, dstrect->x, dstrect->y, dstrect->w, dstrect->h);*/
+    }
+    else
+    {
+        assert((src->w <= dst->w) && (src->h <= dst->h));
+
+        for(int i = 0; i < src->h; i++)
+        {
+            memcpy(dst->pixels + 4*((dstrect->y+i)*dst->w+dstrect->x), src->pixels+4*i*src->w, 4 * src->w);
+        }
+
+        /*NDL_DrawRect((uint32_t*)dst->pixels, dstrect->x, dstrect->y, src->w, src->h);*/
+    }
+   
+}
+
+void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) 
+{
+    memset(dst->pixels, color, 4 * dst->w * dst->h);
+
+    if(dstrect)
+    {
+        NDL_DrawRect((uint32_t *)dst->pixels, dstrect->x, dstrect->y, dstrect->w, dstrect->h);
+    }
+    else
+    {
+        NDL_DrawRect((uint32_t *)dst->pixels, 0, 0, dst->w, dst->h);
+    }
+}
+
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) 
 {
     if((x==0) && (y==0) && (w==0) && (h==0))
