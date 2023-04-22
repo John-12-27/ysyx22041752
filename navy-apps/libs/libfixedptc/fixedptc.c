@@ -93,6 +93,7 @@ fixedpt fixedpt_sqrt(fixedpt A) {
 	return (l);
 }
 
+#include <stdio.h>
 /* Returns the sine of the given fixedpt number. 
  * Note: the loss of precision is extraordinary! */
 fixedpt fixedpt_sin(fixedpt fp) {

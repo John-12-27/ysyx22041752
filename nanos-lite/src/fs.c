@@ -59,7 +59,7 @@ size_t fs_read(int fd, void *buf, size_t len)
     assert(buf);
     if(file_table[fd].read == NULL)
     {
-        if(len && (file_table[fd].open_offset < file_table[fd].size))
+        /*if(len && (file_table[fd].open_offset < file_table[fd].size))*/
         {
             size_t readlen = 0;
             if((file_table[fd].open_offset+len) <= file_table[fd].size)
@@ -87,7 +87,7 @@ size_t fs_write(int fd, const void *buf, size_t len)
 {
     if(file_table[fd].write == NULL)
     {
-        if(len && (file_table[fd].open_offset < file_table[fd].size))
+        /*if(len && (file_table[fd].open_offset < file_table[fd].size))*/
         {
             size_t writelen = 0;
             if((file_table[fd].open_offset+len) <= file_table[fd].size)
