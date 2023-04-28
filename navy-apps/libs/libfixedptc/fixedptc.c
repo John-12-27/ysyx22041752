@@ -1,5 +1,11 @@
 #include "fixedptc.h"
 
+/*fixedpt fixedpt_muli(fixedpt A, int B) */
+/*{*/
+    /*fixedpt C = fixedpt_rconst(B); */
+	/*return (A*C) / FIXEDPT_ONE;*/
+/*}*/
+
 /**
  * Convert the given fixedpt number to a decimal string.
  * The max_dec argument specifies how many decimal digits to the right

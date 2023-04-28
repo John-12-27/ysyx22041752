@@ -11,6 +11,7 @@ static const char *keyname[] = {
 };
 
 extern int NDL_PollEvent(char *buf, int len); 
+static uint8_t keysnapt[83];
 
 int SDL_PushEvent(SDL_Event *ev) {
   return 0;
@@ -97,6 +98,42 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
   return 0;
 }
 
-uint8_t* SDL_GetKeyState(int *numkeys) {
-  return NULL;
+uint8_t* SDL_GetKeyState(int *numkeys) 
+{
+    char buf [64] = {'\0', };
+    NDL_PollEvent(buf, sizeof(buf));
+
+    if(buf[0] != '\0' && buf[0] != 'k')
+    {
+        printf("Err event type\n");
+        assert(0);
+    }
+
+    if(buf[1])
+    {
+        switch(buf[1])
+        {
+            case 'd': 
+                {
+                    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+                    {
+                        bool equal;
+                        if((strlen(&buf[3])-1) > strlen(keyname[i]))
+                            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(&buf[3])-1);
+                        else
+                            equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(keyname[i]));
+                        if(equal)
+                            keysnapt[i] = 1;
+                        else
+                            keysnapt[i] = 0;
+                    }
+                } break;
+            case 'u': break;
+            default :
+                      printf("Err event type\n");
+                      assert(0);
+        }
+    }
+
+    return keysnapt;
 }

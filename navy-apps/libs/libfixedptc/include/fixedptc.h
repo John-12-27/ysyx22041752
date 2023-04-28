@@ -105,7 +105,7 @@ typedef	__uint128_t fixedptud;
 #define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)
 #define FIXEDPT_FMASK	(((fixedpt)1 << FIXEDPT_FBITS) - 1)
 
-#define fixedpt_rconst(R) ((fixedpt) ((R) * FIXEDPT_ONE )) //+ ((R) >= 0 ? 0.5 : -0.5)) )
+#define fixedpt_rconst(R) ((fixedpt) ((R) * FIXEDPT_ONE )) // + ((R) >= 0 ? 0.5 : -0.5)) )
 #define fixedpt_fromint(I) ((fixedptd)(I) << FIXEDPT_FBITS)
 #define fixedpt_toint(F) ((F) >> FIXEDPT_FBITS)
 #define fixedpt_add(A,B) ((A) + (B))
@@ -126,10 +126,12 @@ typedef	__uint128_t fixedptud;
 #define fixedpt_tofloat(T) ((float) ((T)*((float)(1)/(float)(1L << FIXEDPT_FBITS))))
 
 /* Multiplies a fixedpt number with an integer, returns the result. */
+
+//extern fixedpt fixedpt_muli(fixedpt A, int B);
 static inline fixedpt fixedpt_muli(fixedpt A, int B) 
 {
     fixedpt C = fixedpt_rconst(B); 
-	return (A*C) / FIXEDPT_ONE;
+    return (A*C) / FIXEDPT_ONE;
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
