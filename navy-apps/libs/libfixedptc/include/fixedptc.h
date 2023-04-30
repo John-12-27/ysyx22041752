@@ -128,6 +128,7 @@ typedef	__uint128_t fixedptud;
 /* Multiplies a fixedpt number with an integer, returns the result. */
 
 //extern fixedpt fixedpt_muli(fixedpt A, int B);
+
 static inline fixedpt fixedpt_muli(fixedpt A, int B) 
 {
     fixedpt C = fixedpt_rconst(B); 

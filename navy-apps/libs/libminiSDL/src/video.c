@@ -24,7 +24,9 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 
         for(int i = 0; i < srcrect->h; i++)
         {
+
             memcpy(dst->pixels + dst->format->BytesPerPixel*((d_y+i)*dst->w+d_x), src->pixels + src->format->BytesPerPixel*((srcrect->y+i)*src->w+srcrect->x), dst->format->BytesPerPixel* srcrect->w);
+
         }
     }
     else
@@ -95,6 +97,7 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h)
                 for(int j = 0; j < s->w; j++)
                 {
                     uint8_t index = *(uint8_t *)(s->pixels + j + i * s->w);
+                    /*printf("index = %d\n", index);*/
                     SDL_Color *color = &s->format->palette->colors[index];
                     uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
                     NDL_DrawRect(&realColor, j, i, 1, 1);
@@ -112,7 +115,7 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h)
             {
                 for(int j = 0; j < w; j++)
                 {
-                    uint8_t index = *(uint8_t *)(s->pixels + j + i * w);
+                    uint8_t index = *(uint8_t *)(s->pixels + (x+j) + (i+y) * s->w);
                     SDL_Color *color = &s->format->palette->colors[index];
                     uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
                     NDL_DrawRect(&realColor, x+j, y+i, 1, 1);

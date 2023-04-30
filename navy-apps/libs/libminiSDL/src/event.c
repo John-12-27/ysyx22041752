@@ -11,7 +11,6 @@ static const char *keyname[] = {
 };
 
 extern int NDL_PollEvent(char *buf, int len); 
-static uint8_t keysnapt[83];
 
 int SDL_PushEvent(SDL_Event *ev) {
   return 0;
@@ -49,6 +48,7 @@ int SDL_PollEvent(SDL_Event *ev)
         if(equal)
         {
             ev->key.keysym.sym = i;
+            break;
         }
     }
 
@@ -88,6 +88,7 @@ int SDL_WaitEvent(SDL_Event *event)
         if(equal)
         {
             event->key.keysym.sym = i;
+            break;
         }
     }
 
@@ -100,6 +101,7 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
 
 uint8_t* SDL_GetKeyState(int *numkeys) 
 {
+    static uint8_t key_snapshot[83];
     char buf [64] = {'\0', };
     NDL_PollEvent(buf, sizeof(buf));
 
@@ -113,9 +115,10 @@ uint8_t* SDL_GetKeyState(int *numkeys)
     {
         switch(buf[1])
         {
+            int i;
             case 'd': 
                 {
-                    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+                    for(i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
                     {
                         bool equal;
                         if((strlen(&buf[3])-1) > strlen(keyname[i]))
@@ -123,11 +126,14 @@ uint8_t* SDL_GetKeyState(int *numkeys)
                         else
                             equal = !strncmp((const char*)keyname[i], (const char*)&buf[3], strlen(keyname[i]));
                         if(equal)
-                            keysnapt[i] = 1;
+                        {
+                            key_snapshot[i] = 1;
+                            break;
+                        }
                         else
-                            keysnapt[i] = 0;
+                            key_snapshot[i] = 0;
                     }
-                } break;
+                } printf("minisdl i = %d\n", i); break;
             case 'u': break;
             default :
                       printf("Err event type\n");
@@ -135,5 +141,5 @@ uint8_t* SDL_GetKeyState(int *numkeys)
         }
     }
 
-    return keysnapt;
+    return key_snapshot;
 }
