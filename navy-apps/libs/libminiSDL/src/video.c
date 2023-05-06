@@ -24,19 +24,27 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 
         for(int i = 0; i < srcrect->h; i++)
         {
-
             memcpy(dst->pixels + dst->format->BytesPerPixel*((d_y+i)*dst->w+d_x), src->pixels + src->format->BytesPerPixel*((srcrect->y+i)*src->w+srcrect->x), dst->format->BytesPerPixel* srcrect->w);
-
         }
     }
     else
     {
         assert((src->w <= dst->w) && (src->h <= dst->h));
 
-        for(int i = 0; i < src->h; i++)
+        if(dstrect)
         {
-            memcpy(dst->pixels + dst->format->BytesPerPixel*((dstrect->y+i)*dst->w+dstrect->x), src->pixels+src->format->BytesPerPixel*i*src->w, dst->format->BytesPerPixel* src->w);
+            for(int i = 0; i < src->h; i++)
+            {
+                memcpy(dst->pixels + dst->format->BytesPerPixel*((dstrect->y+i)*dst->w+dstrect->x), src->pixels+src->format->BytesPerPixel*i*src->w, dst->format->BytesPerPixel* src->w);
+            }
         }
+        else
+        {
+            for(int i = 0; i < src->h; i++)
+            {
+                memcpy(dst->pixels + dst->format->BytesPerPixel*((i)*dst->w), src->pixels+src->format->BytesPerPixel*i*src->w, dst->format->BytesPerPixel* src->w);
+            }
+        } 
     }
    
 }
