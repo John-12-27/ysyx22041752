@@ -51,18 +51,21 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) 
 {
+    int x = (dstrect == NULL ? 0 : dstrect->x);
+    int y = (dstrect == NULL ? 0 : dstrect->y);
+
     if(dst->format->BitsPerPixel == 8)
-        memset(dst->pixels, (uint8_t)color, dst->format->BytesPerPixel * dst->w * dst->h);
+        memset(dst->pixels + y * dst->w + x, (uint8_t)color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);
     else
-        memset(dst->pixels, color, dst->format->BytesPerPixel * dst->w * dst->h);
+        memset(dst->pixels + y * dst->w + x, color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);
 
     if(dstrect)
     {
         if(dst->format->BitsPerPixel == 8)
         {
             uint8_t index = *(uint8_t *)(dst->pixels);
-            SDL_Color *color = &dst->format->palette->colors[index];
-            uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
+            SDL_Color *pcolor = &dst->format->palette->colors[index];
+            uint32_t realColor = ((uint32_t)0) | (pcolor->r << 16) | (pcolor->g << 8) | pcolor->b;
             for(int i = 0; i < dstrect->h; i++)
             {
                 for(int j = 0; j < dstrect->w; j++)
@@ -79,8 +82,8 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color)
         if(dst->format->BitsPerPixel == 8)
         {
             uint8_t index = *(uint8_t *)(dst->pixels);
-            SDL_Color *color = &dst->format->palette->colors[index];
-            uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
+            SDL_Color *pcolor = &dst->format->palette->colors[index];
+            uint32_t realColor = ((uint32_t)0) | (pcolor->r << 16) | (pcolor->g << 8) | pcolor->b;
             for(int i = 0; i < dst->h; i++)
             {
                 for(int j = 0; j < dst->w; j++)
@@ -313,8 +316,10 @@ uint32_t SDL_MapRGBA(SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint
 }
 
 int SDL_LockSurface(SDL_Surface *s) {
+    assert(0);
   return 0;
 }
 
 void SDL_UnlockSurface(SDL_Surface *s) {
+    assert(0);
 }
