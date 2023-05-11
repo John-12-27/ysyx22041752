@@ -156,11 +156,11 @@ static int decode_exec(Decode *s)
   INSTPAT("0000001 ????? ????? 000 ????? 0111011", mulw   ,  R, R(dest) = SEXT(BITS(BITS(src1, 31, 0) * BITS(src2, 31, 0), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 100 ????? 0110011", div    ,  R, R(dest) = (sword_t)src1 / (sword_t)src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 101 ????? 0110011", divu   ,  R, R(dest) = src1 / src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 100 ????? 0111011", divw   ,  R, R(dest) = SEXT(BITS((sword_t)src1, 31, 0) / BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 100 ????? 0111011", divw   ,  R, R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) / (int32_t)BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 101 ????? 0111011", divuw  ,  R, R(dest) = SEXT(BITS(src1, 31, 0) / BITS(src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 110 ????? 0110011", rem    ,  R, R(dest) = (sword_t)src1 % (sword_t)src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 111 ????? 0110011", remu   ,  R, R(dest) = src1 % src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 110 ????? 0111011", remw   ,  R, R(dest) = SEXT(BITS((sword_t)src1, 31, 0) % BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 110 ????? 0111011", remw   ,  R, R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) % (int32_t)BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 111 ????? 0111011", remuw  ,  R, R(dest) = SEXT(BITS(src1, 31, 0) % BITS(src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
 
   INSTPAT("??????? ????? ????? 001 00000 1110011", csrw   ,  C, csrw(csraddr, src1);); //rd==0 

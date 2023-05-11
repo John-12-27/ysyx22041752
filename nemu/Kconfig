@@ -224,7 +224,7 @@ config ETRACE_COND
 
 config ETRACE_DIRECT
   depends on ETRACE
-  bool "Trace all insts when the condition is true"
+  bool "Trace all exceptions"
   default n
 
 config MTRACE

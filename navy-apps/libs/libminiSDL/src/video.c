@@ -3,16 +3,147 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
+extern void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h);
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-  assert(dst && src);
-  assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+    assert(dst && src);
+    assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+
+    if(srcrect)
+    {
+        int d_x = 0; 
+        int d_y = 0;
+        assert((srcrect->w > 0) && (srcrect->h > 0));
+
+        if(dstrect != NULL)
+        {
+            d_x = dstrect->x;
+            d_y = dstrect->y;
+        }
+
+        for(int i = 0; i < srcrect->h; i++)
+        {
+            memcpy(dst->pixels + dst->format->BytesPerPixel*((d_y+i)*dst->w+d_x), src->pixels + src->format->BytesPerPixel*((srcrect->y+i)*src->w+srcrect->x), dst->format->BytesPerPixel* srcrect->w);
+        }
+    }
+    else
+    {
+        assert((src->w <= dst->w) && (src->h <= dst->h));
+
+        if(dstrect)
+        {
+            for(int i = 0; i < src->h; i++)
+            {
+                memcpy(dst->pixels + dst->format->BytesPerPixel*((dstrect->y+i)*dst->w+dstrect->x), src->pixels+src->format->BytesPerPixel*i*src->w, dst->format->BytesPerPixel* src->w);
+            }
+        }
+        else
+        {
+            for(int i = 0; i < src->h; i++)
+            {
+                memcpy(dst->pixels + dst->format->BytesPerPixel*((i)*dst->w), src->pixels+src->format->BytesPerPixel*i*src->w, dst->format->BytesPerPixel* src->w);
+            }
+        } 
+    }
+   
 }
 
-void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) 
+{
+    int x = (dstrect == NULL ? 0      : dstrect->x);
+    int y = (dstrect == NULL ? 0      : dstrect->y);
+    int w = (dstrect == NULL ? dst->w : dstrect->w);
+    int h = (dstrect == NULL ? dst->h : dstrect->h);
+    if(dst->format->BitsPerPixel == 8)
+    {
+        for(int i = 0; i < h; i++)
+            memset(dst->pixels + dst->format->BytesPerPixel * ((i+y)*dst->w + x), (uint8_t)color, dst->format->BytesPerPixel * w);
+    }
+    else
+    {
+        for(int i = 0; i < h; i++)
+            memset(dst->pixels + dst->format->BytesPerPixel * ((i+y)*dst->w + x), color, dst->format->BytesPerPixel * w);
+        /*memset(dst->pixels + y * dst->w + x, color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);*/
+    }
+
+    if(dstrect)
+    {
+        if(dst->format->BitsPerPixel == 8)
+        {
+            uint8_t index = *(uint8_t *)(dst->pixels);
+            SDL_Color *pcolor = &dst->format->palette->colors[index];
+            uint32_t realColor = ((uint32_t)0) | (pcolor->r << 16) | (pcolor->g << 8) | pcolor->b;
+            for(int i = 0; i < dstrect->h; i++)
+            {
+                for(int j = 0; j < dstrect->w; j++)
+                {
+                    NDL_DrawRect(&realColor, j+dstrect->x, i+dstrect->y, 1, 1);
+                }
+            }
+        }
+        else
+            NDL_DrawRect((uint32_t *)dst->pixels, dstrect->x, dstrect->y, dstrect->w, dstrect->h);
+    }
+    else
+    {
+        if(dst->format->BitsPerPixel == 8)
+        {
+            uint8_t index = *(uint8_t *)(dst->pixels);
+            SDL_Color *pcolor = &dst->format->palette->colors[index];
+            uint32_t realColor = ((uint32_t)0) | (pcolor->r << 16) | (pcolor->g << 8) | pcolor->b;
+            for(int i = 0; i < dst->h; i++)
+            {
+                for(int j = 0; j < dst->w; j++)
+                {
+                    NDL_DrawRect(&realColor, j, i, 1, 1);
+                }
+            }
+        }
+        else
+            NDL_DrawRect((uint32_t *)dst->pixels, 0, 0, dst->w, dst->h);
+    }
 }
 
-void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) 
+{
+    if((x==0) && (y==0) && (w==0) && (h==0))
+    {
+        if(s->format->BitsPerPixel == 8)
+        {
+            for(int i = 0; i < s->h; i++)
+            {
+                for(int j = 0; j < s->w; j++)
+                {
+                    uint8_t index = *(uint8_t *)(s->pixels + j + i * s->w);
+                    /*printf("index = %d\n", index);*/
+                    SDL_Color *color = &s->format->palette->colors[index];
+                    uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
+                    NDL_DrawRect(&realColor, j, i, 1, 1);
+                }
+            }
+        }
+        else
+            NDL_DrawRect((uint32_t*)s->pixels, 0, 0, s->w, s->h);
+    }
+    else
+    {
+        if(s->format->BitsPerPixel == 8)
+        {
+            for(int i = 0; i < h; i++)
+            {
+                for(int j = 0; j < w; j++)
+                {
+                    uint8_t index = *(uint8_t *)(s->pixels + (x+j) + (i+y) * s->w);
+                    SDL_Color *color = &s->format->palette->colors[index];
+                    uint32_t realColor = ((uint32_t)0) | (color->r << 16) | (color->g << 8) | color->b;
+                    NDL_DrawRect(&realColor, x+j, y+i, 1, 1);
+                }
+            }
+        }
+        else
+            NDL_DrawRect((uint32_t*)s->pixels, x, y, w, h);
+    }
 }
 
 // APIs below are already implemented.
@@ -193,8 +324,10 @@ uint32_t SDL_MapRGBA(SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint
 }
 
 int SDL_LockSurface(SDL_Surface *s) {
+    assert(0);
   return 0;
 }
 
 void SDL_UnlockSurface(SDL_Surface *s) {
+    assert(0);
 }

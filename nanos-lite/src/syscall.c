@@ -78,8 +78,15 @@ static uintptr_t sys_gettimeofday(uintptr_t a[])
 {
     assert(a[0] == SYS_gettimeofday);
     uintptr_t *tmp = (uintptr_t*)a[1];
-    tmp[1] = io_read(AM_TIMER_UPTIME).us;
-    tmp[0] = tmp[1] / 1000000;
+
+    volatile uint64_t us = io_read(AM_TIMER_UPTIME).us;
+
+    uint64_t sec  = us / 1000000;
+    uint64_t usec = us % 1000000;
+
+    tmp[0] = sec;
+    tmp[1] = usec;
+
     return 0;
 }
 

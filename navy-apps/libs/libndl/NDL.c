@@ -10,55 +10,53 @@
 static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
+static int canvas_w = 0, canvas_h = 0;
+static int canvas_x = 0, canvas_y = 0;
 
-extern int _open(const char *path, int flags, mode_t mode);
-extern int _read(int fd, void *buf, size_t count); 
-extern int _write(int fd, void *buf, size_t count);
+
+extern int open (const char *file, int flags, ...);
+extern ssize_t read (int fd, void *buf, size_t cnt);
+extern ssize_t write (int fd, const void *buf, size_t cnt);
+extern __off_t lseek(int fd, __off_t pos, int whence);
+extern int close (int fd);
+
+/*uint32_t NDL_GetTicks() */
+/*{*/
+    /*static bool first_flag = false;*/
+    /*static struct timeval tv_init;*/
+    /*struct timeval tv;*/
+    /*gettimeofday(&tv, NULL);*/
+    /*if(!first_flag)*/
+    /*{*/
+        /*first_flag = true;*/
+        /*tv_init = tv;*/
+    /*}*/
+    /*if(tv.tv_usec >= tv_init.tv_usec)*/
+        /*return (tv.tv_usec-tv_init.tv_usec)/1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
+    /*else*/
+        /*return (1000000 - tv_init.tv_usec + tv.tv_usec) / 1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
+/*}*/
 
 uint32_t NDL_GetTicks() 
 {
-    struct timeval tv = {0, 0};
+    static uint64_t boot_time = 0;
+    struct timeval tv;
     gettimeofday(&tv, NULL);
-    return tv.tv_usec/1000;
+    uint64_t us = tv.tv_usec + tv.tv_sec * 1000000;
+
+    if(boot_time == 0)
+        boot_time = us;
+
+    return (us-boot_time) / 1000;
 }
 
 int NDL_PollEvent(char *buf, int len) 
 {
-    return _read(_open("/dev/events", 0, 0), buf, len);
+    return read(open("/dev/events", 0, 0), buf, len);
 }
 
 void NDL_OpenCanvas(int *w, int *h) 
 {
-    char screen_sizeinfo[22];
-    _read(_open("/proc/dispinfo", 0, 0), screen_sizeinfo, sizeof(screen_sizeinfo));
-    char *endw = screen_sizeinfo + 9;
-    char *endh = screen_sizeinfo + 20;
-    screen_w = (int)strtol(&screen_sizeinfo[7], &endw, 10);
-    screen_h = (int)strtol(&screen_sizeinfo[18], &endh, 10);
-
-    /*if((*w > max_width) || ((*w==0) && (*h==0)))*/
-    /*{*/
-        /*screen_w = max_width;*/
-    /*}*/
-    /*else*/
-    /*{*/
-        /*screen_w = *w;*/
-    /*}*/
-    /*if((*h > max_height) || ((*w==0) && (*h==0)))*/
-    /*{*/
-        /*screen_h = max_height;*/
-    /*}*/
-    /*else*/
-    /*{*/
-        /*screen_h = *h;*/
-    /*}*/
-    /*printf("max    width : %d\n", max_width);*/
-    /*printf("max    height: %d\n", max_height);*/
-    /*printf("canvas width : %d\n", *w);*/
-    /*printf("canvas height: %d\n", *h);*/
-    /*printf("screen width : %d\n", screen_w);*/
-    /*printf("screen height: %d\n", screen_h);*/
-
     if(getenv("NWM_APP")) 
     {
         int fbctl = 4;
@@ -78,6 +76,20 @@ void NDL_OpenCanvas(int *w, int *h)
         }
         close(fbctl);
     }
+    else
+    {
+        char screen_sizeinfo[23];
+        read(open("/proc/dispinfo", 0, 0), screen_sizeinfo, sizeof(screen_sizeinfo));
+
+        char *endw = screen_sizeinfo + 9;
+        char *endh = screen_sizeinfo + 21;
+        screen_w = (int)strtol(&screen_sizeinfo[7], &endw, 10);
+        screen_h = (int)strtol(&screen_sizeinfo[19], &endh, 10);
+        canvas_w = *w; canvas_h = *h;
+        canvas_x = screen_w/2-canvas_w/2;
+        canvas_y = screen_h/2-canvas_h/2;
+        lseek(open("/dev/fb", 0, 0), 4*(canvas_y*screen_w + canvas_x), SEEK_SET);
+    }
 }
 
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) 
@@ -85,11 +97,13 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h)
     assert(pixels);
     assert(x>=0); assert(y>=0);
     assert(w<=screen_w); assert(h<=screen_h);
+    int draw_x = x + canvas_x; int draw_y = y + canvas_y;
 
-    int X = screen_w/2 - w/2; //调整画布位于屏幕中央
-    int Y = screen_h/2 - h/2;
-    uintptr_t FB[] = {(uintptr_t)X, (uintptr_t)Y, (uintptr_t)pixels, (uintptr_t)w, (uintptr_t)h, 1};
-    _write(_open("/dev/fb", 0, 0), FB, sizeof(FB));
+    for(int i = 0; i < h; i++)
+    {
+        lseek(open("/dev/fb", 0, 0), 4*((draw_y+i)*screen_w+draw_x), SEEK_SET);
+        write(open("/dev/fb", 0, 0), pixels+i*w, w*4);
+    }
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
