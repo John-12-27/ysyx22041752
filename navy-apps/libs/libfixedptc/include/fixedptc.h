@@ -105,7 +105,7 @@ typedef	__uint128_t fixedptud;
 #define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)
 #define FIXEDPT_FMASK	(((fixedpt)1 << FIXEDPT_FBITS) - 1)
 
-#define fixedpt_rconst(R) ((fixedpt) ((R) * FIXEDPT_ONE )) // + ((R) >= 0 ? 0.5 : -0.5)) )
+#define fixedpt_rconst(R) ((fixedpt) ((R) * FIXEDPT_ONE + ((R) >= 0 ? 0.5 : -0.5)))
 #define fixedpt_fromint(I) ((fixedptd)(I) << FIXEDPT_FBITS)
 #define fixedpt_toint(F) ((F) >> FIXEDPT_FBITS)
 #define fixedpt_add(A,B) ((A) + (B))
@@ -131,15 +131,16 @@ typedef	__uint128_t fixedptud;
 
 static inline fixedpt fixedpt_muli(fixedpt A, int B) 
 {
-    fixedpt C = fixedpt_rconst(B); 
+    fixedpt C = fixedpt_fromint(B); 
     return (A*C) / FIXEDPT_ONE;
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_divi(fixedpt A, int B) 
 {
-    fixedpt C = fixedpt_rconst(B); 
-	return (A/C) * FIXEDPT_ONE;
+    fixedpt C = fixedpt_fromint(B); 
+    //fixedpt C = fixedpt_rconst(B); 
+	return A*FIXEDPT_ONE / C;
 }
 
 /* Multiplies two fixedpt numbers, returns the result. */
@@ -152,7 +153,7 @@ static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B)
 /* Divides two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) 
 {
-	return (A/B) * FIXEDPT_ONE;
+	return A*FIXEDPT_ONE / B;
 }
 
 static inline fixedpt fixedpt_abs(fixedpt A) 
@@ -253,12 +254,13 @@ static inline fixedpt fixedpt_log(fixedpt x, fixedpt base) {
 
 
 /* Return the power value (n^exp) of the given fixedpt numbers */
+
 static inline fixedpt fixedpt_pow(fixedpt n, fixedpt exp) {
-	if (exp == 0)
-		return (FIXEDPT_ONE);
-	if (n < 0)
-		return 0;
-	return (fixedpt_exp(fixedpt_mul(fixedpt_ln(n), exp)));
+    if (exp == 0)
+        return (FIXEDPT_ONE);
+    if (n < 0)
+        return 0;
+    return (fixedpt_exp(fixedpt_mul(fixedpt_ln(n), exp)));
 }
 
 #ifdef __cplusplus
