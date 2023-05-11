@@ -51,13 +51,21 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) 
 {
-    int x = (dstrect == NULL ? 0 : dstrect->x);
-    int y = (dstrect == NULL ? 0 : dstrect->y);
-
+    int x = (dstrect == NULL ? 0      : dstrect->x);
+    int y = (dstrect == NULL ? 0      : dstrect->y);
+    int w = (dstrect == NULL ? dst->w : dstrect->w);
+    int h = (dstrect == NULL ? dst->h : dstrect->h);
     if(dst->format->BitsPerPixel == 8)
-        memset(dst->pixels + y * dst->w + x, (uint8_t)color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);
+    {
+        for(int i = 0; i < h; i++)
+            memset(dst->pixels + dst->format->BytesPerPixel * ((i+y)*dst->w + x), (uint8_t)color, dst->format->BytesPerPixel * w);
+    }
     else
-        memset(dst->pixels + y * dst->w + x, color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);
+    {
+        for(int i = 0; i < h; i++)
+            memset(dst->pixels + dst->format->BytesPerPixel * ((i+y)*dst->w + x), color, dst->format->BytesPerPixel * w);
+        /*memset(dst->pixels + y * dst->w + x, color, dst->format->BytesPerPixel * dstrect->w * dstrect->h);*/
+    }
 
     if(dstrect)
     {
