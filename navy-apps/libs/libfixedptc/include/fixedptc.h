@@ -139,7 +139,6 @@ static inline fixedpt fixedpt_muli(fixedpt A, int B)
 static inline fixedpt fixedpt_divi(fixedpt A, int B) 
 {
     fixedpt C = fixedpt_fromint(B); 
-    //fixedpt C = fixedpt_rconst(B); 
 	return A*FIXEDPT_ONE / C;
 }
 
