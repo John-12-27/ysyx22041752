@@ -47,9 +47,11 @@ ARCHIVE  = $(WORK_DIR)/build/$(NAME)-$(ISA).a
 
 ### Add default libraries for ISA != native
 ifneq ($(ISA), native)
-LIBS += libc libos
+LIBS += libc libos libndl libfixedptc
 CFLAGS += -U_FORTIFY_SOURCE  # fix compile error in Newlib on ubuntu
 else
+LIBS += libndl libfixedptc
+CFLAGS += -U_FORTIFY_SOURCE  # fix compile error in Newlib on ubuntu
 WL = -Wl,
 endif
 
@@ -85,7 +87,7 @@ READELF	  = $(CROSS_COMPILE)readelf
 INC_PATH += $(WORK_DIR)/include $(foreach l,$(LIBS_INC),$(NAVY_HOME)/libs/$(l)/include/)
 INCFLAGS += $(addprefix -I, $(INC_PATH))
 
-CFLAGS   += -O2 -MMD $(INCFLAGS) -static -D__NAVY__ \
+CFLAGS   += -g -O2 -MMD $(INCFLAGS) -static -D__NAVY__ \
             -D__ISA__=\"$(ISA)\" -D__ISA_$(shell echo $(ISA) | tr a-z A-Z)__ \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
@@ -170,8 +172,8 @@ $(CLEAN_ALL):
 .PHONY: clean-all $(CLEAN_ALL)
 
 ### Build fsimg and ramdisk for Nanos-lite
-APPS =
-TESTS = dummy hello
+APPS = pal bird nslider menu nterm
+TESTS = timer-test event-test bmp-test
 
 fsimg: $(addprefix apps/, $(APPS)) $(addprefix tests/, $(TESTS))
 	-for t in $^; do $(MAKE) -s -C $(NAVY_HOME)/$$t install; done

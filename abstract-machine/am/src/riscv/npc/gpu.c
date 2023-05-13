@@ -1,6 +1,7 @@
 #include <am.h>
-#include <nemu.h>
 #include <klib-macros.h>
+#include "../riscv.h"
+#include "npc.h"
 
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 

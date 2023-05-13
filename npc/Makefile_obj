@@ -24,8 +24,8 @@ COMPILE.cc = $(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 BUILD_DIR = ./build/
 CCSRCS    = $(shell find $(abspath ../../csrc) -name "disasm.cc")
 CCFLAGS += $(shell llvm-config --cxxflags) -fPIE
-LIBS += -lreadline 
-LIBS += $(shell llvm-config --libs)
+LIBS += -lreadline -lSDL2
+LIBS += $(shell llvm-config --libs) $(shell sdl-config --cflags --libs)
 
 disasm.o: $(CCSRCS)
 	@echo complie disasm.cc

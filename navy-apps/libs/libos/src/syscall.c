@@ -56,38 +56,45 @@ void _exit(int status) {
   while (1);
 }
 
-int _open(const char *path, int flags, mode_t mode) {
-  _exit(SYS_open);
-  return 0;
+int _open(const char *path, int flags, mode_t mode) 
+{
+    return _syscall_(SYS_open, (intptr_t)path, (intptr_t)flags, (intptr_t)mode);
 }
 
-int _write(int fd, void *buf, size_t count) {
-  _exit(SYS_write);
-  return 0;
+int _write(int fd, void *buf, size_t count) 
+{
+    return _syscall_(SYS_write, (intptr_t)fd, (intptr_t)buf, (intptr_t)count);
 }
 
-void *_sbrk(intptr_t increment) {
-  return (void *)-1;
+extern char end;
+void *_sbrk(intptr_t increment) 
+{
+    static intptr_t last_pgmbrk = (intptr_t)&end;
+    if(!_syscall_(SYS_brk, increment, 0, 0))
+    {
+        last_pgmbrk += increment;
+        return (void *)(last_pgmbrk-increment);
+    }
+    else
+    {
+        return (void *)-1;
+    }
 }
 
 int _read(int fd, void *buf, size_t count) {
-  _exit(SYS_read);
-  return 0;
+  return _syscall_(SYS_read, (intptr_t)fd, (intptr_t)buf, (intptr_t)count);
 }
 
 int _close(int fd) {
-  _exit(SYS_close);
-  return 0;
+  return _syscall_(SYS_close, (intptr_t)fd, 0, 0);
 }
 
 off_t _lseek(int fd, off_t offset, int whence) {
-  _exit(SYS_lseek);
-  return 0;
+  return _syscall_(SYS_lseek, (intptr_t)fd, (intptr_t)offset, (intptr_t)whence);
 }
 
 int _gettimeofday(struct timeval *tv, struct timezone *tz) {
-  _exit(SYS_gettimeofday);
-  return 0;
+  return _syscall_(SYS_gettimeofday, (intptr_t)tv, (intptr_t)tz, 0);
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
