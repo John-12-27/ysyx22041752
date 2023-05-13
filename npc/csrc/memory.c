@@ -50,6 +50,39 @@ static inline word_t paddr_read(paddr_t paddr)
 #endif
         return data;
     }
+
+    else if(paddr == CONFIG_GPU_CONFIG_MMIO)
+    {
+#ifdef CONFIG_DIFFTEST
+        record_skip_pc(D.pc);
+#endif
+        word_t data = (word_t)vgactl_port_base[0];
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("vgactl"))
+        {
+            log_inst(&D);
+            log_device(&D, "vgactl", data, true);
+        }
+#endif
+        return data;
+    }
+
+    else if(paddr == CONFIG_KBD_ADDR_MMIO)
+    {
+#ifdef CONFIG_DIFFTEST
+        record_skip_pc(D.pc);
+#endif
+        word_t data = (word_t)vgactl_port_base[0];
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("keyboard"))
+        {
+            log_inst(&D);
+            log_device(&D, "keyboard", data, true);
+        }
+#endif
+        return data;
+    }
+
     else
     {
         printf("read addr error : %lx\n", paddr);
@@ -90,6 +123,35 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
         {
             log_inst(&D);
             log_device(&D, "serial", data, false);
+        }
+#endif
+    }
+    else if(paddr == CONFIG_GPU_SYNC_MMIO)
+    {
+#ifdef CONFIG_DIFFTEST
+        record_skip_pc(D.pc);
+#endif
+        vgactl_port_base[1] = (uint32_t)data;
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("vgactl"))
+        {
+            log_inst(&D);
+            log_device(&D, "vgactl", data, false);
+        }
+#endif
+    }
+    else if((paddr >= CONFIG_GPU_FBDRAW_MMIO) && (paddr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
+    {
+#ifdef CONFIG_DIFFTEST
+        record_skip_pc(D.pc);
+#endif
+        uint32_t offset = paddr-CONFIG_GPU_FBDRAW_MMIO;
+        *(uint32_t *)(vmem+offset) = (uint32_t)data;
+#ifdef CONFIG_DTRACE
+        if(dtrace_enable("vmem"))
+        {
+            log_inst(&D);
+            log_device(&D, "vmem", data, false);
         }
 #endif
     }

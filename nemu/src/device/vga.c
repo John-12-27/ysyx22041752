@@ -19,15 +19,15 @@
 #define SCREEN_W (MUXDEF(CONFIG_VGA_SIZE_800x600, 800, 400))
 #define SCREEN_H (MUXDEF(CONFIG_VGA_SIZE_800x600, 600, 300))
 
-static uint32_t screen_width() {
+static inline uint32_t screen_width() {
   return MUXDEF(CONFIG_TARGET_AM, io_read(AM_GPU_CONFIG).width, SCREEN_W);
 }
 
-static uint32_t screen_height() {
+static inline uint32_t screen_height() {
   return MUXDEF(CONFIG_TARGET_AM, io_read(AM_GPU_CONFIG).height, SCREEN_H);
 }
 
-static uint32_t screen_size() {
+static inline uint32_t screen_size() {
   return screen_width() * screen_height() * sizeof(uint32_t);
 }
 
