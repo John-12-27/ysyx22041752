@@ -26,6 +26,7 @@
 #include "tracer.h"
 #include "wp.h"
 #include "diff_dut.h"
+#include "device.h"
 
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
@@ -260,7 +261,7 @@ void exec(uint64_t n, bool batch)
             {
                 break;
             }
-
+    device_update();
     top->eval();
 #ifdef DUMP_WAVE
     step_and_dump_wave();

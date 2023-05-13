@@ -19,12 +19,15 @@ static uintptr_t loader(PCB *pcb, const char *filename)
 	size_t file_baseaddr = 0;
 	fs_open(filename, 0, 0, &file_baseaddr);
     ramdisk_read(&elf64_ehdr, file_baseaddr, sizeof(elf64_ehdr));
+
     for(int i = 0; i < EI_NIDENT; i++)
     {
         assert(elf64_ehdr.e_ident[i] == magic[i]);
     }
+
     assert(elf64_ehdr.e_entry);
     assert(elf64_ehdr.e_phoff);
+
     for(int i = 0; i < elf64_ehdr.e_phnum; i++)
     {
         Elf64_Phdr elf64_phdr;
@@ -35,6 +38,7 @@ static uintptr_t loader(PCB *pcb, const char *filename)
             memset((void *)elf64_phdr.p_vaddr+elf64_phdr.p_filesz, 0, elf64_phdr.p_memsz-elf64_phdr.p_filesz);
         }
     }
+
     return (uintptr_t)elf64_ehdr.e_entry;
 }
 
