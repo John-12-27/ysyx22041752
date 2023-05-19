@@ -130,21 +130,21 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 ????? ????? 001 ????? 0011011", slliw  ,SHW, R(dest) = SEXT(BITS(src1, 31, 0) << src2, 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("000000? ????? ????? 101 ????? 0010011", srli   , SH, R(dest) = src1 >> src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 101 ????? 0011011", srliw  ,SHW, R(dest) = SEXT(BITS(src1, 31, 0) >> src2, 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("010000? ????? ????? 101 ????? 0010011", srai   , SH, R(dest) = (src1 >> src2) | (SEXT(BITS(src1, 63, 63), 1) << (64-src2)); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("010000? ????? ????? 101 ????? 0010011", srai   , SH, if(src2) R(dest) = (src1 >> src2) | (SEXT(BITS(src1, 63, 63), 1ull) << (64-src2)); else R(dest) = src1; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0100000 ????? ????? 101 ????? 0011011", sraiw  ,SHW, R(dest) = SEXT((BITS(src1, 31, 0) >> src2) | BITS(SEXT(BITS(src1, 31, 31), 1) << (32-src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 000 ????? 0110011", add    ,  R, R(dest) = src1 + src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 000 ????? 0111011", addw   ,  R, R(dest) = SEXT(BITS((src1 + src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0100000 ????? ????? 000 ????? 0110011", sub    ,  R, R(dest) = src1 - src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0100000 ????? ????? 000 ????? 0111011", subw   ,  R, R(dest) = SEXT(BITS((src1 - src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 001 ????? 0110011", sll    ,  R, R(dest) = src1 << src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000000 ????? ????? 001 ????? 0111011", sllw   ,  R, R(dest) = SEXT(BITS(src1, 31, 0) << src2, 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000000 ????? ????? 001 ????? 0111011", sllw   ,  R, R(dest) = SEXT(BITS(src1, 31, 0) << BITS(src2, 4, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 010 ????? 0110011", slt    ,  R, R(dest) = (sword_t)src1 < (sword_t)src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 011 ????? 0110011", sltu   ,  R, R(dest) = src1 < src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 100 ????? 0110011", xor    ,  R, R(dest) = src1 ^ src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 101 ????? 0110011", srl    ,  R, R(dest) = src1 >> src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000000 ????? ????? 101 ????? 0111011", srlw   ,  R, R(dest) = SEXT(BITS(src1, 31, 0) >> src2, 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0100000 ????? ????? 101 ????? 0110011", sra    ,  R, R(dest) = (src1 >> src2) | (SEXT(BITS(src1, 63, 63), 1) << (64-src2)); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0100000 ????? ????? 101 ????? 0111011", sraw   ,  R, R(dest) = SEXT((BITS(src1, 31, 0) >> src2) | BITS(SEXT(BITS(src1, 31, 31), 1) << (32-src2), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000000 ????? ????? 101 ????? 0111011", srlw   ,  R, R(dest) = SEXT(BITS(src1, 31, 0) >> BITS(src2, 4, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0100000 ????? ????? 101 ????? 0110011", sra    ,  R, if(BITS(src2, 5, 0)) R(dest) = (src1 >> BITS(src2, 5, 0)) | (SEXT(BITS(src1, 63, 63), 1ull) << (64-BITS(src2, 5, 0))); else R(dest) = src1; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0100000 ????? ????? 101 ????? 0111011", sraw   ,  R, R(dest) = SEXT((BITS(src1, 31, 0) >> BITS(src2, 4, 0)) | BITS(SEXT(BITS(src1, 31, 31), 1) << (32-BITS(src2, 4, 0)), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 110 ????? 0110011", or     ,  R, R(dest) = src1 | src2; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000000 ????? ????? 111 ????? 0110011", and    ,  R, R(dest) = src1 & src2; s->jalTag = false; s->jalrTag = false);
 

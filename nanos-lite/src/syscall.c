@@ -1,23 +1,6 @@
 #include <common.h>
 #include "syscall.h"
-
-/*FILE *strace_fp = NULL;*/
-/*void sys_trace_init(const char *file)*/
-/*{*/
-/*#if CONFIG_STRACE*/
-    /*strace_fp = stdout;*/
-    /*if(file != NULL)*/
-    /*{*/
-        /*FILE *fp = fopen(file, "w");*/
-        /*assert(fp);*/
-        /*strace_fp = fp;*/
-    /*}*/
-    /*if(file)*/
-        /*printf("Strace is written to %s", file);*/
-    /*else*/
-        /*printf("Strace is written to stdout");*/
-/*#endif*/
-/*}*/
+#include <proc.h>
 
 extern int fs_open(const char *pathname, int flags, int mode, size_t *offset);
 static uintptr_t sys_open(uintptr_t a[])
@@ -90,6 +73,14 @@ static uintptr_t sys_gettimeofday(uintptr_t a[])
     return 0;
 }
 
+extern void naive_uload(PCB *pcb, const char *filename);
+static uintptr_t sys_execve(uintptr_t a[])
+{
+    assert(a[0] == SYS_execve);
+    naive_uload(NULL, (const char*)a[1]);
+    return 0;
+}
+
 uintptr_t do_syscall(Context *c) 
 {
     uintptr_t a[4];
@@ -100,13 +91,15 @@ uintptr_t do_syscall(Context *c)
 
     switch (a[0]) 
     {
-        case SYS_exit :        halt(0); break;
-        case SYS_open :        c->GPRx = sys_open(a);         break;
-        case SYS_read :        c->GPRx = sys_read(a);         break;
-        case SYS_write:        c->GPRx = sys_write(a);        break;
-        case SYS_close:        c->GPRx = sys_close(a);        break;
-        case SYS_lseek:        c->GPRx = sys_lseek(a);        break;
-        case SYS_brk  :        c->GPRx = sys_brk(a);          break;
+        /*case SYS_exit  :       halt(0); break;*/
+        case SYS_exit  :       naive_uload(NULL, "/bin/menu");break;
+        case SYS_open  :       c->GPRx = sys_open(a);         break;
+        case SYS_read  :       c->GPRx = sys_read(a);         break;
+        case SYS_write :       c->GPRx = sys_write(a);        break;
+        case SYS_close :       c->GPRx = sys_close(a);        break;
+        case SYS_lseek :       c->GPRx = sys_lseek(a);        break;
+        case SYS_brk   :       c->GPRx = sys_brk(a);          break;
+        case SYS_execve:       c->GPRx = sys_execve(a);       break;
         case SYS_gettimeofday: c->GPRx = sys_gettimeofday(a); break;
         default: panic("Unhandled syscall ID = %d", a[0]);
     }

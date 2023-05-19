@@ -19,7 +19,7 @@
 #include "typedef.h"
 #include "npc_state.h"
 
-//#define CONFIG_DIFFTEST      1
+#define CONFIG_DIFFTEST      1
 //#define CONFIG_WATCHPOINT    1
 //#define CONFIG_FTRACE        1
 
