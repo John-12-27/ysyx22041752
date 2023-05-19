@@ -25,8 +25,8 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
     {                                                                                                               
         printf(ANSI_BG_RED "=========================================\n");                                          
         printf("ERROR_PC\t0x%lx\n",cpu.pc);                                                                         
-        printf("REF_PC\t0x%lx\n",ref_r->pc);                                                                        
-        printf("NPC_PC\t0x%lx\n",pc);                                                                               
+        printf("REF_NEXT_PC\t0x%lx\n",ref_r->pc);                                                                        
+        printf("NEMU_NEXT_PC\t0x%lx\n",pc);                                                                               
         printf("=========================================" ANSI_NONE "\n");                                         
         /*assert(0);*/                                                                                              
         return false;                                                                                               
@@ -37,12 +37,9 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
         {                                                                                                           
             printf(ANSI_BG_RED "=========================================\n");                                      
             printf("ERROR_PC\t0x%lx\n",cpu.pc);                                                                     
-            /*printf("REF_PC\t0x%lx\n",ref_r->pc);*/                                                                
             printf("REF_GPR[%d]\t0x%lx\n",i,ref_r->gpr[i]);                                                         
-            /*printf("NPC_PC\t0x%lx\n",pc);*/                                                                       
-            printf("NPC_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);                                                            
+            printf("NEMU_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);                                                            
             printf("=========================================" ANSI_NONE "\n");                                     
-            /*assert(0);*/                                                                                          
             return false;                                                                                           
         }                                                                                                           
     }                                                                                                               
