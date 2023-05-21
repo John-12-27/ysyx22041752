@@ -24,12 +24,12 @@ $(BINARY): compile_git
 
 # Some convenient rules
 
-override ARGS ?= --itrace=$(BUILD_DIR)/nemu-log.txt --mtrace=$(BUILD_DIR)/mtrace.txt 
+override ARGS ?= -b --itrace=$(BUILD_DIR)/nemu-log.txt --mtrace=$(BUILD_DIR)/mtrace.txt 
 override ARGS += $(ARGS_DIFF)
 
 # Command to execute NEMU
-RISCV_TEST ?= add
-IMG ?= $(NEMU_HOME)/rv64ui-p/$(RISCV_TEST).bin
+RISCV_TEST ?= rv64um-p-mul
+IMG ?= $(NEMU_HOME)/rv64uim-p/$(RISCV_TEST).bin
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 
 run-env: $(BINARY) $(DIFF_REF_SO)

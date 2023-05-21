@@ -86,6 +86,30 @@ static void decode_operand(Decode *s, word_t *dest, word_t *src1, word_t *src2, 
     }
 }
 
+static inline int8_t div_filter(word_t src1, word_t src2, bool sign, bool half)
+{
+    printf("src1=0x%lx, src2=0x%lx, sign=%d\n", src1, src2, sign);
+    printf("src1=%ld, src2=%ld, sign=%d\n", src1, src2, sign);
+    printf("src1=%lu, src2=%lu, sign=%d\n", src1, src2, sign);
+    if(src2 == 0)
+    {
+        return -1;
+    }
+    if(sign)
+    {
+        if((src1==0x8000000000000000) && (src2==0xffffffffffffffff) && !half)
+        {
+            return 1;
+        }
+        else if((src1==0x80000000) && (src2==0xffffffff) && half)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static int decode_exec(Decode *s) 
 {
     word_t dest = 0, src1 = 0, src2 = 0, srccsr = 0, csraddr = 0;
@@ -150,18 +174,18 @@ static int decode_exec(Decode *s)
 
 
   INSTPAT("0000001 ????? ????? 000 ????? 0110011", mul    ,  R, R(dest) = (sword_t)src1 * (sword_t)src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 001 ????? 0110011", mulh   ,  R, R(dest) = ((__int128)src1 * (__int128)src2) >> 64; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 010 ????? 0110011", mulhsu ,  R, R(dest) = ((__int128)src1 * (unsigned __int128)src2) >> 64; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 001 ????? 0110011", mulh   ,  R, R(dest) = (int64_t)(((__int128)(sword_t)src1 * (__int128)(sword_t)src2) >> 64); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 010 ????? 0110011", mulhsu ,  R, R(dest) = ((__int128)(sword_t)src1 * (unsigned __int128)src2) >> 64; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 011 ????? 0110011", mulhu  ,  R, R(dest) = ((unsigned __int128)src1 * (unsigned __int128)src2) >> 64; s->jalTag = false; s->jalrTag = false);
   INSTPAT("0000001 ????? ????? 000 ????? 0111011", mulw   ,  R, R(dest) = SEXT(BITS(BITS(src1, 31, 0) * BITS(src2, 31, 0), 31, 0), 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 100 ????? 0110011", div    ,  R, R(dest) = (sword_t)src1 / (sword_t)src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 101 ????? 0110011", divu   ,  R, R(dest) = src1 / src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 100 ????? 0111011", divw   ,  R, R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) / (int32_t)BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 101 ????? 0111011", divuw  ,  R, R(dest) = SEXT(BITS(src1, 31, 0) / BITS(src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 110 ????? 0110011", rem    ,  R, R(dest) = (sword_t)src1 % (sword_t)src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 111 ????? 0110011", remu   ,  R, R(dest) = src1 % src2; s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 110 ????? 0111011", remw   ,  R, R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) % (int32_t)BITS((sword_t)src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
-  INSTPAT("0000001 ????? ????? 111 ????? 0111011", remuw  ,  R, R(dest) = SEXT(BITS(src1, 31, 0) % BITS(src2, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 100 ????? 0110011", div    ,  R, if(div_filter(src1, src2, true, false) == 0) R(dest) = (sword_t)src1 / (sword_t)src2; else if(div_filter(src1, src2, true, false) == 1) R(dest) = src1; else R(dest) = 0xffffffffffffffff; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 101 ????? 0110011", divu   ,  R, if(div_filter(src1, src2, false, false) == 0) R(dest) = src1 / src2; else R(dest) = 0xffffffffffffffff; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 100 ????? 0111011", divw   ,  R, if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), true, true) == 0) R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) / (int32_t)BITS((sword_t)src2, 31, 0), 32); else if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), true, true) == 1) R(dest) = SEXT(BITS(src1, 31, 0), 32); else R(dest) = 0xffffffffffffffff; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 101 ????? 0111011", divuw  ,  R, if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), false, true) == 0) R(dest) = SEXT(BITS(src1, 31, 0) / BITS(src2, 31, 0), 32); else if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), false, true) == 1) R(dest) = SEXT(BITS(src1, 31, 0), 32); else R(dest) = 0xffffffffffffffff; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 110 ????? 0110011", rem    ,  R, if(div_filter(src1, src2, true, false) == 0) R(dest) = (sword_t)src1 % (sword_t)src2; else if(div_filter(src1, src2, true, false) == 1) R(dest) = 0; else R(dest) = src1; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 111 ????? 0110011", remu   ,  R, if(div_filter(src1, src2, false, false) == 0) R(dest) = src1 % src2; else if(div_filter(src1, src2, false, false) == 1) R(dest) = 0; else R(dest) = src1; s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 110 ????? 0111011", remw   ,  R, if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), true, true) == 0) R(dest) = SEXT((int32_t)BITS((sword_t)src1, 31, 0) % (int32_t)BITS((sword_t)src2, 31, 0), 32); else if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), true, true) == 1) R(dest) = 0; else R(dest) = SEXT(BITS(src1, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
+  INSTPAT("0000001 ????? ????? 111 ????? 0111011", remuw  ,  R, if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), false, true) == 0) R(dest) = SEXT(BITS(src1, 31, 0) % BITS(src2, 31, 0), 32); else if(div_filter((word_t)BITS(src1, 31, 0), (word_t)BITS(src2, 31, 0), false, true) == 1) R(dest) = 0; else R(dest) = SEXT(BITS(src1, 31, 0), 32); s->jalTag = false; s->jalrTag = false);
 
   INSTPAT("??????? ????? ????? 001 00000 1110011", csrw   ,  C, csrw(csraddr, src1);); //rd==0 
   INSTPAT("??????? ????? ????? 001 ????? 1110011", csrr   ,  C, R(dest) = srccsr; csrw(csraddr, src1);); //rd!=0
