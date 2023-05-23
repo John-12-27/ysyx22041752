@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-03-30 17:42
+// Last Modified : 2023-05-22 22:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -51,11 +51,10 @@ reg  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;
 
 wire ecall  ;
 wire mret   ;
-/* verilator lint_off UNUSEDSIGNAL */
 wire mul_u  ;
 wire mul_su ;
 wire mul_h  ;
-/* verilator lint_on UNUSEDSIGNAL */
+wire div_u  ;
 wire op_mul ;
 wire op_div ;
 wire op_rem ;
@@ -99,6 +98,7 @@ wire [`PC_WD     -1:0] es_pc  ;
 
 assign {ecall         ,
         mret          ,
+        div_u         ,
         mul_u         ,
         mul_su        ,
         mul_h         ,
@@ -175,7 +175,11 @@ assign expfsm_nxt = expfsm_pre == IDLE && ecall ? W_MEPC   :
                     expfsm_pre == W_MCAUSE      ? IDLE     :
                                                   expfsm_pre;
 
-assign es_ready_go    = expfsm_pre != W_MEPC;
+wire mul_out_valid;
+wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
+wire div_out_valid;                                              
+wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go &&!flush;
 always @(posedge clk) begin
@@ -237,6 +241,12 @@ assign alu_src2 = src_csr   ? csr_rdata :
                   rs2_value;
 
 ysyx_22041752_alu U_ALU_0(
+    .clk             ( clk            ),
+    .reset           ( reset          ),
+    .flush           ( flush          ),
+    .mul_u           ( mul_u          ),
+    .mul_su          ( mul_su         ),
+    .div_u           ( div_u          ),
     .mul_h           ( mul_h          ),
     .op_mul          ( op_mul         ),
     .op_div          ( op_div         ),
@@ -255,7 +265,9 @@ ysyx_22041752_alu U_ALU_0(
     .alu_src1        ( alu_src1       ),
     .alu_src2        ( alu_src2       ),
     .alu_result      ( alu_result     ),
-    .mem_result      ( data_sram_addr )
+    .mem_result      ( data_sram_addr ),
+    .div_out_valid   ( div_out_valid  ),
+    .mul_out_valid   ( mul_out_valid  )
 );
 
 assign data_sram_en  = (es_mem_re | es_mem_we) & es_valid;

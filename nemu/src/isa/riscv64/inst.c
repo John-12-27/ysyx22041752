@@ -88,9 +88,9 @@ static void decode_operand(Decode *s, word_t *dest, word_t *src1, word_t *src2, 
 
 static inline int8_t div_filter(word_t src1, word_t src2, bool sign, bool half)
 {
-    printf("src1=0x%lx, src2=0x%lx, sign=%d\n", src1, src2, sign);
-    printf("src1=%ld, src2=%ld, sign=%d\n", src1, src2, sign);
-    printf("src1=%lu, src2=%lu, sign=%d\n", src1, src2, sign);
+    /*printf("src1=0x%lx, src2=0x%lx, sign=%d\n", src1, src2, sign);*/
+    /*printf("src1=%ld, src2=%ld, sign=%d\n", src1, src2, sign);*/
+    /*printf("src1=%lu, src2=%lu, sign=%d\n", src1, src2, sign);*/
     if(src2 == 0)
     {
         return -1;

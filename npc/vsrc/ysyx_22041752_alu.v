@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-03-29 10:42
+// Last Modified : 2023-05-22 22:37
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,10 +14,12 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module ysyx_22041752_alu(
-    //input  wire        clk         ,
-    //input  wire        reset       , 
-    //input  wire        mul_u       ,
-    //input  wire        mul_su      ,
+    input  wire        clk         ,
+    input  wire        reset       , 
+    input  wire        flush       ,
+    input  wire        mul_u       ,
+    input  wire        mul_su      ,
+    input  wire        div_u       , 
     input  wire        mul_h       ,
     input  wire        op_mul      ,     
     input  wire        op_div      ,
@@ -36,7 +38,9 @@ module ysyx_22041752_alu(
     input  wire [63:0] alu_src1    ,
     input  wire [63:0] alu_src2    ,
     output wire [63:0] alu_result  ,
-    output wire [63:0] mem_result  
+    output wire [63:0] mem_result  ,
+    output wire        div_out_valid,
+    output wire        mul_out_valid
     //output wire [63:0] mul_result
 );
 
@@ -100,15 +104,28 @@ assign alu_result = res_sext ? {{32{res[31]}}, res[31:0]} : res;
 assign mem_result = adder_result;
 
 ysyx_22041752_mul U_MUL_0(
-    .mul_h  ( mul_h      ),
-    .x      ( alu_src1   ),
-    .y      ( alu_src2   ),
-    .res    ( mul_result )
+    .clk            ( clk        ),
+    .reset          ( reset      ),
+    .flush          ( flush      ),
+    .mul_u          ( mul_u      ),
+    .mul_su         ( mul_su     ),
+    .mul_h          ( mul_h      ),
+    .mul_valid      ( op_mul     ),
+    .multiplicand   ( alu_src1   ),
+    .multiplier     ( alu_src2   ),
+    .product        ( mul_result ),
+    .out_valid      ( mul_out_valid)
 );
 
 ysyx_22041752_diver U_DIVER_0(
+    .clk        ( clk        ),
+    .reset      ( reset      ),
     .dividend   ( alu_src1   ),
     .divisor    ( alu_src2   ),
+    .div_valid  ( op_div|op_rem ),
+    .div_signed (~div_u      ),
+    .flush      ( flush      ),
+    .out_valid  ( div_out_valid  ),
     .quotient   ( div_result ),
     .remainder  ( rem_result )
 );
