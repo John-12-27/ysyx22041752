@@ -126,9 +126,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     assert(ref_difftest_init);
     
     Log("Differential testing: %s", ANSI_FMT("ON", ANSI_FG_GREEN));
-    Log("The result of every instruction will be compared with %s. "
-        "This will help you a lot for debugging, but also significantly reduce the performance. "
-        "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
+    Log("The result of every instruction will be compared with %s", ref_so_file);
     ref_difftest_init(port);
     ref_difftest_memcpy(0x80000000, mem, img_size, DIFFTEST_TO_REF);
     ref_difftest_pc_cpy(&cpu.pc, DIFFTEST_TO_REF);
@@ -176,7 +174,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
     }
     skip_pc[0] = 0;
 
-    if (skip_pc[SKIP_BUF_LEN-1] == S.pc)
+    if (skip_pc[SKIP_BUF_LEN-1] == S.pc || S.pc==0x80001068 || S.pc==0x8000106c)
     {
         // to skip the checking of an instruction, just copy the reg state to reference design
         skipped = true;

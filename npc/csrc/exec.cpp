@@ -27,6 +27,7 @@
 #include "wp.h"
 #include "diff_dut.h"
 #include "device.h"
+#include <sys/time.h>
 
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
@@ -216,8 +217,18 @@ void sim_init(int argc, char** argv)
 	tfp->open("logs/dump.vcd");
 };
 
+static uint64_t get_time_internal() 
+{
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  uint64_t us = now.tv_sec * 1000000 + now.tv_usec;
+  return us;
+}
+
 void exec(uint64_t n, bool batch)
 {
+    static uint64_t boot_time = get_time_internal();
+    static uint64_t cycle_count = 0;
     svSetScope(svGetScopeFromName("TOP.top.u_dpi_c"));
     switch (npc_state.state) 
     {
@@ -232,39 +243,39 @@ void exec(uint64_t n, bool batch)
         while(1)
         {
             exec_once();
+            cycle_count++;
+            top->clk = 1;
 
-    top->clk = 1;
-
-    if(top->inst_sram_en)
-    {
-        fetch_addr = top->inst_sram_addr;
-        inst_ract = true;
-    }
-
-    if(top->data_sram_en)
-    {
-        mem_ract = true;
-        mem_wdata  = top->data_sram_wdata;
-        mem_addr   = top->data_sram_addr;
-        mem_wen    = top->data_sram_wen;
-        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-        D.pc = M.pc;
-        D.inst = M.inst;
-    }
-
-    record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
-            if(halt())
+            if(top->inst_sram_en)
             {
-                break;
+                fetch_addr = top->inst_sram_addr;
+                inst_ract = true;
             }
-            if(trace_diff_watch())
+
+            if(top->data_sram_en)
             {
-                break;
+                mem_ract = true;
+                mem_wdata  = top->data_sram_wdata;
+                mem_addr   = top->data_sram_addr;
+                mem_wen    = top->data_sram_wen;
+                mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+                D.pc = M.pc;
+                D.inst = M.inst;
             }
-    device_update();
-    top->eval();
+
+            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+                    if(halt())
+                    {
+                        break;
+                    }
+                    if(trace_diff_watch())
+                    {
+                        break;
+                    }
+            device_update();
+            top->eval();
 #ifdef DUMP_WAVE
-    step_and_dump_wave();
+            step_and_dump_wave();
 #endif
 
         }
@@ -292,6 +303,12 @@ void exec(uint64_t n, bool batch)
             Log("npc: %s at pc = " FMT_WORD, (npc_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) : (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))), npc_state.halt_pc);
       // fall through
         case NPC_QUIT: 
+
+            uint64_t spend_time = get_time_internal() - boot_time;
+            Log("Spend %ldus, %ldms\n", spend_time, spend_time/1000);
+            Log("Cycle_count = %ld, T = %ldus\n", cycle_count, spend_time/cycle_count);
+            Log("Frequency = %ldHz\n", 1000000/(spend_time/cycle_count));
+
 
 #if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
             output_iRingBuf();

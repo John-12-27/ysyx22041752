@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-05-15 20:34
+// Last Modified : 2023-05-24 12:10
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -64,6 +64,7 @@ wire [`PC_WD-1:0] br_target;
 wire mul_u  ;
 wire mul_su ;
 wire mul_h  ;
+wire div_u  ;
 wire op_mul ;
 wire op_div ;
 wire op_rem ;
@@ -137,6 +138,7 @@ assign br_bus       = {br_taken,br_target};
 
 assign ds_to_es_bus = {inst_ecall    ,
                        inst_mret     ,
+                       div_u         ,
                        mul_u         ,
                        mul_su        ,
                        mul_h         ,
@@ -433,6 +435,7 @@ assign op_mul = inst_mul  | inst_mulh  | inst_mulhsu| inst_mulhu | inst_mulw;
 assign mul_u  = inst_mulhu;
 assign mul_su = inst_mulhsu;
 assign mul_h  = inst_mulh | inst_mulhsu| inst_mulhu;
+assign div_u  = inst_divu | inst_divuw | inst_remu  | inst_remuw ;
 assign op_div = inst_div  | inst_divu  | inst_divw  | inst_divuw ;
 assign op_rem = inst_rem  | inst_remu  | inst_remw  | inst_remuw ;
 assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | inst_sd   | 

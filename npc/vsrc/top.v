@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-04-04 12:30
+// Last Modified : 2023-03-30 15:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,6 +16,7 @@
 module top (
     input  wire        clk,
     input  wire        reset,
+
     // inst sram interface
     output wire                     inst_sram_en   ,
     //output wire [`SRAM_WEN_WD -1:0] inst_sram_wen  ,
