@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-22 22:40
+// Last Modified : 2023-05-27 10:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -35,13 +35,18 @@ module ysyx_22041752_EXU(
 
     output wire                           flush          ,
     output wire [`PC_WD-1:0]              flush_pc       ,
+    input  wire                           int_i          ,
+    output wire                           mie_o          ,
+    output wire                           mtie_o          
 
-
+`ifdef DPI_C
+    ,
     output wire [63:0]                    dpi_csrs [3:0] ,
     output wire                           es_exp         ,
     output wire                           es_mret        ,
     output wire [`PC_WD           -1:0]   debug_es_pc
     //output wire [127:0] mul_result         
+`endif
 );
 
 reg         es_valid      ;
@@ -170,10 +175,10 @@ always @(posedge clk) begin
         expfsm_pre <= expfsm_nxt;
     end
 end
-assign expfsm_nxt = expfsm_pre == IDLE && ecall ? W_MEPC   :
-                    expfsm_pre == W_MEPC        ? W_MCAUSE :
-                    expfsm_pre == W_MCAUSE      ? IDLE     :
-                                                  expfsm_pre;
+assign expfsm_nxt = expfsm_pre == IDLE && (ecall || int_i) ? W_MEPC   :
+                    expfsm_pre == W_MEPC                   ? W_MCAUSE :
+                    expfsm_pre == W_MCAUSE                 ? IDLE     :
+                                                             expfsm_pre;
 
 wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
@@ -209,20 +214,27 @@ ysyx_22041752_csr U_YSYX_22041752_CSR_0(
     .addr                           ( csr_addr                      ),
     .wdata                          ( csr_wdata                     ),
     .rdata                          ( csr_rdata                     ),
+
+    .mie_o                          ( mie_o                         ),
+    .mtie_o                         ( mtie_o                        )
+
+`ifdef DPI_C
+    ,
     .dpi_csrs                       ( dpi_csrs                      )
+`endif
 );
 assign csr_we    = es_csr_we || expfsm_pre==W_MEPC || expfsm_pre==W_MCAUSE;
-assign csr_addr  = ecall && (expfsm_pre==IDLE)      ? 12'h305 :
-                   expfsm_pre==W_MEPC    || mret    ? 12'h341 :
-                   expfsm_pre==W_MCAUSE             ? 12'h342 :
-                                                      rscsr   ;
+assign csr_addr  = (ecall || int_i) && (expfsm_pre==IDLE)      ? 12'h305 :
+                   expfsm_pre==W_MEPC    || mret               ? 12'h341 :
+                   expfsm_pre==W_MCAUSE                        ? 12'h342 :
+                                                                 rscsr   ;
 assign csr_wdata = expfsm_pre == W_MEPC   ? es_pc :
-                   expfsm_pre == W_MCAUSE ? 64'hb :
+                   expfsm_pre == W_MCAUSE ? int_i ? 64'h7: 64'hb :
                    {64{csrrs}} & (rs1_value | csr_rdata) |
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
-assign flush    = (ecall||mret) && es_valid;
+assign flush    = (ecall||mret||int_i) && es_valid;
 assign flush_pc = csr_rdata;
 
 assign alu_src1 = src_pc   ? es_pc : 
@@ -286,7 +298,11 @@ assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {mem_read_after_write,es_forward_valid,alu_result,rd};
 
 
+`ifdef DPI_C
 assign es_exp = ecall && flush;
 assign es_mret  = mret && flush;
 assign debug_es_pc = es_pc;
+`endif
+
 endmodule
+

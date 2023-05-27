@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-05-22 22:37
+// Last Modified : 2023-05-26 20:41
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -56,6 +56,7 @@ wire [ 63:0] r_sll;
 wire [ 63:0] r_srl; 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [127:0] r_sra; 
+/* verilator lint_on UNUSEDSIGNAL */
 
 // 64-bit adder
 wire [63:0] adder_a;

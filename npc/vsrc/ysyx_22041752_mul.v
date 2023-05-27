@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_mul.v
 // Author        : Cw
 // Created On    : 2022-11-29 16:07
-// Last Modified : 2023-05-23 21:27
+// Last Modified : 2023-05-27 16:22
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -24,7 +24,7 @@ module ysyx_22041752_mul(
     input  wire [`RF_DATA_WD-1:0]  multiplicand  ,
     input  wire [`RF_DATA_WD-1:0]  multiplier    ,
     output reg  [`RF_DATA_WD-1:0]  product       ,
-    output reg                     out_valid
+    output wire                    out_valid
 );
 
 reg [6:0] count;
@@ -94,25 +94,6 @@ always @(*) begin
         product = pdt_r[`RF_DATA_WD-1:0];
     end
 end
-
-//always @(*) begin
-    //if (!mul_u && !mul_su && multiplier[`RF_DATA_WD-1]) begin
-        //if (mul_h) begin
-            //product = pdt_r[2*`RF_DATA_WD-1:`RF_DATA_WD];
-        //end
-        //else begin
-            //product = pdt_r[`RF_DATA_WD-1:0];
-        //end
-    //end
-    //else begin
-        //if (mul_h) begin
-            //product = pdt_r[2*`RF_DATA_WD-1:`RF_DATA_WD];
-        //end
-        //else begin
-            //product = pdt_r[`RF_DATA_WD-1:0];
-        //end
-    //end
-//end
 
 
 

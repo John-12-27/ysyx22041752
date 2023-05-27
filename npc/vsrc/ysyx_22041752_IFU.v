@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-03-29 21:45
+// Last Modified : 2023-05-27 16:19
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,15 +31,18 @@ module ysyx_22041752_IFU (
 /* verilator lint_on UNUSEDSIGNAL */
 
     input  wire                         flush          , 
-    input  wire [`PC_WD-1:0]            flush_pc       ,
+    input  wire [`PC_WD-1:0]            flush_pc       
 
+`ifdef DPI_C
+    ,
     output wire [`PC_WD-1:0]            debug_fs_pc
+`endif
 );
 
 reg         fs_valid;
 wire        fs_ready_go;
 wire        fs_allowin;
-reg         to_fs_valid;
+wire        to_fs_valid;
 
 wire [`PC_WD-1:0] seq_pc;
 wire [`PC_WD-1:0] nextpc;
@@ -86,6 +89,8 @@ assign inst_en    = to_fs_valid && fs_allowin;
 assign inst_addr  = nextpc;
 assign fs_inst    = inst_rdata[`INST_WD-1:0];
 
+`ifdef DPI_C
 assign debug_fs_pc = fs_pc;
+`endif
 endmodule
 

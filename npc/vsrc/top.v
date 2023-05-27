@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-03-30 15:26
+// Last Modified : 2023-05-27 10:27
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,6 +31,9 @@ module top (
     input  wire [`SRAM_DATA_WD-1:0] data_sram_rdata
 );
    
+wire              mie;
+wire              mtie;
+wire              interrupt ;
 wire              flush     ;
 wire [`PC_WD-1:0] flush_pc  ;
 
@@ -52,12 +55,7 @@ wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus;
 wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus;
 wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus;
 
-/* verilator lint_off UNUSEDSIGNAL */
-wire [63:0] mul_result;
-wire [63:0] div_result;
-wire [63:0] div_complete;
-
-
+`ifdef DPI_C
 // trace debug interface
 wire [`PC_WD       -1:0] debug_fs_pc      ;
 wire [`PC_WD       -1:0] debug_wb_pc      ;
@@ -72,6 +70,8 @@ wire [`RF_DATA_WD  -1:0] debug_wb_rf_wdata;
 wire [`RF_DATA_WD-1:0]    dpi_regs [`RF_NUM-1:0];
 wire [`RF_DATA_WD-1:0]    dpi_csrs [3:0];
 wire [            0:0]    stop;
+`endif
+
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
     .clk            (clk            ),
@@ -89,9 +89,12 @@ ysyx_22041752_IFU U_IFU_0(
     .inst_rdata     (inst_sram_rdata),
 
     .flush          (flush          ),
-    .flush_pc       (flush_pc       ),
+    .flush_pc       (flush_pc       )
 
+`ifdef DPI_C
+    ,
     .debug_fs_pc    (debug_fs_pc    )
+`endif
 );
 
 // ID stage
@@ -109,10 +112,14 @@ ysyx_22041752_IDU U_IDU_0(
     .es_forward_bus ( es_forward_bus ),
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
-    .flush          ( flush          ),
+    .flush          ( flush          )
+
+`ifdef DPI_C
+    ,
     .dpi_regs       ( dpi_regs       ),
     .stop           ( stop           ),
     .debug_ds_inst  ( debug_ds_inst  ) 
+`endif
 );
 
 // EXE stage
@@ -132,11 +139,36 @@ ysyx_22041752_EXU U_EXU_0(
     .data_sram_wdata( data_sram_wdata ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
+    .int_i          ( interrupt       ),
+    .mie_o          ( mie             ),
+    .mtie_o         ( mtie            )
 
+`ifdef DPI_C
+    ,
     .dpi_csrs       ( dpi_csrs        ),
     .es_exp         ( debug_es_exp    ),
     .es_mret        ( debug_es_mret   ),
     .debug_es_pc    ( debug_es_pc     )
+`endif
+);
+
+wire                     clint_wen   = |data_sram_wen ;
+wire [`SRAM_ADDR_WD-1:0] clint_addr  = data_sram_addr ;
+wire [`SRAM_DATA_WD-1:0] clint_wdata = data_sram_wdata;
+wire [`SRAM_ADDR_WD-1:0] clint_rdata;
+wire                     clint_rdat_v;
+
+ysyx_22041752_clint U_YSYX_22041752_CLINT_0(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .wen                            ( clint_wen                     ),
+    .addr                           ( clint_addr                    ),
+    .wdata                          ( clint_wdata                   ),
+    .rdata                          ( clint_rdata                   ),
+    .rdat_v                         ( clint_rdat_v                  ),
+    .mie_i                          ( mie                           ),
+    .mtie_i                         ( mtie                          ),
+    .int_t_o                        ( interrupt                     )
 );
 
 // MEM stage
@@ -149,7 +181,7 @@ ysyx_22041752_MEU U_MEU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
-    .data_sram_rdata( data_sram_rdata ),
+    .data_sram_rdata( clint_rdat_v ? clint_rdata : data_sram_rdata ),
     .ms_forward_bus ( ms_forward_bus  )
 );
 
@@ -161,14 +193,19 @@ ysyx_22041752_WBU U_WBU_0(
     .ms_to_ws_valid    ( ms_to_ws_valid    ),
     .ms_to_ws_bus      ( ms_to_ws_bus      ),
     .ws_to_rf_bus      ( ws_to_rf_bus      ),
-    .ws_forward_bus    ( ws_forward_bus    ),
+    .ws_forward_bus    ( ws_forward_bus    )
+
+`ifdef DPI_C
+    ,
     .debug_ws_valid    ( debug_ws_valid    ),
     .debug_wb_pc	   ( debug_wb_pc	   ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
     .debug_wb_rf_wdata ( debug_wb_rf_wdata )
+`endif
 );
 
+`ifdef DPI_C
 dpi_c u_dpi_c(
     .clk               ( clk               ),
     .stop              ( stop              ),
@@ -185,5 +222,6 @@ dpi_c u_dpi_c(
     .debug_wb_rf_wdata ( debug_wb_rf_wdata ),
     .debug_fs_pc       ( debug_fs_pc       )
 );
+`endif
 
 endmodule

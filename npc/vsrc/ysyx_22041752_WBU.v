@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_WBU.v
 // Author        : Cw
 // Created On    : 2022-11-21 16:21
-// Last Modified : 2022-11-22 16:48
+// Last Modified : 2023-05-26 21:37
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -24,13 +24,17 @@ module ysyx_22041752_WBU (
     //to rf: for write back
     output wire [`WS_TO_RF_BUS_WD -1:0]  ws_to_rf_bus  ,
     //forward_bus
-	output wire [`FORWARD_BUS_WD  -1:0]  ws_forward_bus,
+	output wire [`FORWARD_BUS_WD  -1:0]  ws_forward_bus
 	//trace debug interface
+
+`ifdef DPI_C
+    ,
     output wire [`PC_WD           -1:0]  debug_wb_pc   ,
     output wire                          debug_ws_valid,
     output wire                          debug_wb_rf_wen ,
     output wire [`RF_ADDR_WD      -1:0]  debug_wb_rf_wnum,
     output wire [`RF_DATA_WD      -1:0]  debug_wb_rf_wdata
+`endif
 );
 
 reg         ws_valid;
@@ -75,15 +79,19 @@ assign rf_we    = ws_rf_we&&ws_valid;
 assign rf_waddr = rd;
 assign rf_wdata = ws_r;
 
+// forward info generate
+wire ws_forward_valid;
+assign ws_forward_valid = rf_we;
+assign ws_forward_bus   = {ws_forward_valid,ws_r,rd};
+
+`ifdef DPI_C
 // debug info generate
 assign debug_wb_pc       = ws_pc;
 assign debug_ws_valid    = ws_valid;
 assign debug_wb_rf_wen   = rf_we;
 assign debug_wb_rf_wnum  = rd;
 assign debug_wb_rf_wdata = ws_r;
-// forward info generate
-wire ws_forward_valid;
-assign ws_forward_valid = rf_we;
-assign ws_forward_bus   = {ws_forward_valid,ws_r,rd};
+`endif
 
 endmodule
+

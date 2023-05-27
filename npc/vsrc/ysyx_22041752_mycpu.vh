@@ -21,5 +21,9 @@
     `define WS_TO_RF_BUS_WD   70
     `define FORWARD_BUS_WD    70
     `define ES_FORWARD_BUS_WD 71
+
+    `define CLINT_BASE_ADDR   64'h0200_0000
+
+    `define DPI_C
 `endif
 
