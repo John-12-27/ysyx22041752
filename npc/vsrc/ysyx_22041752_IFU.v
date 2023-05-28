@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-05-27 16:19
+// Last Modified : 2023-05-27 19:59
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -25,6 +25,7 @@ module ysyx_22041752_IFU (
     output wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     // inst sram interface
     output wire                         inst_en        ,
+    input  wire                         inst_ready     ,
     output wire [`SRAM_ADDR_WD-1:0]     inst_addr      ,
 /* verilator lint_off UNUSEDSIGNAL */
     input  wire [`SRAM_DATA_WD-1:0]     inst_rdata     ,
@@ -56,7 +57,7 @@ reg  [`PC_WD-1:0]   fs_pc;
 assign fs_to_ds_bus = {fs_inst, fs_pc};
 
 // pre-IF stage
-assign to_fs_valid  = ~reset;
+assign to_fs_valid  = ~reset && inst_ready;
 
 assign seq_pc       = fs_pc + 4;
 assign nextpc       = flush    ? flush_pc  :

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-27 10:26
+// Last Modified : 2023-05-27 20:08
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -28,10 +28,11 @@ module ysyx_22041752_EXU(
 	//forward_bus
 	output wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus,
     // data sram interface
-    output wire                           data_sram_en   ,
-    output wire [`SRAM_WEN_WD -1:0]       data_sram_wen  ,
-    output wire [`SRAM_ADDR_WD-1:0]       data_sram_addr ,
-    output wire [`SRAM_DATA_WD-1:0]       data_sram_wdata,
+    output wire                           data_en       ,
+    input  wire                           data_ready    ,
+    output wire [`SRAM_WEN_WD -1:0]       data_wen      ,
+    output wire [`SRAM_ADDR_WD-1:0]       data_addr     ,
+    output wire [`SRAM_DATA_WD-1:0]       data_wdata    ,
 
     output wire                           flush          ,
     output wire [`PC_WD-1:0]              flush_pc       ,
@@ -184,7 +185,8 @@ wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
 wire div_out_valid;                                              
 wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
-assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall;
+wire mem_stall = data_en && !data_ready;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !mem_stall;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go &&!flush;
 always @(posedge clk) begin
@@ -277,19 +279,19 @@ ysyx_22041752_alu U_ALU_0(
     .alu_src1        ( alu_src1       ),
     .alu_src2        ( alu_src2       ),
     .alu_result      ( alu_result     ),
-    .mem_result      ( data_sram_addr ),
+    .mem_result      ( data_addr      ),
     .div_out_valid   ( div_out_valid  ),
     .mul_out_valid   ( mul_out_valid  )
 );
 
-assign data_sram_en  = (es_mem_re | es_mem_we) & es_valid;
-assign data_sram_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
-                       es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
-                       es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
-                       es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 8'h01 :
-                                                                        8'h00 ;
+assign data_en  = (es_mem_re | es_mem_we) & es_valid;
+assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
+                  es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
+                  es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
+                  es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 8'h01 :
+                                                                   8'h00 ;
 
-assign data_sram_wdata = rs2_value;
+assign data_wdata = rs2_value;
 //forward_bus
 wire mem_read_after_write;
 wire es_forward_valid;

@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-05-27 10:27
+// Last Modified : 2023-05-27 20:05
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,21 +14,49 @@
 `default_nettype none
 `include "ysyx_22041752_mycpu.vh"
 module top (
-    input  wire        clk,
-    input  wire        reset,
+    input  wire        aclk,
+    input  wire        aresetn,
+    
+    output wire [ 3:0] arid    ,
+    output wire [31:0] araddr  ,
+    output wire [ 7:0] arlen   ,
+    output wire [ 2:0] arsize  ,
+    output wire [ 1:0] arburst ,
+    output wire [ 1:0] arlock  ,
+    output wire [ 3:0] arcache ,
+    output wire [ 2:0] arprot  ,
+    output wire        arvalid ,
+    input  wire        arready ,
 
-    // inst sram interface
-    output wire                     inst_sram_en   ,
-    //output wire [`SRAM_WEN_WD -1:0] inst_sram_wen  ,
-    output wire [`SRAM_ADDR_WD-1:0] inst_sram_addr ,
-    //output wire [`SRAM_DATA_WD-1:0] inst_sram_wdata,
-    input  wire [`SRAM_DATA_WD-1:0] inst_sram_rdata,
-    // data sram interface
-    output wire                     data_sram_en   ,
-    output wire [`SRAM_WEN_WD -1:0] data_sram_wen  ,
-    output wire [`SRAM_ADDR_WD-1:0] data_sram_addr ,
-    output wire [`SRAM_DATA_WD-1:0] data_sram_wdata,
-    input  wire [`SRAM_DATA_WD-1:0] data_sram_rdata
+    input  wire [ 3:0] rid     ,
+    input  wire [63:0] rdata   ,
+    input  wire [ 1:0] rresp   ,
+    input  wire        rlast   ,
+    input  wire        rvalid  ,
+    output wire        rready  ,
+
+    output wire [ 3:0] awid    ,
+    output wire [31:0] awaddr  ,
+    output wire [ 7:0] awlen   ,
+    output wire [ 2:0] awsize  ,
+    output wire [ 1:0] awburst ,
+    output wire [ 1:0] awlock  ,
+    output wire [ 3:0] awcache ,
+    output wire [ 2:0] awprot  ,
+    output wire        awvalid ,
+    input  wire        awready ,
+
+    output wire [ 3:0] wid     ,
+    output wire [63:0] wdata   ,
+    output wire [ 3:0] wstrb   ,
+    output wire        wlast   ,
+    output wire        wvalid  ,
+    input  wire        wready  ,
+
+    input  wire [ 3:0] bid     ,
+    input  wire [ 1:0] bresp   ,
+    input  wire        bvalid  ,
+    output wire        bready
 );
    
 wire              mie;
@@ -72,6 +100,30 @@ wire [`RF_DATA_WD-1:0]    dpi_csrs [3:0];
 wire [            0:0]    stop;
 `endif
 
+wire clk = aclk;
+reg reset;
+always @(posedge clk or aresetn) begin
+    if (!aresetn) begin
+        reset <= 1;
+    end
+    else begin
+        reset <= 0;
+    end
+end
+
+// inst sram interface
+wire                     inst_en   ;
+wire                     inst_ready;
+wire [`SRAM_ADDR_WD-1:0] inst_addr ;
+wire [`SRAM_DATA_WD-1:0] inst_rdata;
+// data sram interface
+wire                     data_en   ;
+wire                     data_ready;
+wire [`SRAM_WEN_WD -1:0] data_wen  ;
+wire [`SRAM_ADDR_WD-1:0] data_addr ;
+wire [`SRAM_DATA_WD-1:0] data_wdata;
+wire [`SRAM_DATA_WD-1:0] data_rdata;
+
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
     .clk            (clk            ),
@@ -84,9 +136,10 @@ ysyx_22041752_IFU U_IFU_0(
     .fs_to_ds_valid (fs_to_ds_valid ),
     .fs_to_ds_bus   (fs_to_ds_bus   ),
 
-    .inst_en        (inst_sram_en   ),
-    .inst_addr      (inst_sram_addr ),
-    .inst_rdata     (inst_sram_rdata),
+    .inst_en        (inst_en        ),
+    .inst_ready     (inst_ready     ),
+    .inst_addr      (inst_addr      ),
+    .inst_rdata     (inst_rdata     ),
 
     .flush          (flush          ),
     .flush_pc       (flush_pc       )
@@ -133,10 +186,11 @@ ysyx_22041752_EXU U_EXU_0(
     .es_to_ms_valid ( es_to_ms_valid  ),
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .es_forward_bus ( es_forward_bus  ),
-    .data_sram_en   ( data_sram_en    ),
-    .data_sram_wen  ( data_sram_wen   ),
-    .data_sram_addr ( data_sram_addr  ),
-    .data_sram_wdata( data_sram_wdata ),
+    .data_en        ( data_en         ),
+    .data_ready     ( data_ready      ),
+    .data_wen       ( data_wen        ),
+    .data_addr      ( data_addr       ),
+    .data_wdata     ( data_wdata      ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_i          ( interrupt       ),
@@ -152,9 +206,9 @@ ysyx_22041752_EXU U_EXU_0(
 `endif
 );
 
-wire                     clint_wen   = |data_sram_wen ;
-wire [`SRAM_ADDR_WD-1:0] clint_addr  = data_sram_addr ;
-wire [`SRAM_DATA_WD-1:0] clint_wdata = data_sram_wdata;
+wire                     clint_wen   = |data_wen ;
+wire [`SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
+wire [`SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
 wire [`SRAM_ADDR_WD-1:0] clint_rdata;
 wire                     clint_rdat_v;
 
@@ -181,7 +235,7 @@ ysyx_22041752_MEU U_MEU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
-    .data_sram_rdata( clint_rdat_v ? clint_rdata : data_sram_rdata ),
+    .data_sram_rdata( clint_rdat_v ? clint_rdata : data_rdata ),
     .ms_forward_bus ( ms_forward_bus  )
 );
 
@@ -203,6 +257,57 @@ ysyx_22041752_WBU U_WBU_0(
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
     .debug_wb_rf_wdata ( debug_wb_rf_wdata )
 `endif
+);
+
+ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .inst_en                        ( inst_en                       ),
+    .inst_ready                     ( inst_ready                    ),
+    .inst_addr                      ( inst_addr                     ),
+    .inst_rdata                     ( inst_rdata                    ),
+    .data_en                        ( data_en                       ),
+    .data_ready                     ( data_ready                    ),
+    .data_wen                       ( data_wen                      ),
+    .data_addr                      ( data_addr                     ),
+    .data_wdata                     ( data_wdata                    ),
+    .data_rdata                     ( data_rdata                    ),
+    .arid                           ( arid                          ),
+    .araddr                         ( araddr                        ),
+    .arlen                          ( arlen                         ),
+    .arsize                         ( arsize                        ),
+    .arburst                        ( arburst                       ),
+    .arlock                         ( arlock                        ),
+    .arcache                        ( arcache                       ),
+    .arprot                         ( arprot                        ),
+    .arvalid                        ( arvalid                       ),
+    .arready                        ( arready                       ),
+    .rid                            ( rid                           ),
+    .rdata                          ( rdata                         ),
+    .rresp                          ( rresp                         ),
+    .rlast                          ( rlast                         ),
+    .rvalid                         ( rvalid                        ),
+    .rready                         ( rready                        ),
+    .awid                           ( awid                          ),
+    .awaddr                         ( awaddr                        ),
+    .awlen                          ( awlen                         ),
+    .awsize                         ( awsize                        ),
+    .awburst                        ( awburst                       ),
+    .awlock                         ( awlock                        ),
+    .awcache                        ( awcache                       ),
+    .awprot                         ( awprot                        ),
+    .awvalid                        ( awvalid                       ),
+    .awready                        ( awready                       ),
+    .wid                            ( wid                           ),
+    .wdata                          ( wdata                         ),
+    .wstrb                          ( wstrb                         ),
+    .wlast                          ( wlast                         ),
+    .wvalid                         ( wvalid                        ),
+    .wready                         ( wready                        ),
+    .bid                            ( bid                           ),
+    .bresp                          ( bresp                         ),
+    .bvalid                         ( bvalid                        ),
+    .bready                         ( bready                        )
 );
 
 `ifdef DPI_C

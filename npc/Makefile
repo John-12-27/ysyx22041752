@@ -59,6 +59,7 @@ VERILATOR_FLAGS += -Wno-EOFNEWLINE
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
 
+VERILATOR_FLAGS += --threads 4
 # Input files for Verilator
 #VERILATOR_INPUT = -f input.vc $(VSRCS) $(CXXSRCS)
 
