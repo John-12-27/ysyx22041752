@@ -109,6 +109,57 @@ end
 /******************************************************************************************************************************/
 `else
 
+wire dividend_s  = div_signed & dividend[`RF_DATA_WD-1];
+wire divisor_s   = div_signed & divisor[`RF_DATA_WD-1];
+wire remainder_s = dividend_s;
+wire quotient_s  = div_signed & (dividend_s ^ divisor_s);
+
+wire [`RF_DATA_WD-1:0]   dividend_abs       ;
+wire [`RF_DATA_WD-1:0]   divisor_abs        ;
+
+wire [`RF_DATA_WD-1:0] not_p1_i_1 = dividend;
+wire [`RF_DATA_WD-1:0] not_p1_i_2 = divisor;
+wire [`RF_DATA_WD-1:0] not_p1_o_1 = ~not_p1_i_1 + 1;
+wire [`RF_DATA_WD-1:0] not_p1_o_2 = ~not_p1_i_2 + 1;
+
+assign dividend_abs = dividend_s ? not_p1_o_1 : dividend;
+assign divisor_abs  = divisor_s  ? not_p1_o_2 : divisor;
+
+wire [`RF_DATA_WD-1:0] quotient_abs  = dividend_abs / divisor_abs;
+wire [`RF_DATA_WD-1:0] remainder_abs = dividend_abs % divisor_abs;
+
+assign out_valid = div_valid;
+
+always @(*) begin
+    if (divisor == 0) begin
+        quotient = 64'hffff_ffff_ffff_ffff;        
+    end
+    else if (div_signed && (dividend == 64'h8000_0000_0000_0000) && (divisor == 64'hffff_ffff_ffff_ffff)) begin
+        quotient = dividend;
+    end
+    else if (quotient_s) begin
+        quotient = ~quotient_abs + 1;
+    end
+    else begin
+        quotient = quotient_abs;
+    end
+end
+
+always @(*) begin
+    if (divisor == 0) begin
+        remainder = dividend;        
+    end
+    else if (div_signed && (dividend == 64'h8000_0000_0000_0000) && (divisor == 64'hffff_ffff_ffff_ffff)) begin
+        remainder = 0;
+    end
+    else if (remainder_s) begin
+        remainder = ~remainder_abs + 1;
+    end
+    else begin
+        remainder = remainder_abs;
+    end
+end
+
 `endif
 
 endmodule
