@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_csr.v
 // Author        : Cw
 // Created On    : 2023-03-28 22:12
-// Last Modified : 2023-05-29 20:32
+// Last Modified : 2023-05-29 21:51
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,16 +13,16 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_csr (
-    input wire clk  ,
+    input wire         clk   ,
+    input wire         reset ,
 
     input  wire        wen   ,
     input  wire [11:0] addr  ,
     input  wire [63:0] wdata ,
     output wire [63:0] rdata ,
     
-    input  wire        int_i ,
-    output wire mie_o ,
-    output wire mtie_o
+    input  wire int_t_i,
+    output wire int_t_o
 
 `ifdef DPI_C
     ,
@@ -35,7 +35,10 @@ reg [63:0] mtvec  ;
 reg [63:0] mepc   ;
 reg [63:0] mcause ;
 reg [63:0] mie    ;
+
+/* verilator lint_off UNUSEDSIGNAL */
 reg [63:0] mip    ;
+/* verilator lint_on UNUSEDSIGNAL */
 
 assign rdata = {64{(addr == `CSR_ADDR_MSTATUS)}} & mstatus |
                {64{(addr == `CSR_ADDR_MIE)}}     & mie     |
@@ -45,13 +48,12 @@ assign rdata = {64{(addr == `CSR_ADDR_MSTATUS)}} & mstatus |
                {64{(addr == `CSR_ADDR_MCAUSE)}}  & mcause  ;
 
 always @(posedge clk) begin
-`ifdef DPI_C
-    mstatus <= 64'ha00001800;
-`else
-    if (wen && addr == `CSR_ADDR_MSTATUS) begin
+    if (reset) begin
+        mstatus <= 64'ha00001800;
+    end
+    else if (wen && addr == `CSR_ADDR_MSTATUS) begin
         mstatus <= wdata;
     end
-`endif
 end
 
 always @(posedge clk) begin
@@ -79,13 +81,12 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-    if (wen && addr == `CSR_ADDR_MIP) begin
-        mip <= wdata;
-    end
+    mip[7] <= mstatus[3] & mie[7] & int_t_i;
+    mip[6:0] <= 0;
+    mip[63:8]<= 0;
 end
 
-assign mie_o  = mstatus[3];
-assign mtie_o = mie[7];
+assign int_t_o = mip[7];
 
 `ifdef DPI_C
 assign dpi_csrs[0] = mstatus;

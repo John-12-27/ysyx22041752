@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-29 20:28
+// Last Modified : 2023-05-29 21:53
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -34,11 +34,9 @@ module ysyx_22041752_EXU(
     output wire [`SRAM_ADDR_WD-1:0]       data_addr     ,
     output wire [`SRAM_DATA_WD-1:0]       data_wdata    ,
 
-    output wire                           flush          ,
-    output wire [`PC_WD-1:0]              flush_pc       ,
-    input  wire                           int_i          ,
-    output wire                           mie_o          ,
-    output wire                           mtie_o          
+    output wire                           flush         ,
+    output wire [`PC_WD-1:0]              flush_pc      ,
+    input  wire                           int_t_i        
 
 `ifdef DPI_C
     ,
@@ -176,10 +174,10 @@ always @(posedge clk) begin
         expfsm_pre <= expfsm_nxt;
     end
 end
-assign expfsm_nxt = expfsm_pre == IDLE && (ecall || int_i) ? W_MEPC   :
-                    expfsm_pre == W_MEPC                   ? W_MCAUSE :
-                    expfsm_pre == W_MCAUSE                 ? IDLE     :
-                                                             expfsm_pre;
+assign expfsm_nxt = expfsm_pre == IDLE && (ecall || int_t_o) ? W_MEPC   :
+                    expfsm_pre == W_MEPC                     ? W_MCAUSE :
+                    expfsm_pre == W_MCAUSE                   ? IDLE     :
+                                                               expfsm_pre;
 
 wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
@@ -209,17 +207,17 @@ wire        csr_we   ;
 wire [11:0] csr_addr ;
 wire [63:0] csr_wdata;
 wire [63:0] csr_rdata;
+wire        int_t_o  ;
 
 ysyx_22041752_csr U_YSYX_22041752_CSR_0(
     .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
     .wen                            ( csr_we                        ),
     .addr                           ( csr_addr                      ),
     .wdata                          ( csr_wdata                     ),
     .rdata                          ( csr_rdata                     ),
-    .int_i                          ( int_i                         ),
-
-    .mie_o                          ( mie_o                         ),
-    .mtie_o                         ( mtie_o                        )
+    .int_t_i                        ( int_t_i                       ),
+    .int_t_o                        ( int_t_o                       )
 
 `ifdef DPI_C
     ,
@@ -227,17 +225,17 @@ ysyx_22041752_csr U_YSYX_22041752_CSR_0(
 `endif
 );
 assign csr_we    = es_csr_we || expfsm_pre==W_MEPC || expfsm_pre==W_MCAUSE;
-assign csr_addr  = (ecall || int_i) && (expfsm_pre==IDLE)      ? `CSR_ADDR_MTVEC  :
+assign csr_addr  = (ecall || int_t_o) && (expfsm_pre==IDLE)    ? `CSR_ADDR_MTVEC  :
                    expfsm_pre==W_MEPC    || mret               ? `CSR_ADDR_MEPC   :
                    expfsm_pre==W_MCAUSE                        ? `CSR_ADDR_MCAUSE :
                                                                  rscsr            ;
 assign csr_wdata = expfsm_pre == W_MEPC   ? es_pc :
-                   expfsm_pre == W_MCAUSE ? int_i ? 64'h7: 64'hb :
+                   expfsm_pre == W_MCAUSE ? int_t_o ? 64'h8000_0000_0000_0007: 64'hb :
                    {64{csrrs}} & (rs1_value | csr_rdata) |
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
-assign flush    = (ecall||mret||int_i) && es_valid;
+assign flush    = (ecall||mret||int_t_o) && es_valid;
 assign flush_pc = csr_rdata;
 
 assign alu_src1 = src_pc   ? es_pc : 

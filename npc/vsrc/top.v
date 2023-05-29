@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-05-27 20:05
+// Last Modified : 2023-05-29 21:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -61,7 +61,7 @@ module top (
    
 wire              mie;
 wire              mtie;
-wire              interrupt ;
+wire              int_t;
 wire              flush     ;
 wire [`PC_WD-1:0] flush_pc  ;
 
@@ -193,9 +193,7 @@ ysyx_22041752_EXU U_EXU_0(
     .data_wdata     ( data_wdata      ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
-    .int_i          ( interrupt       ),
-    .mie_o          ( mie             ),
-    .mtie_o         ( mtie            )
+    .int_t_i        ( int_t           )
 
 `ifdef DPI_C
     ,
@@ -206,6 +204,7 @@ ysyx_22041752_EXU U_EXU_0(
 `endif
 );
 
+wire                     clint_en    = data_en;
 wire                     clint_wen   = |data_wen ;
 wire [`SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
 wire [`SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
@@ -215,14 +214,13 @@ wire                     clint_rdat_v;
 ysyx_22041752_clint U_YSYX_22041752_CLINT_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
+    .en                             ( clint_en                      ),
     .wen                            ( clint_wen                     ),
     .addr                           ( clint_addr                    ),
     .wdata                          ( clint_wdata                   ),
     .rdata                          ( clint_rdata                   ),
     .rdat_v                         ( clint_rdat_v                  ),
-    .mie_i                          ( mie                           ),
-    .mtie_i                         ( mtie                          ),
-    .int_t_o                        ( interrupt                     )
+    .int_t_o                        ( int_t                         )
 );
 
 // MEM stage
