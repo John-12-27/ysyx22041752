@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-22 22:40
+// Last Modified : 2023-05-29 15:44
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -241,9 +241,11 @@ assign alu_src2 = src_csr   ? csr_rdata :
                   rs2_value;
 
 ysyx_22041752_alu U_ALU_0(
+`ifndef DPI_C
     .clk             ( clk            ),
     .reset           ( reset          ),
     .flush           ( flush          ),
+`endif
     .mul_u           ( mul_u          ),
     .mul_su          ( mul_su         ),
     .div_u           ( div_u          ),
