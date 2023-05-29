@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_mul.v
 // Author        : Cw
 // Created On    : 2022-11-29 16:07
-// Last Modified : 2023-05-27 16:22
+// Last Modified : 2023-05-29 19:53
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,9 +14,11 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module ysyx_22041752_mul(
+`ifndef DPI_C
     input  wire                    clk           ,
     input  wire                    reset         ,
     input  wire                    flush         ,
+`endif
     input  wire                    mul_u         ,
     input  wire                    mul_su        ,
     input  wire                    mul_h         ,
@@ -26,6 +28,8 @@ module ysyx_22041752_mul(
     output reg  [`RF_DATA_WD-1:0]  product       ,
     output wire                    out_valid
 );
+
+`ifndef DPI_C
 
 reg [6:0] count;
 wire count_en = ~reset & ~flush & mul_valid;
@@ -95,27 +99,11 @@ always @(*) begin
     end
 end
 
+/******************************************************************************************************************************/
+/******************************************************************************************************************************/
+/******************************************************************************************************************************/
+`else
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
 wire [`RF_DATA_WD-1:0] not_p1_x = ~multiplicand+1;
 wire [`RF_DATA_WD-1:0] not_p1_y = ~multiplier+1;
 
@@ -151,7 +139,9 @@ always @(*) begin
         end
     end
 end
-*/
+
+assign out_valid = mul_valid;
+`endif
 
 endmodule
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_diver.v
 // Author        : Cw
 // Created On    : 2022-12-14 14:01
-// Last Modified : 2023-05-27 16:47
+// Last Modified : 2023-05-29 19:55
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,21 +14,24 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module ysyx_22041752_diver (
+`ifndef DPI_C
     input  wire                   clk        ,
     input  wire                   reset      ,
-
+    input  wire                   flush      ,
+`endif
     input  wire [`RF_DATA_WD-1:0] dividend   ,
     input  wire [`RF_DATA_WD-1:0] divisor    ,
     input  wire                   div_valid  ,
     //input  wire                   divw       ,
     input  wire                   div_signed ,
-    input  wire                   flush      ,
     //output wire                   div_ready  ,
     output wire                   out_valid  ,
     output reg  [`RF_DATA_WD-1:0] quotient   ,
     output reg  [`RF_DATA_WD-1:0] remainder
 );
     
+`ifndef DPI_C
+
 reg [7:0] count;
 wire count_en = ~reset & ~flush & div_valid;
 always @(posedge clk) begin
@@ -100,6 +103,13 @@ always @(*) begin
         remainder = result_abs_buffer[2*`RF_DATA_WD-1:`RF_DATA_WD];
     end
 end
+
+/******************************************************************************************************************************/
+/******************************************************************************************************************************/
+/******************************************************************************************************************************/
+`else
+
+`endif
 
 endmodule
 
