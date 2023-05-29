@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_csr.v
 // Author        : Cw
 // Created On    : 2023-03-28 22:12
-// Last Modified : 2023-05-27 15:37
+// Last Modified : 2023-05-29 20:32
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -20,6 +20,7 @@ module ysyx_22041752_csr (
     input  wire [63:0] wdata ,
     output wire [63:0] rdata ,
     
+    input  wire        int_i ,
     output wire mie_o ,
     output wire mtie_o
 
@@ -36,49 +37,49 @@ reg [63:0] mcause ;
 reg [63:0] mie    ;
 reg [63:0] mip    ;
 
-assign rdata = {64{(addr == 12'h300)}} & mstatus |
-               {64{(addr == 12'h304)}} & mie     |
-               {64{(addr == 12'h344)}} & mip     |
-               {64{(addr == 12'h305)}} & mtvec   |
-               {64{(addr == 12'h341)}} & mepc    |
-               {64{(addr == 12'h342)}} & mcause  ;
+assign rdata = {64{(addr == `CSR_ADDR_MSTATUS)}} & mstatus |
+               {64{(addr == `CSR_ADDR_MIE)}}     & mie     |
+               {64{(addr == `CSR_ADDR_MIP)}}     & mip     |
+               {64{(addr == `CSR_ADDR_MTVEC)}}   & mtvec   |
+               {64{(addr == `CSR_ADDR_MEPC)}}    & mepc    |
+               {64{(addr == `CSR_ADDR_MCAUSE)}}  & mcause  ;
 
 always @(posedge clk) begin
 `ifdef DPI_C
     mstatus <= 64'ha00001800;
 `else
-    if (wen && addr == 12'h300) begin
+    if (wen && addr == `CSR_ADDR_MSTATUS) begin
         mstatus <= wdata;
     end
 `endif
 end
 
 always @(posedge clk) begin
-    if (wen && addr == 12'h305) begin
+    if (wen && addr == `CSR_ADDR_MTVEC) begin
         mtvec <= wdata;
     end
 end
 
 always @(posedge clk) begin
-    if (wen && addr == 12'h341) begin
+    if (wen && addr == `CSR_ADDR_MEPC) begin
         mepc <= wdata;
     end
 end
 
 always @(posedge clk) begin
-    if (wen && addr == 12'h342) begin
+    if (wen && addr == `CSR_ADDR_MCAUSE) begin
         mcause <= wdata;
     end
 end
 
 always @(posedge clk) begin
-    if (wen && addr == 12'h304) begin
+    if (wen && addr == `CSR_ADDR_MIE) begin
         mie <= wdata;
     end
 end
 
 always @(posedge clk) begin
-    if (wen && addr == 12'h344) begin
+    if (wen && addr == `CSR_ADDR_MIP) begin
         mip <= wdata;
     end
 end

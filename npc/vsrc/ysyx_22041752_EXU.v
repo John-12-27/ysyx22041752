@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-27 20:08
+// Last Modified : 2023-05-29 20:28
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -216,6 +216,7 @@ ysyx_22041752_csr U_YSYX_22041752_CSR_0(
     .addr                           ( csr_addr                      ),
     .wdata                          ( csr_wdata                     ),
     .rdata                          ( csr_rdata                     ),
+    .int_i                          ( int_i                         ),
 
     .mie_o                          ( mie_o                         ),
     .mtie_o                         ( mtie_o                        )
@@ -226,10 +227,10 @@ ysyx_22041752_csr U_YSYX_22041752_CSR_0(
 `endif
 );
 assign csr_we    = es_csr_we || expfsm_pre==W_MEPC || expfsm_pre==W_MCAUSE;
-assign csr_addr  = (ecall || int_i) && (expfsm_pre==IDLE)      ? 12'h305 :
-                   expfsm_pre==W_MEPC    || mret               ? 12'h341 :
-                   expfsm_pre==W_MCAUSE                        ? 12'h342 :
-                                                                 rscsr   ;
+assign csr_addr  = (ecall || int_i) && (expfsm_pre==IDLE)      ? `CSR_ADDR_MTVEC  :
+                   expfsm_pre==W_MEPC    || mret               ? `CSR_ADDR_MEPC   :
+                   expfsm_pre==W_MCAUSE                        ? `CSR_ADDR_MCAUSE :
+                                                                 rscsr            ;
 assign csr_wdata = expfsm_pre == W_MEPC   ? es_pc :
                    expfsm_pre == W_MCAUSE ? int_i ? 64'h7: 64'hb :
                    {64{csrrs}} & (rs1_value | csr_rdata) |
@@ -255,9 +256,11 @@ assign alu_src2 = src_csr   ? csr_rdata :
                   rs2_value;
 
 ysyx_22041752_alu U_ALU_0(
+`ifndef DPI_C
     .clk             ( clk            ),
     .reset           ( reset          ),
     .flush           ( flush          ),
+`endif
     .mul_u           ( mul_u          ),
     .mul_su          ( mul_su         ),
     .div_u           ( div_u          ),
