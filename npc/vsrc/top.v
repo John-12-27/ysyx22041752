@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-05-29 21:54
+// Last Modified : 2023-05-30 18:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -48,7 +48,7 @@ module top (
 
     output wire [ 3:0] wid     ,
     output wire [63:0] wdata   ,
-    output wire [ 3:0] wstrb   ,
+    output wire [ 7:0] wstrb   ,
     output wire        wlast   ,
     output wire        wvalid  ,
     input  wire        wready  ,
@@ -59,8 +59,6 @@ module top (
     output wire        bready
 );
    
-wire              mie;
-wire              mtie;
 wire              int_t;
 wire              flush     ;
 wire [`PC_WD-1:0] flush_pc  ;
@@ -261,11 +259,11 @@ ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .inst_en                        ( inst_en                       ),
-    .inst_ready                     ( inst_ready                    ),
+    .inst_resp                      ( inst_ready                    ),
     .inst_addr                      ( inst_addr                     ),
     .inst_rdata                     ( inst_rdata                    ),
     .data_en                        ( data_en                       ),
-    .data_ready                     ( data_ready                    ),
+    .data_resp                      ( data_ready                    ),
     .data_wen                       ( data_wen                      ),
     .data_addr                      ( data_addr                     ),
     .data_wdata                     ( data_wdata                    ),
