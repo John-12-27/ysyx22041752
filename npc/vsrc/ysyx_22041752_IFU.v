@@ -5,39 +5,33 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-05-29 21:50
+// Last Modified : 2023-05-31 21:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-`default_nettype none
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_IFU (
-    input  wire                         clk            ,
-    input  wire                         reset          ,
-    //allwoin
-    input  wire                         ds_allowin     ,
-    //brbus
-    input  wire [`BR_BUS_WD       -1:0] br_bus         ,
-    //to ds
-    output wire                         fs_to_ds_valid ,
-    output wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
-    // inst sram interface
-    output wire                         inst_en        ,
-    input  wire                         inst_ready     ,
-    output wire [`SRAM_ADDR_WD-1:0]     inst_addr      ,
+    input                                        clk            ,
+    input                                        reset          ,
+    
+    input                                        ds_allowin     ,
+    
+    input  [`ysyx_22041752_BR_BUS_WD       -1:0] br_bus         ,
+    
+    output                                       fs_to_ds_valid ,
+    output [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
+    
+    output                                       inst_en        ,
+    input                                        inst_ready     ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0]     inst_addr      ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [`SRAM_DATA_WD-1:0]     inst_rdata     ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0]     inst_rdata     ,
 /* verilator lint_on UNUSEDSIGNAL */
 
-    input  wire                         flush          , 
-    input  wire [`PC_WD-1:0]            flush_pc       
-
-`ifdef DPI_C
-    ,
-    output wire [`PC_WD-1:0]            debug_fs_pc
-`endif
+    input                                        flush          , 
+    input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       
 );
 
 reg         fs_valid;
@@ -45,15 +39,15 @@ wire        fs_ready_go;
 wire        fs_allowin;
 wire        to_fs_valid;
 
-wire [`PC_WD-1:0] seq_pc;
-wire [`PC_WD-1:0] nextpc;
+wire [`ysyx_22041752_PC_WD-1:0] seq_pc;
+wire [`ysyx_22041752_PC_WD-1:0] nextpc;
 
-wire              br_taken;
-wire [`PC_WD-1:0] br_target;
+wire                            br_taken;
+wire [`ysyx_22041752_PC_WD-1:0] br_target;
 assign {br_taken,br_target} = br_bus;
 
-wire [`INST_WD-1:0] fs_inst;
-reg  [`PC_WD-1:0]   fs_pc;
+wire [`ysyx_22041752_INST_WD-1:0] fs_inst;
+reg  [`ysyx_22041752_PC_WD-1:0]   fs_pc;
 assign fs_to_ds_bus = {fs_inst, fs_pc};
 
 // pre-IF stage
@@ -79,7 +73,7 @@ end
 
 always @(posedge clk) begin
     if (reset) begin
-        fs_pc <= `RESET_PC_VALUE;   
+        fs_pc <= `ysyx_22041752_RESET_PC_VALUE;   
     end
     else if (to_fs_valid && fs_allowin) begin
         fs_pc <= nextpc;
@@ -88,10 +82,7 @@ end
 
 assign inst_en    = to_fs_valid && fs_allowin;
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata[`INST_WD-1:0];
+assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
 
-`ifdef DPI_C
-assign debug_fs_pc = fs_pc;
-`endif
 endmodule
 

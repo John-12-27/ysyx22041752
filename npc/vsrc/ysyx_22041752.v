@@ -2,66 +2,142 @@
 //                 Copyright (c) 2022 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : top.v
+// Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-05-30 18:14
+// Last Modified : 2023-05-31 21:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
-`default_nettype none
 `include "ysyx_22041752_mycpu.vh"
-module top (
-    input  wire        aclk,
-    input  wire        aresetn,
-    
-    output wire [ 3:0] arid    ,
-    output wire [31:0] araddr  ,
-    output wire [ 7:0] arlen   ,
-    output wire [ 2:0] arsize  ,
-    output wire [ 1:0] arburst ,
-    output wire [ 1:0] arlock  ,
-    output wire [ 3:0] arcache ,
-    output wire [ 2:0] arprot  ,
-    output wire        arvalid ,
-    input  wire        arready ,
+module ysyx_22041752(
+    input         clock,
+    input         reset,
 
-    input  wire [ 3:0] rid     ,
-    input  wire [63:0] rdata   ,
-    input  wire [ 1:0] rresp   ,
-    input  wire        rlast   ,
-    input  wire        rvalid  ,
-    output wire        rready  ,
+    input          io_master_awready ,
+    output         io_master_awvalid ,
+    output [ 3:0]  io_master_awid    ,
+    output [31:0]  io_master_awaddr  ,
+    output [ 7:0]  io_master_awlen   ,
+    output [ 2:0]  io_master_awsize  ,
+    output [ 1:0]  io_master_awburst ,
+    input          io_master_wready  ,
+    output         io_master_wvalid  ,
+    output [63:0]  io_master_wdata   ,
+    output [ 7:0]  io_master_wstrb   ,
+    output         io_master_wlast   ,
+    output         io_master_bready  ,
+    input          io_master_bvalid  ,
+    input  [ 3:0]  io_master_bid     ,
+    input  [ 1:0]  io_master_bresp   ,
+    input          io_master_arready ,
+    output         io_master_arvalid ,
+    output [ 3:0]  io_master_arid    ,
+    output [31:0]  io_master_araddr  ,
+    output [ 7:0]  io_master_arlen   ,
+    output [ 2:0]  io_master_arsize  ,
+    output [ 1:0]  io_master_arburst ,
+    output         io_master_rready  ,
+    input          io_master_rvalid  ,
+    input  [ 3:0]  io_master_rid     ,
+    input  [63:0]  io_master_rdata   ,
+    input  [ 1:0]  io_master_rresp   ,
+    input          io_master_rlast   ,
 
-    output wire [ 3:0] awid    ,
-    output wire [31:0] awaddr  ,
-    output wire [ 7:0] awlen   ,
-    output wire [ 2:0] awsize  ,
-    output wire [ 1:0] awburst ,
-    output wire [ 1:0] awlock  ,
-    output wire [ 3:0] awcache ,
-    output wire [ 2:0] awprot  ,
-    output wire        awvalid ,
-    input  wire        awready ,
+    input          io_slave_awready  ,
+    output         io_slave_awvalid  ,
+    output [ 3:0]  io_slave_awid     ,
+    output [31:0]  io_slave_awaddr   ,
+    output [ 7:0]  io_slave_awlen    ,
+    output [ 2:0]  io_slave_awsize   ,
+    output [ 1:0]  io_slave_awburst  ,
+    input          io_slave_wready   ,
+    output         io_slave_wvalid   ,
+    output [63:0]  io_slave_wdata    ,
+    output [ 7:0]  io_slave_wstrb    ,
+    output         io_slave_wlast    ,
+    output         io_slave_bready   ,
+    input          io_slave_bvalid   ,
+    input  [ 3:0]  io_slave_bid      ,
+    input  [ 1:0]  io_slave_bresp    ,
+    input          io_slave_arready  ,
+    output         io_slave_arvalid  ,
+    output [ 3:0]  io_slave_arid     ,
+    output [31:0]  io_slave_araddr   ,
+    output [ 7:0]  io_slave_arlen    ,
+    output [ 2:0]  io_slave_arsize   ,
+    output [ 1:0]  io_slave_arburst  ,
+    output         io_slave_rready   ,
+    input          io_slave_rvalid   ,
+    input  [ 3:0]  io_slave_rid      ,
+    input  [63:0]  io_slave_rdata    ,
+    input  [ 1:0]  io_slave_rresp    ,
+    input          io_slave_rlast    ,
 
-    output wire [ 3:0] wid     ,
-    output wire [63:0] wdata   ,
-    output wire [ 7:0] wstrb   ,
-    output wire        wlast   ,
-    output wire        wvalid  ,
-    input  wire        wready  ,
+    input          io_interrupt   ,
 
-    input  wire [ 3:0] bid     ,
-    input  wire [ 1:0] bresp   ,
-    input  wire        bvalid  ,
-    output wire        bready
+    output [ 5:0]  io_sram0_addr  ,
+    output         io_sram0_cen   ,
+    output         io_sram0_wen   ,
+    output [127:0] io_sram0_wmask ,
+    output [127:0] io_sram0_wdata ,
+    output [127:0] io_sram0_rdata ,
+
+    output [ 5:0]  io_sram1_addr  ,
+    output         io_sram1_cen   ,
+    output         io_sram1_wen   ,
+    output [127:0] io_sram1_wmask ,
+    output [127:0] io_sram1_wdata ,
+    output [127:0] io_sram1_rdata ,
+
+    output [ 5:0]  io_sram2_addr  ,
+    output         io_sram2_cen   ,
+    output         io_sram2_wen   ,
+    output [127:0] io_sram2_wmask ,
+    output [127:0] io_sram2_wdata ,
+    output [127:0] io_sram2_rdata ,
+
+    output [ 5:0]  io_sram3_addr  ,
+    output         io_sram3_cen   ,
+    output         io_sram3_wen   ,
+    output [127:0] io_sram3_wmask ,
+    output [127:0] io_sram3_wdata ,
+    output [127:0] io_sram3_rdata ,
+
+    output [ 5:0]  io_sram4_addr  ,
+    output         io_sram4_cen   ,
+    output         io_sram4_wen   ,
+    output [127:0] io_sram4_wmask ,
+    output [127:0] io_sram4_wdata ,
+    output [127:0] io_sram4_rdata ,
+
+    output [ 5:0]  io_sram5_addr  ,
+    output         io_sram5_cen   ,
+    output         io_sram5_wen   ,
+    output [127:0] io_sram5_wmask ,
+    output [127:0] io_sram5_wdata ,
+    output [127:0] io_sram5_rdata ,
+
+    output [ 5:0]  io_sram6_addr  ,
+    output         io_sram6_cen   ,
+    output         io_sram6_wen   ,
+    output [127:0] io_sram6_wmask ,
+    output [127:0] io_sram6_wdata ,
+    output [127:0] io_sram6_rdata ,
+
+    output [ 5:0]  io_sram7_addr  ,
+    output         io_sram7_cen   ,
+    output         io_sram7_wen   ,
+    output [127:0] io_sram7_wmask ,
+    output [127:0] io_sram7_wdata ,
+    output [127:0] io_sram7_rdata 
 );
    
 wire              int_t;
 wire              flush     ;
-wire [`PC_WD-1:0] flush_pc  ;
+wire [`ysyx_22041752_PC_WD-1:0] flush_pc  ;
 
 wire         ds_allowin;
 wire         es_allowin;
@@ -71,56 +147,30 @@ wire         fs_to_ds_valid;
 wire         ds_to_es_valid;
 wire         es_to_ms_valid;
 wire         ms_to_ws_valid;
-wire [`FS_TO_DS_BUS_WD -1:0]   fs_to_ds_bus;
-wire [`DS_TO_ES_BUS_WD -1:0]   ds_to_es_bus;
-wire [`ES_TO_MS_BUS_WD -1:0]   es_to_ms_bus;
-wire [`MS_TO_WS_BUS_WD -1:0]   ms_to_ws_bus;
-wire [`WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus;
-wire [`BR_BUS_WD       -1:0]   br_bus;
-wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus;
-wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus;
-wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus;
+wire [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0]   fs_to_ds_bus;
+wire [`ysyx_22041752_DS_TO_ES_BUS_WD -1:0]   ds_to_es_bus;
+wire [`ysyx_22041752_ES_TO_MS_BUS_WD -1:0]   es_to_ms_bus;
+wire [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0]   ms_to_ws_bus;
+wire [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus;
+wire [`ysyx_22041752_BR_BUS_WD       -1:0]   br_bus;
+wire [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus;
+wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus;
+wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus;
 
-`ifdef DPI_C
-// trace debug interface
-wire [`PC_WD       -1:0] debug_fs_pc      ;
-wire [`PC_WD       -1:0] debug_wb_pc      ;
-wire [`PC_WD       -1:0] debug_es_pc      ;
-wire                     debug_es_exp     ;
-wire                     debug_es_mret    ;
-wire                     debug_ws_valid   ;
-wire [`INST_WD     -1:0] debug_ds_inst    ;
-wire                     debug_wb_rf_wen  ;
-wire [`RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
-wire [`RF_DATA_WD  -1:0] debug_wb_rf_wdata;
-wire [`RF_DATA_WD-1:0]    dpi_regs [`RF_NUM-1:0];
-wire [`RF_DATA_WD-1:0]    dpi_csrs [3:0];
-wire [            0:0]    stop;
-`endif
-
-wire clk = aclk;
-reg reset;
-always @(posedge clk or aresetn) begin
-    if (!aresetn) begin
-        reset <= 1;
-    end
-    else begin
-        reset <= 0;
-    end
-end
+wire clk = clock;
 
 // inst sram interface
 wire                     inst_en   ;
 wire                     inst_ready;
-wire [`SRAM_ADDR_WD-1:0] inst_addr ;
-wire [`SRAM_DATA_WD-1:0] inst_rdata;
+wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata;
 // data sram interface
 wire                     data_en   ;
 wire                     data_ready;
-wire [`SRAM_WEN_WD -1:0] data_wen  ;
-wire [`SRAM_ADDR_WD-1:0] data_addr ;
-wire [`SRAM_DATA_WD-1:0] data_wdata;
-wire [`SRAM_DATA_WD-1:0] data_rdata;
+wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
+wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -141,11 +191,6 @@ ysyx_22041752_IFU U_IFU_0(
 
     .flush          (flush          ),
     .flush_pc       (flush_pc       )
-
-`ifdef DPI_C
-    ,
-    .debug_fs_pc    (debug_fs_pc    )
-`endif
 );
 
 // ID stage
@@ -164,13 +209,6 @@ ysyx_22041752_IDU U_IDU_0(
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
     .flush          ( flush          )
-
-`ifdef DPI_C
-    ,
-    .dpi_regs       ( dpi_regs       ),
-    .stop           ( stop           ),
-    .debug_ds_inst  ( debug_ds_inst  ) 
-`endif
 );
 
 // EXE stage
@@ -192,22 +230,14 @@ ysyx_22041752_EXU U_EXU_0(
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_t_i        ( int_t           )
-
-`ifdef DPI_C
-    ,
-    .dpi_csrs       ( dpi_csrs        ),
-    .es_exp         ( debug_es_exp    ),
-    .es_mret        ( debug_es_mret   ),
-    .debug_es_pc    ( debug_es_pc     )
-`endif
 );
 
-wire                     clint_en    = data_en;
-wire                     clint_wen   = |data_wen ;
-wire [`SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
-wire [`SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
-wire [`SRAM_ADDR_WD-1:0] clint_rdata;
-wire                     clint_rdat_v;
+wire                                   clint_en    = data_en;
+wire                                   clint_wen   = |data_wen ;
+wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
+wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] clint_rdata;
+wire                                   clint_rdat_v;
 
 ysyx_22041752_clint U_YSYX_22041752_CLINT_0(
     .clk                            ( clk                           ),
@@ -244,15 +274,6 @@ ysyx_22041752_WBU U_WBU_0(
     .ms_to_ws_bus      ( ms_to_ws_bus      ),
     .ws_to_rf_bus      ( ws_to_rf_bus      ),
     .ws_forward_bus    ( ws_forward_bus    )
-
-`ifdef DPI_C
-    ,
-    .debug_ws_valid    ( debug_ws_valid    ),
-    .debug_wb_pc	   ( debug_wb_pc	   ),
-    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
-    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
-`endif
 );
 
 ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
@@ -305,24 +326,5 @@ ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
     .bvalid                         ( bvalid                        ),
     .bready                         ( bready                        )
 );
-
-`ifdef DPI_C
-dpi_c u_dpi_c(
-    .clk               ( clk               ),
-    .stop              ( stop              ),
-    .ws_valid          ( debug_ws_valid    ),
-    .dpi_regs          ( dpi_regs          ),
-    .dpi_csrs          ( dpi_csrs          ),
-    .debug_wb_pc       ( debug_wb_pc       ),
-    .debug_es_pc       ( debug_es_pc       ),
-    .debug_es_exp      ( debug_es_exp      ),
-    .debug_es_mret     ( debug_es_mret     ),
-    .debug_ds_inst     ( debug_ds_inst     ),
-    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
-    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata ),
-    .debug_fs_pc       ( debug_fs_pc       )
-);
-`endif
 
 endmodule

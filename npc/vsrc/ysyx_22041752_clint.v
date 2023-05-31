@@ -5,36 +5,36 @@
 // Filename      : ysyx_22041752_clint.v
 // Author        : Cw
 // Created On    : 2023-05-26 20:44
-// Last Modified : 2023-05-29 20:45
+// Last Modified : 2023-05-31 20:21
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-`define MTIME_OFFSET 64'h0000_bff8
-`define MTIMECMP_OFFSET 64'h0000_4000
+`define ysyx_22041752_MTIME_OFFSET 64'h0000_bff8
+`define ysyx_22041752_MTIMECMP_OFFSET 64'h0000_4000
 
 module ysyx_22041752_clint (
-    input  wire clk          ,
-    input  wire reset        ,
+    input  clk          ,
+    input  reset        ,
 
-    input  wire        en    ,
-    input  wire        wen   ,
-    input  wire [63:0] addr  ,
-    input  wire [63:0] wdata ,
-    output reg  [63:0] rdata ,
-    output reg         rdat_v,
+    input             en    ,
+    input             wen   ,
+    input  [63:0]     addr  ,
+    input  [63:0]     wdata ,
+    output reg [63:0] rdata ,
+    output reg        rdat_v,
 
-    output wire        int_t_o
+    output            int_t_o
 );
-    
+
 reg [63:0] mtime;
 always @(posedge clk) begin
     if (reset) begin
         mtime <= 0;
     end
-    else if (wen && (addr == `CLINT_BASE_ADDR+`MTIME_OFFSET)) begin
+    else if (wen && (addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIME_OFFSET)) begin
         mtime <= wdata;
     end
     else begin
@@ -47,17 +47,20 @@ always @(posedge clk) begin
     if (reset) begin
         mtimecmp <= 0;
     end
-    else if (wen && (addr == `CLINT_BASE_ADDR+`MTIMECMP_OFFSET)) begin
+    else if (wen && (addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET)) begin
         mtimecmp <= wdata;
     end
 end
 
 always @(posedge clk) begin
-    if (en && !wen) begin
-        if (addr==`CLINT_BASE_ADDR+`MTIME_OFFSET) begin
+    if (reset) begin
+        rdata <= 0;
+    end
+    else if (en && !wen) begin
+        if (addr==`ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIME_OFFSET) begin
             rdata <= mtime;
         end
-        else if (addr==`CLINT_BASE_ADDR+`MTIMECMP_OFFSET) begin
+        else if (addr==`ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET) begin
             rdata <= mtimecmp;
         end
     end
@@ -67,7 +70,7 @@ always @(posedge clk) begin
     if(reset)
         rdat_v <= 1'b0;
     else begin
-        rdat_v <= en && !wen && ((addr == `CLINT_BASE_ADDR+`MTIME_OFFSET) || (addr == `CLINT_BASE_ADDR+`MTIMECMP_OFFSET));
+        rdat_v <= en && !wen && ((addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIME_OFFSET) || (addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET));
     end
 end
 

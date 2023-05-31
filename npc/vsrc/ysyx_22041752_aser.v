@@ -5,18 +5,18 @@
 // Filename      : ysyx_22041752_aser.v
 // Author        : Cw
 // Created On    : 2022-08-24 09:46
-// Last Modified : 2023-05-23 12:16
+// Last Modified : 2023-05-31 20:12
 // ---------------------------------------------------------------------------------
 // Description   : 64-bit adder_suber 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 module ysyx_22041752_aser (
-    input  wire [63:0] a        ,
-    input  wire [63:0] b        ,
-    input  wire        sub      ,
-    output wire        cout     ,
-    output wire [63:0] result   
+    input  [63:0] a        ,
+    input  [63:0] b        ,
+    input         sub      ,
+    output        cout     ,
+    output [63:0] result   
 );
 
 

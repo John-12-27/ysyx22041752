@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-05-30 18:23
+// Last Modified : 2023-05-31 20:16
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,70 +13,70 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_axiarbiter (
-    input  wire        clk     ,
-    input  wire        reset   ,
+    input          clk     ,
+    input          reset   ,
 
     //from IFU & LSU
-    input  wire                     inst_en    ,
-    output wire                     inst_resp  ,
+    input                                    inst_en    ,
+    output                                   inst_resp  ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [`SRAM_ADDR_WD-1:0] inst_addr  ,
+    input  [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr  ,
 /* verilator lint_on UNUSEDSIGNAL */
-    output wire [`SRAM_DATA_WD-1:0] inst_rdata ,
-    input  wire                     data_en    ,
-    output wire                     data_resp  ,
-    input  wire [`SRAM_WEN_WD -1:0] data_wen   ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata ,
+    input                                    data_en    ,
+    output                                   data_resp  ,
+    input  [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen   ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [`SRAM_ADDR_WD-1:0] data_addr  ,
+    input  [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr  ,
 /* verilator lint_on UNUSEDSIGNAL */
-    input  wire [`SRAM_DATA_WD-1:0] data_wdata ,
-    output wire [`SRAM_ADDR_WD-1:0] data_rdata ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_rdata ,
 
     //axi_interface
-    output wire [ 3:0] arid    ,
-    output wire [31:0] araddr  ,
-    output wire [ 7:0] arlen   ,
-    output wire [ 2:0] arsize  ,
-    output wire [ 1:0] arburst ,
-    output wire [ 1:0] arlock  ,
-    output wire [ 3:0] arcache ,
-    output wire [ 2:0] arprot  ,
-    output wire        arvalid ,
-    input  wire        arready ,
+    output [ 3:0] arid    ,
+    output [31:0] araddr  ,
+    output [ 7:0] arlen   ,
+    output [ 2:0] arsize  ,
+    output [ 1:0] arburst ,
+    output [ 1:0] arlock  ,
+    output [ 3:0] arcache ,
+    output [ 2:0] arprot  ,
+    output        arvalid ,
+    input         arready ,
                                
-    input  wire [ 3:0] rid     ,
-    input  wire [63:0] rdata   ,
+    input  [ 3:0] rid     ,
+    input  [63:0] rdata   ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [ 1:0] rresp   ,
-    input  wire        rlast   ,
+    input  [ 1:0] rresp   ,
+    input         rlast   ,
 /* verilator lint_on UNUSEDSIGNAL */
-    input  wire        rvalid  ,
-    output wire        rready  ,
+    input         rvalid  ,
+    output        rready  ,
                                
-    output wire [ 3:0] awid    ,
-    output wire [31:0] awaddr  ,
-    output wire [ 7:0] awlen   ,
-    output wire [ 2:0] awsize  ,
-    output wire [ 1:0] awburst ,
-    output wire [ 1:0] awlock  ,
-    output wire [ 3:0] awcache ,
-    output wire [ 2:0] awprot  ,
-    output wire        awvalid ,
-    input  wire        awready ,
+    output [ 3:0] awid    ,
+    output [31:0] awaddr  ,
+    output [ 7:0] awlen   ,
+    output [ 2:0] awsize  ,
+    output [ 1:0] awburst ,
+    output [ 1:0] awlock  ,
+    output [ 3:0] awcache ,
+    output [ 2:0] awprot  ,
+    output        awvalid ,
+    input         awready ,
+                          
+    output [ 3:0] wid     ,
+    output [63:0] wdata   ,
+    output [ 7:0] wstrb   ,
+    output        wlast   ,
+    output        wvalid  ,
+    input         wready  ,
                                
-    output wire [ 3:0] wid     ,
-    output wire [63:0] wdata   ,
-    output wire [ 7:0] wstrb   ,
-    output wire        wlast   ,
-    output wire        wvalid  ,
-    input  wire        wready  ,
-                               
-    input  wire [ 3:0] bid     ,
+    input  [ 3:0] bid     ,
 /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [ 1:0] bresp   ,
+    input  [ 1:0] bresp   ,
 /* verilator lint_on UNUSEDSIGNAL */
-    input  wire        bvalid  ,
-    output wire        bready  
+    input         bvalid  ,
+    output        bready  
 );
     
 reg  [2:0] arbfsm_pre;
