@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-05-31 20:16
+// Last Modified : 2023-05-31 22:25
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -38,9 +38,6 @@ module ysyx_22041752_axiarbiter (
     output [ 7:0] arlen   ,
     output [ 2:0] arsize  ,
     output [ 1:0] arburst ,
-    output [ 1:0] arlock  ,
-    output [ 3:0] arcache ,
-    output [ 2:0] arprot  ,
     output        arvalid ,
     input         arready ,
                                
@@ -58,13 +55,9 @@ module ysyx_22041752_axiarbiter (
     output [ 7:0] awlen   ,
     output [ 2:0] awsize  ,
     output [ 1:0] awburst ,
-    output [ 1:0] awlock  ,
-    output [ 3:0] awcache ,
-    output [ 2:0] awprot  ,
     output        awvalid ,
     input         awready ,
                           
-    output [ 3:0] wid     ,
     output [63:0] wdata   ,
     output [ 7:0] wstrb   ,
     output        wlast   ,
@@ -113,9 +106,6 @@ assign araddr  = arbfsm_nxt==FETCH ? inst_addr[31:0] : data_addr[31:0];
 assign arlen   = 8'h1;
 assign arsize  = 3'h7;
 assign arburst = 2'b01;
-assign arlock  = 0;
-assign arcache = 0;
-assign arprot  = 0;
 assign arvalid = arbfsm_pre==FETCH || arbfsm_pre==LOAD;
 
 assign rready  = arbfsm_pre==WAIT_FETCH || arbfsm_pre==WAIT_LOAD;
@@ -125,12 +115,8 @@ assign awaddr  = data_addr[31:0];
 assign awlen   = 8'h1;
 assign awsize  = 3'h7;
 assign awburst = 2'b01;
-assign awlock  = 0;
-assign awcache = 0;
-assign awprot  = 0;
 assign awvalid = arbfsm_pre==STORE;
 
-assign wid     = 4'h1;
 assign wdata   = data_wdata;
 assign wstrb   = data_wen;
 assign wlast   = 1'b1;
