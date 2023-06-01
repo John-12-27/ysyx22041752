@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-05-31 22:25
+// Last Modified : 2023-06-01 19:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -135,8 +135,68 @@ module ysyx_22041752(
     input  [127:0] io_sram7_rdata 
 );
    
-wire              int_t;
-wire              flush     ;
+assign io_slave_awready = 1'b0;
+assign io_slave_wready  = 1'b0;
+assign io_slave_bvalid  = 1'b0;
+assign io_slave_bid     = 4'b0;
+assign io_slave_bresp   = 2'b0;
+assign io_slave_arready = 1'b0;
+assign io_slave_rvalid  = 1'b0;
+assign io_slave_rid     = 4'b0;
+assign io_slave_rdata   = 64'b0;
+assign io_slave_rresp   = 2'b0;
+assign io_slave_rlast   = 1'b0;
+               
+assign io_sram0_addr    = 6'b0;
+assign io_sram0_cen     = 1'b0; 
+assign io_sram0_wen     = 1'b0; 
+assign io_sram0_wmask   = 128'b0; 
+assign io_sram0_wdata   = 128'b0; 
+
+assign io_sram1_addr    = 6'b0;
+assign io_sram1_cen     = 1'b0; 
+assign io_sram1_wen     = 1'b0; 
+assign io_sram1_wmask   = 128'b0; 
+assign io_sram1_wdata   = 128'b0; 
+
+assign io_sram2_addr    = 6'b0;
+assign io_sram2_cen     = 1'b0; 
+assign io_sram2_wen     = 1'b0; 
+assign io_sram2_wmask   = 128'b0; 
+assign io_sram2_wdata   = 128'b0; 
+
+assign io_sram3_addr    = 6'b0;
+assign io_sram3_cen     = 1'b0; 
+assign io_sram3_wen     = 1'b0; 
+assign io_sram3_wmask   = 128'b0; 
+assign io_sram3_wdata   = 128'b0; 
+
+assign io_sram4_addr    = 6'b0;
+assign io_sram4_cen     = 1'b0; 
+assign io_sram4_wen     = 1'b0; 
+assign io_sram4_wmask   = 128'b0; 
+assign io_sram4_wdata   = 128'b0; 
+
+assign io_sram5_addr    = 6'b0;
+assign io_sram5_cen     = 1'b0; 
+assign io_sram5_wen     = 1'b0; 
+assign io_sram5_wmask   = 128'b0; 
+assign io_sram5_wdata   = 128'b0; 
+
+assign io_sram6_addr    = 6'b0;
+assign io_sram6_cen     = 1'b0; 
+assign io_sram6_wen     = 1'b0; 
+assign io_sram6_wmask   = 128'b0; 
+assign io_sram6_wdata   = 128'b0; 
+
+assign io_sram7_addr    = 6'b0;
+assign io_sram7_cen     = 1'b0; 
+assign io_sram7_wen     = 1'b0; 
+assign io_sram7_wmask   = 128'b0; 
+assign io_sram7_wdata   = 128'b0; 
+
+wire         int_t;
+wire         flush;
 wire [`ysyx_22041752_PC_WD-1:0] flush_pc  ;
 
 wire         ds_allowin;
@@ -159,14 +219,14 @@ wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus;
 
 wire clk = clock;
 
-// inst sram interface
-wire                     inst_en   ;
-wire                     inst_ready;
+// fetch insts interface
+wire                                   inst_en   ;
+wire                                   inst_ready;
 wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata;
-// data sram interface
-wire                     data_en   ;
-wire                     data_ready;
+// ld/store interface
+wire                                   data_en   ;
+wire                                   data_ready;
 wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
 wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;

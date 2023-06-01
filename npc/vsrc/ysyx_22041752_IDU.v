@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-05-31 20:46
+// Last Modified : 2023-06-01 20:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -479,6 +479,7 @@ assign id_mem_bytes = (inst_lb || inst_lbu || inst_sb) ? 2'b00 :
 //read from regfile
 ysyx_22041752_rf U_RF_0(
     .clk        ( clk      ),
+    .reset      ( reset    ),
     .addr_r1    ( rs1      ),
     .addr_r2    ( rs2      ),
     .data_r1    ( data_r1  ),

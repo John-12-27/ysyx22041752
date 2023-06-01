@@ -1,7 +1,7 @@
     
 `ifndef _MY_CPU_H_
 `define _MY_CPU_H_
-    `define ysyx_22041752_SRAM_ADDR_WD      64
+    `define ysyx_22041752_SRAM_ADDR_WD      32
     `define ysyx_22041752_SRAM_DATA_WD      64
     `define ysyx_22041752_SRAM_WEN_WD        8
     `define ysyx_22041752_RF_ADDR_WD         5
@@ -11,7 +11,7 @@
 
     `define ysyx_22041752_INST_WD           32
     `define ysyx_22041752_PC_WD             64
-    `define ysyx_22041752_RESET_PC_VALUE    `ysyx_22041752_PC_WD'h7fff_fffc
+    `define ysyx_22041752_RESET_PC_VALUE    `ysyx_22041752_PC_WD'h2fff_fffc
 
     `define ysyx_22041752_BR_BUS_WD         65
     `define ysyx_22041752_FS_TO_DS_BUS_WD   96

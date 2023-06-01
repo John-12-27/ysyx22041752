@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-05-31 21:01
+// Last Modified : 2023-06-01 20:32
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -80,7 +80,7 @@ always @(posedge clk) begin
     end
 end
 
-assign inst_en    = to_fs_valid && fs_allowin;
+assign inst_en    = ~reset && fs_allowin;
 assign inst_addr  = nextpc;
 assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
 
