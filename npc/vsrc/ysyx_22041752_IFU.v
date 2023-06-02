@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-01 20:32
+// Last Modified : 2023-06-02 15:52
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,6 +29,7 @@ module ysyx_22041752_IFU (
 /* verilator lint_off UNUSEDSIGNAL */
     input  [`ysyx_22041752_SRAM_DATA_WD-1:0]     inst_rdata     ,
 /* verilator lint_on UNUSEDSIGNAL */
+    input                                        inst_valid     ,
 
     input                                        flush          , 
     input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       
@@ -59,7 +60,16 @@ assign nextpc       = flush    ? flush_pc  :
                                  seq_pc    ; 
 
 // IF stage
-assign fs_ready_go    = 1'b1;
+reg inst_en_r;
+always @(posedge clk) begin
+    if (reset) begin
+        inst_en_r <= 0;
+    end
+    else begin
+        inst_en_r <= inst_en;
+    end
+end
+assign fs_ready_go    = inst_en_r ? inst_valid : 1'b1;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
 assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~br_taken && ~flush;
 always @(posedge clk) begin

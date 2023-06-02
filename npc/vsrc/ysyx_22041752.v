@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-01 19:54
+// Last Modified : 2023-06-02 17:43
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -224,6 +224,7 @@ wire                                   inst_en   ;
 wire                                   inst_ready;
 wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata;
+wire                                   inst_valid;
 // ld/store interface
 wire                                   data_en   ;
 wire                                   data_ready;
@@ -231,6 +232,7 @@ wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
 wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata;
+wire                                   data_valid;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -248,6 +250,7 @@ ysyx_22041752_IFU U_IFU_0(
     .inst_ready     (inst_ready     ),
     .inst_addr      (inst_addr      ),
     .inst_rdata     (inst_rdata     ),
+    .inst_valid     (inst_valid     ),
 
     .flush          (flush          ),
     .flush_pc       (flush_pc       )
@@ -296,7 +299,7 @@ wire                                   clint_en    = data_en;
 wire                                   clint_wen   = |data_wen ;
 wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] clint_rdata;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_rdata;
 wire                                   clint_rdat_v;
 
 ysyx_22041752_clint U_YSYX_22041752_CLINT_0(
@@ -321,7 +324,8 @@ ysyx_22041752_MEU U_MEU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
-    .data_sram_rdata( clint_rdat_v ? clint_rdata : data_rdata ),
+    .data_rdata     ( clint_rdat_v ? clint_rdata : data_rdata ),
+    .rdata_valid    ( clint_rdat_v ? 1'b1        : data_valid ),
     .ms_forward_bus ( ms_forward_bus  )
 );
 
@@ -340,15 +344,17 @@ ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .inst_en                        ( inst_en                       ),
-    .inst_resp                      ( inst_ready                    ),
+    .inst_ready                     ( inst_ready                    ),
     .inst_addr                      ( inst_addr                     ),
     .inst_rdata                     ( inst_rdata                    ),
+    .inst_valid                     ( inst_valid                    ),
     .data_en                        ( data_en                       ),
-    .data_resp                      ( data_ready                    ),
+    .data_ready                     ( data_ready                    ),
     .data_wen                       ( data_wen                      ),
     .data_addr                      ( data_addr                     ),
     .data_wdata                     ( data_wdata                    ),
     .data_rdata                     ( data_rdata                    ),
+    .data_valid                     ( data_valid                    ),
     .arid                           ( io_master_arid                ),
     .araddr                         ( io_master_araddr              ),
     .arlen                          ( io_master_arlen               ),

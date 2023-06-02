@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-31 20:41
+// Last Modified : 2023-06-02 17:43
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -216,17 +216,17 @@ assign csr_addr  = (ecall || int_t_o) && (expfsm_pre==IDLE)    ? `ysyx_22041752_
                    expfsm_pre==W_MEPC    || mret               ? `ysyx_22041752_CSR_ADDR_MEPC   :
                    expfsm_pre==W_MCAUSE                        ? `ysyx_22041752_CSR_ADDR_MCAUSE :
                                                                  rscsr            ;
-assign csr_wdata = expfsm_pre == W_MEPC   ? es_pc :
+assign csr_wdata = expfsm_pre == W_MEPC   ? {32'b0, es_pc} :
                    expfsm_pre == W_MCAUSE ? int_t_o ? 64'h8000_0000_0000_0007: 64'hb :
                    {64{csrrs}} & (rs1_value | csr_rdata) |
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
 assign flush    = (ecall||mret||int_t_o) && es_valid;
-assign flush_pc = csr_rdata;
+assign flush_pc = csr_rdata[31:0];
 
-assign alu_src1 = src_pc   ? es_pc : 
-                  src_0    ? 64'd0 :
+assign alu_src1 = src_pc   ? {32'b0, es_pc} : 
+                  src_0    ? 64'd0          :
                   res_sext && (op_sll || op_srl || op_sra) ? {32'b0,rs1_value[31:0]} :
                   rs1_value;
   
@@ -240,6 +240,9 @@ assign alu_src2 = src_csr   ? csr_rdata :
                   (op_sll || op_srl || op_sra) ? {58'b0,rs2_value[5:0]} :
                   rs2_value;
 
+/* verilator lint_off UNUSEDSIGNAL */
+wire [63:0] mem_addr;
+/* verilator lint_on UNUSEDSIGNAL */
 ysyx_22041752_alu U_ALU_0(
     .clk             ( clk            ),
     .reset           ( reset          ),
@@ -265,11 +268,12 @@ ysyx_22041752_alu U_ALU_0(
     .alu_src1        ( alu_src1       ),
     .alu_src2        ( alu_src2       ),
     .alu_result      ( alu_result     ),
-    .mem_result      ( data_addr      ),
+    .mem_result      ( mem_addr       ),
     .div_out_valid   ( div_out_valid  ),
     .mul_out_valid   ( mul_out_valid  )
 );
 
+assign data_addr= mem_addr[31:0];
 assign data_en  = (es_mem_re | es_mem_we) & es_valid;
 assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                   es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :

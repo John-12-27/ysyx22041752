@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-05-31 20:50
+// Last Modified : 2023-06-02 15:48
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,7 +26,8 @@ module ysyx_22041752_MEU (
     output                                       ms_to_ws_valid,
     output [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus  ,
     
-    input  [`ysyx_22041752_SRAM_DATA_WD    -1:0] data_sram_rdata,
+    input  [`ysyx_22041752_SRAM_DATA_WD    -1:0] data_rdata    ,
+    input                                        rdata_valid   ,
 	
 	output [`ysyx_22041752_FORWARD_BUS_WD  -1:0] ms_forward_bus
 );
@@ -64,7 +65,7 @@ assign ms_to_ws_bus = {ms_rf_we       ,
                        ms_pc             
                       };
 
-assign ms_ready_go    = 1'b1;
+assign ms_ready_go    = ms_mem_re ? rdata_valid : 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin
@@ -84,13 +85,13 @@ always @(posedge clk) begin
     end
 end
 
-assign mem_result = ms_mem_bytes==2'b00 && res_sext ? {{56{data_sram_rdata[ 7]}}, data_sram_rdata[ 7:0]} : 
-                    ms_mem_bytes==2'b00 && res_zext ? {{56{               1'b0}}, data_sram_rdata[ 7:0]} :
-                    ms_mem_bytes==2'b01 && res_sext ? {{48{data_sram_rdata[15]}}, data_sram_rdata[15:0]} :
-                    ms_mem_bytes==2'b01 && res_zext ? {{48{               1'b0}}, data_sram_rdata[15:0]} :
-                    ms_mem_bytes==2'b10 && res_sext ? {{32{data_sram_rdata[31]}}, data_sram_rdata[31:0]} :
-                    ms_mem_bytes==2'b10 && res_zext ? {{32{               1'b0}}, data_sram_rdata[31:0]} :
-                                                                                  data_sram_rdata        ;
+assign mem_result = ms_mem_bytes==2'b00 && res_sext ? {{56{data_rdata[ 7]}}, data_rdata[ 7:0]} : 
+                    ms_mem_bytes==2'b00 && res_zext ? {{56{          1'b0}}, data_rdata[ 7:0]} :
+                    ms_mem_bytes==2'b01 && res_sext ? {{48{data_rdata[15]}}, data_rdata[15:0]} :
+                    ms_mem_bytes==2'b01 && res_zext ? {{48{          1'b0}}, data_rdata[15:0]} :
+                    ms_mem_bytes==2'b10 && res_sext ? {{32{data_rdata[31]}}, data_rdata[31:0]} :
+                    ms_mem_bytes==2'b10 && res_zext ? {{32{          1'b0}}, data_rdata[31:0]} :
+                                                                             data_rdata        ;
 assign ms_final_result = ms_mem_re ? mem_result : alu_result;
 						 
 //forward_bus
