@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_mul.v
 // Author        : Cw
 // Created On    : 2022-11-29 16:07
-// Last Modified : 2023-05-31 20:55
+// Last Modified : 2023-06-02 21:41
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -75,7 +75,8 @@ always @(*) begin
     end
 end
 
-ysyx_22041752_aser U_YSYX_22041752_ASER_0(
+ysyx_22041752_aser #(.WIDTH (64))
+U_YSYX_22041752_ASER_0(
     .a                              ( pdt_r[2*`ysyx_22041752_RF_DATA_WD-1:`ysyx_22041752_RF_DATA_WD] ), 
     .b                              ( multiplicand                       ),
     .sub                            ( sub_en                             ),
