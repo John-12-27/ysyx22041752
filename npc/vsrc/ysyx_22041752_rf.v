@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_regfiles.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:21
-// Last Modified : 2023-05-31 20:57
+// Last Modified : 2023-06-03 20:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -22,6 +22,11 @@ module ysyx_22041752_rf (
     input  [`ysyx_22041752_RF_ADDR_WD-1 : 0] addr_w ,
     input                                    we     , 
     input  [`ysyx_22041752_RF_DATA_WD-1 : 0] data_w 
+
+`ifdef DPI_C
+        ,
+    output [`ysyx_22041752_RF_DATA_WD-1 : 0] dpi_regs [`ysyx_22041752_RF_NUM-1 : 0]
+`endif
 );
 
 reg [`ysyx_22041752_RF_DATA_WD-1 : 0] regs [`ysyx_22041752_RF_NUM-1 : 0];
@@ -47,6 +52,15 @@ generate
         
     end
 endgenerate
+
+`ifdef DPI_C
+generate
+    for(i = 0; i < `ysyx_22041752_RF_NUM; i++) begin
+        :DPI_C_REGS
+        assign dpi_regs[i] = regs[i];
+    end
+endgenerate
+`endif
 
 endmodule
 

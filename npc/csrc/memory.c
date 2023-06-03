@@ -192,11 +192,12 @@ long load_img(char *img)
 
 word_t vaddr_ifetch(paddr_t addr, uint8_t len)
 {
+    printf("addr=%lx\n", addr);
     switch(len)
     {
         case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);
         case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);
-        case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);
+        case 4:  printf("inst=%x\n", *(uint32_t *)(mem + addr - MBASEADDR));return *(uint32_t *)(mem + addr - MBASEADDR);
         case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
         default: assert(0);
     }

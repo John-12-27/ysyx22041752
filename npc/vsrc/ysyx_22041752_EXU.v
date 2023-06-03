@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-03 17:51
+// Last Modified : 2023-06-03 20:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -37,6 +37,15 @@ module ysyx_22041752_EXU(
     output                                         flush         ,
     output [`ysyx_22041752_PC_WD-1:0]              flush_pc      ,
     input                                          int_t_i        
+
+`ifdef DPI_C
+        ,
+    output [63:0]                    dpi_csrs [3:0] ,
+    output                           es_exp         ,
+    output                           es_mret        ,
+    output [`ysyx_22041752_PC_WD-1:0]debug_es_pc
+`endif
+
 );
 
 reg         es_valid      ;
@@ -210,6 +219,10 @@ ysyx_22041752_csr U_YSYX_22041752_CSR_0(
     .rdata                          ( csr_rdata                     ),
     .int_t_i                        ( int_t_i                       ),
     .int_t_o                        ( int_t_o                       )
+`ifdef DPI_C
+        ,
+    .dpi_csrs                       ( dpi_csrs                      )
+`endif
 );
 assign csr_we    = es_csr_we || expfsm_pre==W_MEPC || expfsm_pre==W_MCAUSE;
 
@@ -293,5 +306,10 @@ assign mem_read_after_write = (es_mem_re) && es_valid;
 assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {mem_read_after_write,es_forward_valid,alu_result,rd};
 
+`ifdef DPI_C
+assign es_exp = ecall && flush;
+assign es_mret  = mret && flush;
+assign debug_es_pc = es_pc;
+`endif
 endmodule
 

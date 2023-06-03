@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-03 17:54
+// Last Modified : 2023-06-03 20:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -33,6 +33,10 @@ module ysyx_22041752_IFU (
 
     input                                        flush          , 
     input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       
+`ifdef DPI_C
+    ,
+    output [`ysyx_22041752_PC_WD-1:0]       debug_fs_pc
+`endif
 );
 
 reg         fs_valid;
@@ -94,5 +98,8 @@ assign inst_en    = ~reset && fs_allowin;
 assign inst_addr  = nextpc;
 assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
 
+`ifdef DPI_C
+assign debug_fs_pc = fs_pc;
+`endif
 endmodule
 

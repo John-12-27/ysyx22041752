@@ -229,7 +229,7 @@ void exec(uint64_t n, bool batch)
 {
     static uint64_t boot_time = get_time_internal();
     static uint64_t cycle_count = 0;
-    svSetScope(svGetScopeFromName("TOP.top.u_dpi_c"));
+    svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
     switch (npc_state.state) 
     {
         case NPC_END: 

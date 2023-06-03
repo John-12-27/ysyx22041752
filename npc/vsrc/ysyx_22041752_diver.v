@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_diver.v
 // Author        : Cw
 // Created On    : 2022-12-14 14:01
-// Last Modified : 2023-06-03 18:13
+// Last Modified : 2023-06-03 20:30
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,9 +15,9 @@
 
 module ysyx_22041752_diver (
 `ifndef DPI_C
-    input  wire                   clk        ,
-    input  wire                   reset      ,
-    input  wire                   flush      ,
+    input                                       clk        ,
+    input                                       reset      ,
+    input                                       flush      ,
 `endif
     input  [`ysyx_22041752_RF_DATA_WD-1:0]      dividend   ,
     input  [`ysyx_22041752_RF_DATA_WD-1:0]      divisor    ,

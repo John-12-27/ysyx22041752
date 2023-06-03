@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-02 17:43
+// Last Modified : 2023-06-03 21:43
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,8 +15,6 @@
 module ysyx_22041752(
     input         clock,
     input         reset,
-
-    input          io_interrupt      ,
 
     input          io_master_awready ,
     output         io_master_awvalid ,
@@ -46,155 +44,9 @@ module ysyx_22041752(
     input  [3:0]   io_master_rid     ,
     input  [63:0]  io_master_rdata   ,
     input  [1:0]   io_master_rresp   ,
-    input          io_master_rlast   ,
-
-    output         io_slave_awready ,
-    input          io_slave_awvalid ,
-    input  [3:0]   io_slave_awid    ,
-    input  [31:0]  io_slave_awaddr  ,
-    input  [7:0]   io_slave_awlen   ,
-    input  [2:0]   io_slave_awsize  ,
-    input  [1:0]   io_slave_awburst ,
-    output         io_slave_wready  ,
-    input          io_slave_wvalid  ,
-    input  [63:0]  io_slave_wdata   ,
-    input  [7:0]   io_slave_wstrb   ,
-    input          io_slave_wlast   ,
-    input          io_slave_bready  ,
-    output         io_slave_bvalid  ,
-    output [3:0]   io_slave_bid     ,
-    output [1:0]   io_slave_bresp   ,
-    output         io_slave_arready ,
-    input          io_slave_arvalid ,
-    input  [3:0]   io_slave_arid    ,
-    input  [31:0]  io_slave_araddr  ,
-    input  [7:0]   io_slave_arlen   ,
-    input  [2:0]   io_slave_arsize  ,
-    input  [1:0]   io_slave_arburst ,
-    input          io_slave_rready  ,
-    output         io_slave_rvalid  ,
-    output [3:0]   io_slave_rid     ,
-    output [63:0]  io_slave_rdata   ,
-    output [1:0]   io_slave_rresp   ,
-    output         io_slave_rlast   ,
-
-    output [5:0]   io_sram0_addr  ,
-    output         io_sram0_cen   ,
-    output         io_sram0_wen   ,
-    output [127:0] io_sram0_wmask ,
-    output [127:0] io_sram0_wdata ,
-    input  [127:0] io_sram0_rdata ,
-
-    output [5:0]   io_sram1_addr  ,
-    output         io_sram1_cen   ,
-    output         io_sram1_wen   ,
-    output [127:0] io_sram1_wmask ,
-    output [127:0] io_sram1_wdata ,
-    input  [127:0] io_sram1_rdata ,
-
-    output [5:0]   io_sram2_addr  ,
-    output         io_sram2_cen   ,
-    output         io_sram2_wen   ,
-    output [127:0] io_sram2_wmask ,
-    output [127:0] io_sram2_wdata ,
-    input  [127:0] io_sram2_rdata ,
-
-    output [5:0]   io_sram3_addr  ,
-    output         io_sram3_cen   ,
-    output         io_sram3_wen   ,
-    output [127:0] io_sram3_wmask ,
-    output [127:0] io_sram3_wdata ,
-    input  [127:0] io_sram3_rdata ,
-
-    output [5:0]   io_sram4_addr  ,
-    output         io_sram4_cen   ,
-    output         io_sram4_wen   ,
-    output [127:0] io_sram4_wmask ,
-    output [127:0] io_sram4_wdata ,
-    input  [127:0] io_sram4_rdata ,
-
-    output [5:0]   io_sram5_addr  ,
-    output         io_sram5_cen   ,
-    output         io_sram5_wen   ,
-    output [127:0] io_sram5_wmask ,
-    output [127:0] io_sram5_wdata ,
-    input  [127:0] io_sram5_rdata ,
-
-    output [5:0]   io_sram6_addr  ,
-    output         io_sram6_cen   ,
-    output         io_sram6_wen   ,
-    output [127:0] io_sram6_wmask ,
-    output [127:0] io_sram6_wdata ,
-    input  [127:0] io_sram6_rdata ,
-
-    output [5:0]   io_sram7_addr  ,
-    output         io_sram7_cen   ,
-    output         io_sram7_wen   ,
-    output [127:0] io_sram7_wmask ,
-    output [127:0] io_sram7_wdata ,
-    input  [127:0] io_sram7_rdata 
+    input          io_master_rlast   
 );
    
-assign io_slave_awready = 1'b0;
-assign io_slave_wready  = 1'b0;
-assign io_slave_bvalid  = 1'b0;
-assign io_slave_bid     = 4'b0;
-assign io_slave_bresp   = 2'b0;
-assign io_slave_arready = 1'b0;
-assign io_slave_rvalid  = 1'b0;
-assign io_slave_rid     = 4'b0;
-assign io_slave_rdata   = 64'b0;
-assign io_slave_rresp   = 2'b0;
-assign io_slave_rlast   = 1'b0;
-               
-assign io_sram0_addr    = 6'b0;
-assign io_sram0_cen     = 1'b0; 
-assign io_sram0_wen     = 1'b0; 
-assign io_sram0_wmask   = 128'b0; 
-assign io_sram0_wdata   = 128'b0; 
-
-assign io_sram1_addr    = 6'b0;
-assign io_sram1_cen     = 1'b0; 
-assign io_sram1_wen     = 1'b0; 
-assign io_sram1_wmask   = 128'b0; 
-assign io_sram1_wdata   = 128'b0; 
-
-assign io_sram2_addr    = 6'b0;
-assign io_sram2_cen     = 1'b0; 
-assign io_sram2_wen     = 1'b0; 
-assign io_sram2_wmask   = 128'b0; 
-assign io_sram2_wdata   = 128'b0; 
-
-assign io_sram3_addr    = 6'b0;
-assign io_sram3_cen     = 1'b0; 
-assign io_sram3_wen     = 1'b0; 
-assign io_sram3_wmask   = 128'b0; 
-assign io_sram3_wdata   = 128'b0; 
-
-assign io_sram4_addr    = 6'b0;
-assign io_sram4_cen     = 1'b0; 
-assign io_sram4_wen     = 1'b0; 
-assign io_sram4_wmask   = 128'b0; 
-assign io_sram4_wdata   = 128'b0; 
-
-assign io_sram5_addr    = 6'b0;
-assign io_sram5_cen     = 1'b0; 
-assign io_sram5_wen     = 1'b0; 
-assign io_sram5_wmask   = 128'b0; 
-assign io_sram5_wdata   = 128'b0; 
-
-assign io_sram6_addr    = 6'b0;
-assign io_sram6_cen     = 1'b0; 
-assign io_sram6_wen     = 1'b0; 
-assign io_sram6_wmask   = 128'b0; 
-assign io_sram6_wdata   = 128'b0; 
-
-assign io_sram7_addr    = 6'b0;
-assign io_sram7_cen     = 1'b0; 
-assign io_sram7_wen     = 1'b0; 
-assign io_sram7_wmask   = 128'b0; 
-assign io_sram7_wdata   = 128'b0; 
-
 wire         int_t;
 wire         flush;
 wire [`ysyx_22041752_PC_WD-1:0] flush_pc  ;
@@ -216,6 +68,23 @@ wire [`ysyx_22041752_BR_BUS_WD       -1:0]   br_bus;
 wire [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus;
 wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus;
 wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus;
+
+`ifdef DPI_C
+// trace debug interface
+wire [`ysyx_22041752_PC_WD       -1:0] debug_fs_pc      ;
+wire [`ysyx_22041752_PC_WD       -1:0] debug_wb_pc      ;
+wire [`ysyx_22041752_PC_WD       -1:0] debug_es_pc      ;
+wire                                   debug_es_exp     ;
+wire                                   debug_es_mret    ;
+wire                                   debug_ws_valid   ;
+wire [`ysyx_22041752_INST_WD     -1:0] debug_ds_inst    ;
+wire                                   debug_wb_rf_wen  ;
+wire [`ysyx_22041752_RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
+wire [`ysyx_22041752_RF_DATA_WD  -1:0] debug_wb_rf_wdata;
+wire [`ysyx_22041752_RF_DATA_WD  -1:0] dpi_regs [`ysyx_22041752_RF_NUM-1:0];
+wire [`ysyx_22041752_RF_DATA_WD  -1:0] dpi_csrs [3:0];
+wire [                            0:0] stop;
+`endif
 
 wire clk = clock;
 
@@ -254,6 +123,10 @@ ysyx_22041752_IFU U_IFU_0(
 
     .flush          (flush          ),
     .flush_pc       (flush_pc       )
+`ifdef DPI_C
+    ,
+    .debug_fs_pc    (debug_fs_pc    )
+`endif
 );
 
 // ID stage
@@ -272,6 +145,12 @@ ysyx_22041752_IDU U_IDU_0(
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
     .flush          ( flush          )
+`ifdef DPI_C
+    ,
+    .dpi_regs       ( dpi_regs       ),
+    .stop           ( stop           ),
+    .debug_ds_inst  ( debug_ds_inst  ) 
+`endif
 );
 
 // EXE stage
@@ -293,6 +172,13 @@ ysyx_22041752_EXU U_EXU_0(
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_t_i        ( int_t           )
+`ifdef DPI_C
+    ,
+    .dpi_csrs       ( dpi_csrs        ),
+    .es_exp         ( debug_es_exp    ),
+    .es_mret        ( debug_es_mret   ),
+    .debug_es_pc    ( debug_es_pc     )
+`endif
 );
 
 wire                                   clint_en    = data_en;
@@ -338,6 +224,14 @@ ysyx_22041752_WBU U_WBU_0(
     .ms_to_ws_bus      ( ms_to_ws_bus      ),
     .ws_to_rf_bus      ( ws_to_rf_bus      ),
     .ws_forward_bus    ( ws_forward_bus    )
+`ifdef DPI_C
+    ,
+    .debug_ws_valid    ( debug_ws_valid    ),
+    .debug_wb_pc	   ( debug_wb_pc	   ),
+    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
+    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
+    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
+`endif
 );
 
 ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
@@ -385,5 +279,24 @@ ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
     .bvalid                         ( io_master_bvalid              ),
     .bready                         ( io_master_bready              )
 );
+
+`ifdef DPI_C
+dpi_c u_dpi_c(
+    .clk               ( clk               ),
+    .stop              ( stop              ),
+    .ws_valid          ( debug_ws_valid    ),
+    .dpi_regs          ( dpi_regs          ),
+    .dpi_csrs          ( dpi_csrs          ),
+    .debug_wb_pc       ( {32'd0,debug_wb_pc}       ),
+    .debug_es_pc       ( {32'd0,debug_es_pc}       ),
+    .debug_es_exp      ( debug_es_exp      ),
+    .debug_es_mret     ( debug_es_mret     ),
+    .debug_ds_inst     ( debug_ds_inst     ),
+    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
+    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
+    .debug_wb_rf_wdata ( debug_wb_rf_wdata ),
+    .debug_fs_pc       ( {32'd0,debug_fs_pc}       )
+);
+`endif
 
 endmodule

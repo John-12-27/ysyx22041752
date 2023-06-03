@@ -12,7 +12,7 @@
 
     `define ysyx_22041752_INST_WD           32
     `define ysyx_22041752_PC_WD             32
-    `define ysyx_22041752_RESET_PC_VALUE    `ysyx_22041752_PC_WD'h2fff_fffc
+    `define ysyx_22041752_RESET_PC_VALUE    `ysyx_22041752_PC_WD'h7fff_fffc
 
     `define ysyx_22041752_BR_BUS_WD         33
     `define ysyx_22041752_FS_TO_DS_BUS_WD   64

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_mul.v
 // Author        : Cw
 // Created On    : 2022-11-29 16:07
-// Last Modified : 2023-06-03 18:16
+// Last Modified : 2023-06-03 20:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,9 +15,9 @@
 
 module ysyx_22041752_mul(
 `ifndef DPI_C
-    input  wire                    clk           ,
-    input  wire                    reset         ,
-    input  wire                    flush         ,
+    input                          clk           ,
+    input                          reset         ,
+    input                          flush         ,
 `endif
     input                          mul_u         ,
     input                          mul_su        ,

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-06-03 18:08
+// Last Modified : 2023-06-03 20:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,34 +15,34 @@
 
 module ysyx_22041752_alu(
 `ifndef DPI_C
-    input  wire        clk         ,
-    input  wire        reset       , 
-    input  wire        flush       ,
+    input         clk         ,
+    input         reset       , 
+    input         flush       ,
 `endif
-    input  wire        mul_u       ,
-    input  wire        mul_su      ,
-    input  wire        div_u       , 
-    input  wire        mul_h       ,
-    input  wire        op_mul      ,     
-    input  wire        op_div      ,
-    input  wire        op_rem      ,
-    input  wire        op_add      ,
-    input  wire        op_sub      ,
-    input  wire        op_slt      ,
-    input  wire        op_sltu     ,
-    input  wire        op_and      ,
-    input  wire        op_or       ,
-    input  wire        op_xor      ,
-    input  wire        op_sll      ,
-    input  wire        op_srl      ,
-    input  wire        op_sra      ,
-    input  wire        res_sext    ,
-    input  wire [63:0] alu_src1    ,
-    input  wire [63:0] alu_src2    ,
-    output wire [63:0] alu_result  ,
-    output wire [63:0] mem_result  ,
-    output wire        div_out_valid,
-    output wire        mul_out_valid
+    input         mul_u       ,
+    input         mul_su      ,
+    input         div_u       , 
+    input         mul_h       ,
+    input         op_mul      ,     
+    input         op_div      ,
+    input         op_rem      ,
+    input         op_add      ,
+    input         op_sub      ,
+    input         op_slt      ,
+    input         op_sltu     ,
+    input         op_and      ,
+    input         op_or       ,
+    input         op_xor      ,
+    input         op_sll      ,
+    input         op_srl      ,
+    input         op_sra      ,
+    input         res_sext    ,
+    input  [63:0] alu_src1    ,
+    input  [63:0] alu_src2    ,
+    output [63:0] alu_result  ,
+    output [63:0] mem_result  ,
+    output        div_out_valid,
+    output        mul_out_valid
 );
 
 wire [63:0] mul_result;

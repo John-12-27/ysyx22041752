@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_WBU.v
 // Author        : Cw
 // Created On    : 2022-11-21 16:21
-// Last Modified : 2023-05-31 21:01
+// Last Modified : 2023-06-03 21:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -25,6 +25,14 @@ module ysyx_22041752_WBU (
     output [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]  ws_to_rf_bus  ,
    
 	output [`ysyx_22041752_FORWARD_BUS_WD  -1:0]  ws_forward_bus
+`ifdef DPI_C
+    ,
+    output wire [`ysyx_22041752_PC_WD           -1:0]  debug_wb_pc   ,
+    output wire                                        debug_ws_valid,
+    output wire                                        debug_wb_rf_wen ,
+    output wire [`ysyx_22041752_RF_ADDR_WD      -1:0]  debug_wb_rf_wnum,
+    output wire [`ysyx_22041752_RF_DATA_WD      -1:0]  debug_wb_rf_wdata
+`endif
 );
 
 reg         ws_valid;
@@ -78,6 +86,14 @@ assign rf_wdata = ws_r;
 wire ws_forward_valid;
 assign ws_forward_valid = rf_we;
 assign ws_forward_bus   = {ws_forward_valid,ws_r,rd};
+
+`ifdef DPI_C
+assign debug_wb_pc       = ws_pc;
+assign debug_ws_valid    = ws_valid;
+assign debug_wb_rf_wen   = rf_we;
+assign debug_wb_rf_wnum  = rd;
+assign debug_wb_rf_wdata = ws_r;
+`endif
 
 endmodule
 

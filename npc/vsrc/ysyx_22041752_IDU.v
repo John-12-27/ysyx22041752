@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-06-03 17:53
+// Last Modified : 2023-06-03 20:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -34,6 +34,14 @@ module ysyx_22041752_IDU (
 	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus,
 
     input                                          flush         
+
+`ifdef DPI_C
+        ,
+    //used to dpi-c debug
+    output [`ysyx_22041752_RF_DATA_WD     -1:0]    dpi_regs [`ysyx_22041752_RF_NUM-1:0],
+    output [                 0:0]    stop,
+    output [`ysyx_22041752_INST_WD        -1:0]    debug_ds_inst
+`endif
 );
 
 reg  ds_valid   ;
@@ -487,6 +495,11 @@ ysyx_22041752_rf U_RF_0(
     .addr_w     ( rf_waddr ),
     .we         ( rf_we    ),
     .data_w     ( rf_wdata )
+`ifdef DPI_C
+        ,
+    .dpi_regs   ( dpi_regs )
+`endif
+
 );
 
 wire rs1_is_not_zero;
@@ -562,4 +575,8 @@ U_ASER_1(
 );
 /* verilator lint_on PINCONNECTEMPTY */
 
+`ifdef DPI_C
+assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
+assign debug_ds_inst = ds_inst;
+`endif
 endmodule
