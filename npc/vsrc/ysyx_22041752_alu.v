@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-06-03 16:36
+// Last Modified : 2023-06-03 18:08
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -43,7 +43,6 @@ module ysyx_22041752_alu(
     output wire [63:0] mem_result  ,
     output wire        div_out_valid,
     output wire        mul_out_valid
-    //output wire [63:0] mul_result
 );
 
 wire [63:0] mul_result;
@@ -58,6 +57,7 @@ wire [ 63:0] r_sll;
 wire [ 63:0] r_srl; 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [127:0] r_sra; 
+/* verilator lint_on UNUSEDSIGNAL */
 
 // 64-bit adder
 wire [63:0] adder_a;
@@ -69,7 +69,8 @@ wire        adder_cout;
 assign adder_a   = alu_src1;
 assign adder_b   = alu_src2;
 assign adder_cin = op_sub | op_slt | op_sltu;
-ysyx_22041752_aser U_ASER_0(
+ysyx_22041752_aser #(.WIDTH (64))
+U_ASER_0(
     .a          ( adder_a      ),
     .b          ( adder_b      ),
     .sub        ( adder_cin    ),
