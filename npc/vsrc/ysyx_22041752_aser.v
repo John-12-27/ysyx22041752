@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_aser.v
 // Author        : Cw
 // Created On    : 2022-08-24 09:46
-// Last Modified : 2023-06-03 15:17
+// Last Modified : 2023-06-03 16:37
 // ---------------------------------------------------------------------------------
 // Description   : 64-bit adder_suber 
 //
@@ -28,6 +28,5 @@ wire [WIDTH-1:0] y  ;
 assign x = a;
 assign y = sub ? ~b : b;
 assign {cout, result} = x + y + {{WIDTH{1'b0}}, sub};
-
 endmodule
 

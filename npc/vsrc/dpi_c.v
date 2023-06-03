@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-03 15:58
+// Last Modified : 2023-06-03 16:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -155,7 +155,6 @@ function void mem_inst();
     output longint pc   ;
     output int     inst ;
     pc    = {32'd0, debug_es_pc};
-
     inst  = inst_r0 ;
 endfunction
 

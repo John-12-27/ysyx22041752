@@ -277,7 +277,6 @@ void exec(uint64_t n, bool batch)
 #ifdef DUMP_WAVE
             step_and_dump_wave();
 #endif
-
         }
     }
     else
