@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-05-30 18:09
+// Last Modified : 2023-06-03 15:59
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -214,17 +214,17 @@ assign csr_addr  = ecall && (expfsm_pre==IDLE)      ? 12'h305 :
                    expfsm_pre==W_MEPC    || mret    ? 12'h341 :
                    expfsm_pre==W_MCAUSE             ? 12'h342 :
                                                       rscsr   ;
-assign csr_wdata = expfsm_pre == W_MEPC   ? es_pc :
+assign csr_wdata = expfsm_pre == W_MEPC   ? {32'd0, es_pc} :
                    expfsm_pre == W_MCAUSE ? 64'hb :
                    {64{csrrs}} & (rs1_value | csr_rdata) |
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
 assign flush    = (ecall||mret) && es_valid;
-assign flush_pc = csr_rdata;
+assign flush_pc = csr_rdata[31:0];
 
-assign alu_src1 = src_pc   ? es_pc : 
-                  src_0    ? 64'd0 :
+assign alu_src1 = src_pc   ? {32'd0, es_pc} : 
+                  src_0    ? 64'd0          :
                   res_sext && (op_sll || op_srl || op_sra) ? {32'b0,rs1_value[31:0]} :
                   rs1_value;
   
@@ -237,7 +237,10 @@ assign alu_src2 = src_csr   ? csr_rdata :
                   res_sext && (op_sll || op_srl || op_sra) ? {59'b0,rs2_value[4:0]} :
                   (op_sll || op_srl || op_sra) ? {58'b0,rs2_value[5:0]} :
                   rs2_value;
-
+/* verilator lint_off UNUSEDSIGNAL */
+wire [63:0] mem_addr;
+/* verilator lint_on UNUSEDSIGNAL */
+assign data_sram_addr = mem_addr[31:0];
 ysyx_22041752_alu U_ALU_0(
 `ifndef DPI_C
     .clk             ( clk            ),
@@ -265,7 +268,7 @@ ysyx_22041752_alu U_ALU_0(
     .alu_src1        ( alu_src1       ),
     .alu_src2        ( alu_src2       ),
     .alu_result      ( alu_result     ),
-    .mem_result      ( data_sram_addr ),
+    .mem_result      ( mem_addr       ),
     .div_out_valid   ( div_out_valid  ),
     .mul_out_valid   ( mul_out_valid  )
 );

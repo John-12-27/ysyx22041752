@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-03-30 15:26
+// Last Modified : 2023-06-03 15:18
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -51,12 +51,6 @@ wire [`BR_BUS_WD       -1:0]   br_bus;
 wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus;
 wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus;
 wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus;
-
-/* verilator lint_off UNUSEDSIGNAL */
-wire [63:0] mul_result;
-wire [63:0] div_result;
-wire [63:0] div_complete;
-
 
 // trace debug interface
 wire [`PC_WD       -1:0] debug_fs_pc      ;

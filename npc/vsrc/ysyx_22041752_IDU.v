@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-05-24 12:10
+// Last Modified : 2023-06-03 15:22
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -520,8 +520,8 @@ wire rs1_eq_rs2 ;
 wire rs1_l_rs2  ;
 wire rs1u_l_rs2u;
 wire bc_co      ;
-wire [`RF_DATA_WD-1:0] bt_a;
-wire [`RF_DATA_WD-1:0] bt_b;
+wire [`PC_WD-1:0] bt_a;
+wire [`PC_WD-1:0] bt_b;
 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [`RF_DATA_WD-1:0] bc_r;
@@ -547,13 +547,14 @@ ysyx_22041752_aser U_ASER_0(
     .result     ( bc_r        )
 );
 
-assign bt_a = inst_jalr ? rs1_value : ds_pc;
-assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu) ? {{51{imm_b[12]}},imm_b} :
-               inst_jalr                                                               ? {{52{imm_i[11]}},imm_i} :
-                                                                                         {{43{imm_j[20]}},imm_j} ;
+assign bt_a = inst_jalr ? rs1_value[31:0] : ds_pc;
+assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
+               inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
+                                                                                         {{11{imm_j[20]}},imm_j} ;
 
 /* verilator lint_off PINCONNECTEMPTY */
-ysyx_22041752_aser U_ASER_1(
+ysyx_22041752_aser #(.WIDTH (32))
+U_ASER_1(
     .a          ( bt_a      ),
     .b          ( bt_b      ),
     .sub        ( 1'b0      ),

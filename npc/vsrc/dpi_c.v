@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-03-30 16:54
+// Last Modified : 2023-06-03 15:58
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -143,10 +143,10 @@ function void record();
     valid = valid_r;
     exp   = exp_cmt;
     mret  = mret_cmt;
-    pc    = current_pc;
-    fspc  = debug_fs_pc;
-    espc  = debug_es_pc;
-    dnpc  = debug_wb_pc;
+    pc    = {32'd0, current_pc };
+    fspc  = {32'd0, debug_fs_pc};
+    espc  = {32'd0, debug_es_pc};
+    dnpc  = {32'd0, debug_wb_pc};
     inst  = inst_r3 ;
 endfunction
 
@@ -154,7 +154,7 @@ export "DPI-C" function mem_inst;
 function void mem_inst();
     output longint pc   ;
     output int     inst ;
-    pc    = debug_es_pc;
+    pc    = {32'd0, debug_es_pc};
 
     inst  = inst_r0 ;
 endfunction
