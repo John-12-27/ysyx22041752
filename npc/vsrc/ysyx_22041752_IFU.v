@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-03 20:31
+// Last Modified : 2023-06-04 10:15
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -69,7 +69,7 @@ always @(posedge clk) begin
     if (reset) begin
         inst_en_r <= 0;
     end
-    else begin
+    else if (fs_allowin) begin
         inst_en_r <= inst_en;
     end
 end

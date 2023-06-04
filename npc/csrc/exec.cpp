@@ -50,11 +50,9 @@ static void step_and_dump_wave()
 static void single_cycle()
 {
     top->clk = 0; top->eval();
-    //top->clk = 1; top->eval();	
 #ifdef DUMP_WAVE
     step_and_dump_wave();
 #endif
-    //top->clk = 0; top->eval();
     top->clk = 1; top->eval();	
 #ifdef DUMP_WAVE
     step_and_dump_wave();
@@ -143,7 +141,7 @@ paddr_t espc;
 static void exec_once()
 {
     top->clk = 0; 
-
+/*
     if(inst_ract)
     {
         if(fetch_addr == 0)
@@ -151,19 +149,19 @@ static void exec_once()
             printf("%lx\n", S.pc);
             printf("%lx\n", fspc);
             printf("%lx\n", espc);
-
             assert(0);
         }
         inst_ract = false;
         top->inst_sram_rdata = vaddr_ifetch(fetch_addr, 4);
     }
+    */
 
     if(top->inst_sram_en)
     {
         fetch_addr = top->inst_sram_addr;
         inst_ract = true;
     }
-
+/*
     if(mem_ract)
     {
         mem_ract = false;
@@ -176,6 +174,7 @@ static void exec_once()
             vaddr_write(mem_addr, mem_wdata, mem_wen);
         }
     }
+    */
 
     if(top->data_sram_en)
     {
@@ -246,10 +245,21 @@ void exec(uint64_t n, bool batch)
             cycle_count++;
             top->clk = 1;
 
+
+
             if(top->inst_sram_en)
             {
                 fetch_addr = top->inst_sram_addr;
                 inst_ract = true;
+        if(fetch_addr == 0)
+        {
+            printf("%lx\n", S.pc);
+            printf("%lx\n", fspc);
+            printf("%lx\n", espc);
+            assert(0);
+        }
+        inst_ract = false;
+        top->inst_sram_rdata = vaddr_ifetch(fetch_addr, 4);
             }
 
             if(top->data_sram_en)
@@ -261,6 +271,14 @@ void exec(uint64_t n, bool batch)
                 mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
                 D.pc = M.pc;
                 D.inst = M.inst;
+        if(!mem_wen)
+        {
+            top->data_sram_rdata = vaddr_read(mem_addr);
+        }
+        else
+        {
+            vaddr_write(mem_addr, mem_wdata, mem_wen);
+        }
             }
 
             record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-03 22:45
+// Last Modified : 2023-06-04 11:04
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -177,7 +177,7 @@ always @(posedge clk) begin
         inst_ready_r <= 0;
     end
     else begin
-        inst_ready_r <= arfsm_pre==AR_FETCH_OK;
+        inst_ready_r <= arfsm_nxt==AR_FETCH_OK;
     end
 end
 
@@ -185,7 +185,7 @@ always @(posedge clk) begin
     if (reset) begin
         inst_rdata_r <= 0;
     end
-    else begin
+    else if (rfsm_nxt==R_GET_INST) begin
         inst_rdata_r <= rdata;
     end
 end
@@ -195,7 +195,7 @@ always @(posedge clk) begin
         inst_valid_r <= 0;
     end
     else begin
-        inst_valid_r <= rfsm_pre==R_GET_INST;
+        inst_valid_r <= rfsm_nxt==R_GET_INST;
     end
 end
 
@@ -204,7 +204,7 @@ always @(posedge clk) begin
         data_ready_r <= 0;
     end
     else begin
-        data_ready_r <= arfsm_pre==AR_LOAD_OK;
+        data_ready_r <= arfsm_nxt==AR_LOAD_OK;
     end
 end
 
@@ -212,7 +212,7 @@ always @(posedge clk) begin
     if (reset) begin
         data_rdata_r <= 0;
     end
-    else begin
+    else if (rfsm_nxt==R_GET_DATA) begin
         data_rdata_r <= rdata;
     end
 end
@@ -222,7 +222,7 @@ always @(posedge clk) begin
         data_valid_r <= 0;
     end
     else begin
-        data_valid_r <= rfsm_pre==R_GET_DATA;
+        data_valid_r <= rfsm_nxt==R_GET_DATA;
     end
 end
 
@@ -295,7 +295,7 @@ always @(posedge clk) begin
         arvalid_r <= 0;
     end
     else begin
-        if (arfsm_pre==AR_FETCH || arfsm_pre==AR_LOAD) begin
+        if (arfsm_pre==AR_FETCH&&arfsm_nxt==AR_FETCH || arfsm_pre==AR_LOAD&&arfsm_nxt==AR_LOAD) begin
             arvalid_r <= 1;
         end
         else begin
@@ -312,7 +312,7 @@ always @(posedge clk) begin
         rready_r <= 0;
     end
     else begin
-        if (rfsm_pre==R_WAIT_FETCH || rfsm_pre==R_WAIT_LOAD) begin
+        if (rfsm_pre==R_WAIT_FETCH&&rfsm_nxt==R_WAIT_FETCH || rfsm_pre==R_WAIT_LOAD&&rfsm_nxt==R_WAIT_LOAD) begin
             rready_r <= 1;
         end      
         else begin
@@ -370,7 +370,7 @@ always @(posedge clk) begin
         awvalid_r <= 0;
     end
     else begin
-        if (awfsm_pre==AW_WAIT || awfsm_pre==AW_WAIT_AW) begin
+        if (awfsm_pre==AW_WAIT&&awfsm_nxt==AW_WAIT || awfsm_pre==AW_WAIT_AW&&awfsm_nxt==AW_WAIT_AW) begin
             awvalid_r <= 1;
         end
         else begin
@@ -410,7 +410,7 @@ always @(posedge clk) begin
         wvalid_r <= 0;
     end
     else begin
-        if (awfsm_pre==AW_WAIT || awfsm_pre==AW_WAIT_W) begin
+        if (awfsm_pre==AW_WAIT&&awfsm_nxt==AW_WAIT || awfsm_pre==AW_WAIT_W&&awfsm_nxt==AW_WAIT_W) begin
             wvalid_r <= 1;
         end
         else begin
