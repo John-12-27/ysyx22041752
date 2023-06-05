@@ -73,7 +73,6 @@ static uintptr_t sys_gettimeofday(uintptr_t a[])
     return 0;
 }
 
-<<<<<<< HEAD
 extern void naive_uload(PCB *pcb, const char *filename);
 static uintptr_t sys_execve(uintptr_t a[])
 {
