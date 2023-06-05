@@ -41,43 +41,53 @@ module axi_ram #
     parameter PIPELINE_OUTPUT = 0
 )
 (
-    input  wire                   clk,
-    input  wire                   rst,
+    input                    clk,
+    input                    rst,
 
-    input  wire [ID_WIDTH-1:0]    s_axi_awid,
-    input  wire [ADDR_WIDTH-1:0]  s_axi_awaddr,
-    input  wire [7:0]             s_axi_awlen,
-    input  wire [2:0]             s_axi_awsize,
-    input  wire [1:0]             s_axi_awburst,
-    input  wire                   s_axi_awvalid,
-    output wire                   s_axi_awready,
-    input  wire [DATA_WIDTH-1:0]  s_axi_wdata,
-    input  wire [STRB_WIDTH-1:0]  s_axi_wstrb,
-    input  wire                   s_axi_wlast,
-    input  wire                   s_axi_wvalid,
-    output wire                   s_axi_wready,
-    output wire [ID_WIDTH-1:0]    s_axi_bid,
-    output wire [1:0]             s_axi_bresp,
-    output wire                   s_axi_bvalid,
-    input  wire                   s_axi_bready,
-    input  wire [ID_WIDTH-1:0]    s_axi_arid,
-    input  wire [ADDR_WIDTH-1:0]  s_axi_araddr,
-    input  wire [7:0]             s_axi_arlen,
-    input  wire [2:0]             s_axi_arsize,
-    input  wire [1:0]             s_axi_arburst,
-    input  wire                   s_axi_arvalid,
-    output wire                   s_axi_arready,
-    output wire [ID_WIDTH-1:0]    s_axi_rid,
-    output wire [DATA_WIDTH-1:0]  s_axi_rdata,
-    output wire [1:0]             s_axi_rresp,
-    output wire                   s_axi_rlast,
-    output wire                   s_axi_rvalid,
-    input  wire                   s_axi_rready, 
+    input  [ID_WIDTH-1:0]    s_axi_awid,
+    input  [ADDR_WIDTH-1:0]  s_axi_awaddr,
+    input  [7:0]             s_axi_awlen,
+    input  [2:0]             s_axi_awsize,
+    input  [1:0]             s_axi_awburst,
+    input                    s_axi_awvalid,
+    output                   s_axi_awready,
+    input  [DATA_WIDTH-1:0]  s_axi_wdata,
+    input  [STRB_WIDTH-1:0]  s_axi_wstrb,
+    /* verilator lint_off UNUSEDSIGNAL */
+    input                    s_axi_wlast,
+    /* verilator lint_on UNUSEDSIGNAL */
+    input                    s_axi_wvalid,
+    output                   s_axi_wready,
+    output [ID_WIDTH-1:0]    s_axi_bid,
+    output [1:0]             s_axi_bresp,
+    output                   s_axi_bvalid,
+    input                    s_axi_bready,
+    input  [ID_WIDTH-1:0]    s_axi_arid,
+    input  [ADDR_WIDTH-1:0]  s_axi_araddr,
+    input  [7:0]             s_axi_arlen,
+    input  [2:0]             s_axi_arsize,
+    input  [1:0]             s_axi_arburst,
+    input                    s_axi_arvalid,
+    output                   s_axi_arready,
+    output [ID_WIDTH-1:0]    s_axi_rid,
+    output [DATA_WIDTH-1:0]  s_axi_rdata,
+    output [1:0]             s_axi_rresp,
+    output                   s_axi_rlast,
+    output                   s_axi_rvalid,
+    input                    s_axi_rready, 
 
+    output        inst_sram_en   ,
+    output [31:0] inst_sram_addr ,
+    input  [63:0] inst_sram_rdata,
 
+    output        data_sram_en   ,
+    output [ 7:0] data_sram_wen  ,
+    output [31:0] data_sram_addr ,
+    output [63:0] data_sram_wdata,
+    input  [63:0] data_sram_rdata
 );
 
-parameter VALID_ADDR_WIDTH = ADDR_WIDTH - $clog2(STRB_WIDTH);
+//parameter VALID_ADDR_WIDTH = ADDR_WIDTH - $clog2(STRB_WIDTH);
 parameter WORD_WIDTH = STRB_WIDTH;
 parameter WORD_SIZE = DATA_WIDTH/WORD_WIDTH;
 
@@ -127,7 +137,7 @@ reg [ID_WIDTH-1:0] s_axi_bid_reg = {ID_WIDTH{1'b0}}, s_axi_bid_next;
 reg s_axi_bvalid_reg = 1'b0, s_axi_bvalid_next;
 reg s_axi_arready_reg = 1'b0, s_axi_arready_next;
 reg [ID_WIDTH-1:0] s_axi_rid_reg = {ID_WIDTH{1'b0}}, s_axi_rid_next;
-reg [DATA_WIDTH-1:0] s_axi_rdata_reg = {DATA_WIDTH{1'b0}}, s_axi_rdata_next;
+reg [DATA_WIDTH-1:0] s_axi_rdata_reg = {DATA_WIDTH{1'b0}};
 reg s_axi_rlast_reg = 1'b0, s_axi_rlast_next;
 reg s_axi_rvalid_reg = 1'b0, s_axi_rvalid_next;
 reg [ID_WIDTH-1:0] s_axi_rid_pipe_reg = {ID_WIDTH{1'b0}};
@@ -136,10 +146,10 @@ reg s_axi_rlast_pipe_reg = 1'b0;
 reg s_axi_rvalid_pipe_reg = 1'b0;
 
 
-wire [VALID_ADDR_WIDTH-1:0] s_axi_awaddr_valid = s_axi_awaddr >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
-wire [VALID_ADDR_WIDTH-1:0] s_axi_araddr_valid = s_axi_araddr >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
-wire [VALID_ADDR_WIDTH-1:0] read_addr_valid = read_addr_reg >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
-wire [VALID_ADDR_WIDTH-1:0] write_addr_valid = write_addr_reg >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
+//wire [VALID_ADDR_WIDTH-1:0] s_axi_awaddr_valid = s_axi_awaddr >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
+//wire [VALID_ADDR_WIDTH-1:0] s_axi_araddr_valid = s_axi_araddr >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
+//wire [VALID_ADDR_WIDTH-1:0] read_addr_valid = read_addr_reg >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
+//wire [VALID_ADDR_WIDTH-1:0] write_addr_valid = write_addr_reg >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
 
 assign s_axi_awready = s_axi_awready_reg;
 assign s_axi_wready = s_axi_wready_reg;
@@ -169,6 +179,7 @@ always @* begin
     s_axi_bid_next = s_axi_bid_reg;
     s_axi_bvalid_next = s_axi_bvalid_reg && !s_axi_bready;
 
+    /* verilator lint_off CASEINCOMPLETE */
     case (write_state_reg)
         WRITE_STATE_IDLE: begin
             s_axi_awready_next = 1'b1;
@@ -177,7 +188,7 @@ always @* begin
                 write_id_next = s_axi_awid;
                 write_addr_next = s_axi_awaddr;
                 write_count_next = s_axi_awlen;
-                write_size_next = s_axi_awsize < $clog2(STRB_WIDTH) ? s_axi_awsize : $clog2(STRB_WIDTH);
+                write_size_next = s_axi_awsize;
                 write_burst_next = s_axi_awburst;
 
                 s_axi_awready_next = 1'b0;
@@ -224,6 +235,7 @@ always @* begin
             end
         end
     endcase
+    /* verilator lint_on CASEINCOMPLETE */
 end
 
 always @(posedge clk) begin
@@ -281,7 +293,7 @@ always @* begin
                 read_id_next = s_axi_arid;
                 read_addr_next = s_axi_araddr;
                 read_count_next = s_axi_arlen;
-                read_size_next = s_axi_arsize < $clog2(STRB_WIDTH) ? s_axi_arsize : $clog2(STRB_WIDTH);
+                read_size_next = s_axi_arsize;
                 read_burst_next = s_axi_arburst;
 
                 s_axi_arready_next = 1'b0;
@@ -327,8 +339,12 @@ always @(posedge clk) begin
     s_axi_rlast_reg <= s_axi_rlast_next;
     s_axi_rvalid_reg <= s_axi_rvalid_next;
 
+    //if (mem_rd_en) begin
+        //s_axi_rdata_reg <= mem[read_addr_valid];
+    //end
+
     if (mem_rd_en) begin
-        s_axi_rdata_reg <= mem[read_addr_valid];
+        s_axi_rdata_reg <= read_id_reg==1 ? data_sram_rdata : inst_sram_rdata;
     end
 
     if (!s_axi_rvalid_pipe_reg || s_axi_rready) begin
@@ -346,6 +362,13 @@ always @(posedge clk) begin
         s_axi_rvalid_pipe_reg <= 1'b0;
     end
 end
+
+assign data_sram_en    = mem_rd_en&&s_axi_rid_reg==1 || mem_wr_en;
+assign data_sram_wen   = mem_wr_en ? s_axi_wstrb : 8'b0;
+assign data_sram_wdata = s_axi_wdata;
+assign data_sram_addr  = mem_rd_en ? read_addr_reg : write_addr_reg;
+assign inst_sram_en    = mem_rd_en&&s_axi_rid_reg==0;
+assign inst_sram_addr  = read_addr_reg;
 
 endmodule
 

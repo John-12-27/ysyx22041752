@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-03 21:23
+// Last Modified : 2023-06-05 20:27
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -91,46 +91,46 @@ ysyx_22041752 U_YSYX_22041752_0(
     .io_master_rlast                ( rlast               )
 );
 
-axi2ram U_AXI2RAM_0(
-    .clk                   ( clk                  ),
-    .reset                 ( reset                ),
-    .awready               ( awready              ),
-    .awvalid               ( awvalid              ),
-    .awid                  ( awid                 ),
-    .awaddr                ( awaddr               ),
-    .awlen                 ( awlen                ),
-    .awsize                ( awsize               ),
-    .awburst               ( awburst              ),
-    .wready                ( wready               ),
-    .wvalid                ( wvalid               ),
-    .wdata                 ( wdata                ),
-    .wstrb                 ( wstrb                ),
-    .wlast                 ( wlast                ),
-    .bready                ( bready               ),
-    .bvalid                ( bvalid               ),
-    .bid                   ( bid                  ),
-    .bresp                 ( bresp                ),
-    .arready               ( arready              ),
-    .arvalid               ( arvalid              ),
-    .arid                  ( arid                 ),
-    .araddr                ( araddr               ),
-    .arlen                 ( arlen                ),
-    .arsize                ( arsize               ),
-    .arburst               ( arburst              ),
-    .rready                ( rready               ),
-    .rvalid                ( rvalid               ),
-    .rid                   ( rid                  ),
-    .rdata                 ( rdata                ),
-    .rresp                 ( rresp                ),
-    .rlast                 ( rlast                ),
-    .inst_sram_en          ( inst_sram_en         ),
-    .inst_sram_addr        ( inst_sram_addr       ),
-    .inst_sram_rdata       ( inst_sram_rdata      ),
-    .data_sram_en          ( data_sram_en         ),
-    .data_sram_wen         ( data_sram_wen        ),
-    .data_sram_addr        ( data_sram_addr       ),
-    .data_sram_wdata       ( data_sram_wdata      ),
-    .data_sram_rdata       ( data_sram_rdata      )
+axi_ram U_RAM_0(
+    .clk                            ( clk     ),
+    .rst                            ( reset   ),
+    .s_axi_awid                     ( awid    ),
+    .s_axi_awaddr                   ( awaddr  ),
+    .s_axi_awlen                    ( awlen   ),
+    .s_axi_awsize                   ( awsize  ),
+    .s_axi_awburst                  ( awburst ),
+    .s_axi_awvalid                  ( awvalid ),
+    .s_axi_awready                  ( awready ),
+    .s_axi_wdata                    ( wdata   ),
+    .s_axi_wstrb                    ( wstrb   ),
+    .s_axi_wlast                    ( wlast   ),
+    .s_axi_wvalid                   ( wvalid  ),
+    .s_axi_wready                   ( wready  ),
+    .s_axi_bid                      ( bid     ),
+    .s_axi_bresp                    ( bresp   ),
+    .s_axi_bvalid                   ( bvalid  ),
+    .s_axi_bready                   ( bready  ),
+    .s_axi_arid                     ( arid    ),
+    .s_axi_araddr                   ( araddr  ),
+    .s_axi_arlen                    ( arlen   ),
+    .s_axi_arsize                   ( arsize  ),
+    .s_axi_arburst                  ( arburst ),
+    .s_axi_arvalid                  ( arvalid ),
+    .s_axi_arready                  ( arready ),
+    .s_axi_rid                      ( rid     ),
+    .s_axi_rdata                    ( rdata   ),
+    .s_axi_rresp                    ( rresp   ),
+    .s_axi_rlast                    ( rlast   ),
+    .s_axi_rvalid                   ( rvalid  ),
+    .s_axi_rready                   ( rready  ),
+    .inst_sram_en                   ( inst_sram_en    ),
+    .inst_sram_addr                 ( inst_sram_addr  ),
+    .inst_sram_rdata                ( inst_sram_rdata ),
+    .data_sram_en                   ( data_sram_en    ),
+    .data_sram_wen                  ( data_sram_wen   ),
+    .data_sram_addr                 ( data_sram_addr  ),
+    .data_sram_wdata                ( data_sram_wdata ),
+    .data_sram_rdata                ( data_sram_rdata ) 
 );
 
 endmodule

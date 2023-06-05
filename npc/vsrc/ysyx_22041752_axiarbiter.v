@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-04 11:04
+// Last Modified : 2023-06-05 21:34
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -273,12 +273,12 @@ always @(posedge clk) begin
         arlen_r <= 0;
     end
     else begin
-        arlen_r <= 1;
+        arlen_r <= 0;
     end
 end
 
 always @(*) begin
-    arsize_r = 3'd7;
+    arsize_r = 3'b011; // 8 bytes
 end
 
 always @(posedge clk) begin
@@ -348,12 +348,12 @@ always @(posedge clk) begin
         awlen_r <= 0;
     end
     else begin
-        awlen_r <= 1;
+        awlen_r <= 0;
     end
 end
 
 always @(*) begin
-    awsize_r = 3'd7;
+    awsize_r = 3'b011; //8 bytes
 end
 
 always @(posedge clk) begin
