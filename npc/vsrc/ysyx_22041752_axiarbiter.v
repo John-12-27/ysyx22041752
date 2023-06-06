@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-05 21:34
+// Last Modified : 2023-06-06 20:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -86,12 +86,12 @@ always @(posedge clk) begin
     end
 end
 wire data_ren = data_en && data_wen==0;
-assign arfsm_nxt = (arfsm_pre==AR_IDLE || arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK) && data_ren        ? AR_LOAD     :
-                   (arfsm_pre==AR_IDLE || arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK) && inst_en         ? AR_FETCH    :  
-                    arfsm_pre==AR_FETCH                                                    && arvalid&arready ? AR_FETCH_OK :  
-                    arfsm_pre==AR_LOAD                                                     && arvalid&arready ? AR_LOAD_OK  :
-                   (arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK)                                          ? AR_IDLE     :
-                                                                                                                arfsm_pre   ;
+assign arfsm_nxt = (arfsm_pre==AR_IDLE || arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK) && data_ren ? AR_LOAD     :
+                   (arfsm_pre==AR_IDLE || arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK) && inst_en  ? AR_FETCH    :  
+                    arfsm_pre==AR_FETCH                                                    && arready  ? AR_FETCH_OK :  
+                    arfsm_pre==AR_LOAD                                                     && arready  ? AR_LOAD_OK  :
+                   (arfsm_pre==AR_FETCH_OK || arfsm_pre==AR_LOAD_OK)                                   ? AR_IDLE     :
+                                                                                                         arfsm_pre   ;
 
 reg  [2:0] rfsm_pre;
 wire [2:0] rfsm_nxt;
@@ -111,8 +111,8 @@ end
 
 assign rfsm_nxt = (rfsm_pre==R_IDLE || rfsm_pre==R_GET_INST || rfsm_pre==R_GET_DATA) && arfsm_pre==AR_FETCH_OK ? R_WAIT_FETCH :
                   (rfsm_pre==R_IDLE || rfsm_pre==R_GET_INST || rfsm_pre==R_GET_DATA) && arfsm_pre==AR_LOAD_OK  ? R_WAIT_LOAD  :
-                   rfsm_pre==R_WAIT_FETCH                                            && rready&rvalid&&rid==0  ? R_GET_INST   :
-                   rfsm_pre==R_WAIT_LOAD                                             && rready&rvalid&&rid==1  ? R_GET_DATA   :
+                   rfsm_pre==R_WAIT_FETCH                                            && rvalid&&rid==0         ? R_GET_INST   :
+                   rfsm_pre==R_WAIT_LOAD                                             && rvalid&&rid==1         ? R_GET_DATA   :
                   (rfsm_pre==R_GET_INST || rfsm_pre==R_GET_DATA)                                               ? R_IDLE       :
                                                                                                                  rfsm_pre;
 
@@ -132,14 +132,14 @@ always @(posedge clk) begin
     end
 end
 
-assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) && (|data_wen)                     ? AW_WAIT    :
-                    awfsm_pre==AW_WAIT                      &&  awvalid&awready&&wvalid&wready ? AW_OK      :
-                    awfsm_pre==AW_WAIT                      &&  awvalid&awready                ? AW_WAIT_W  :
-                    awfsm_pre==AW_WAIT                      &&  wvalid &wready                 ? AW_WAIT_AW :
-                    awfsm_pre==AW_WAIT_AW                   &&  awvalid&awready                ? AW_OK      :
-                    awfsm_pre==AW_WAIT_W                    &&  wvalid &wready                 ? AW_OK      :
-                    awfsm_pre==AW_OK                                                           ? AW_IDLE    :
-                                                                                                 awfsm_pre  ;
+assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) &&  data_en&&(|data_wen)      ? AW_WAIT    :
+                    awfsm_pre==AW_WAIT                      &&  awready&&wready ? AW_OK      :
+                    awfsm_pre==AW_WAIT                      &&  awready         ? AW_WAIT_W  :
+                    awfsm_pre==AW_WAIT                      &&  wready          ? AW_WAIT_AW :
+                    awfsm_pre==AW_WAIT_AW                   &&  awready         ? AW_OK      :
+                    awfsm_pre==AW_WAIT_W                    &&  wready          ? AW_OK      :
+                    awfsm_pre==AW_OK                                            ? AW_IDLE    :
+                                                                                  awfsm_pre  ;
 reg  [1:0] bfsm_pre;
 wire [1:0] bfsm_nxt;
 parameter B_IDLE=0;
@@ -155,7 +155,7 @@ always @(posedge clk) begin
 end
 
 assign bfsm_nxt = (bfsm_pre==B_IDLE || bfsm_pre==B_GET) && awfsm_pre==AW_OK ? B_WAIT_STORE :
-                   bfsm_pre==B_WAIT_STORE               && bready&bvalid    ? B_GET        :
+                   bfsm_pre==B_WAIT_STORE               && bvalid           ? B_GET        :
                    bfsm_pre==B_GET                                          ? B_IDLE       :
                                                                               bfsm_pre     ;
 
@@ -204,7 +204,7 @@ always @(posedge clk) begin
         data_ready_r <= 0;
     end
     else begin
-        data_ready_r <= arfsm_nxt==AR_LOAD_OK;
+        data_ready_r <= arfsm_nxt==AR_LOAD_OK || awfsm_nxt==AW_OK;
     end
 end
 
@@ -245,10 +245,10 @@ always @(posedge clk) begin
         arid_r <= 0;
     end
     else begin
-        if (arfsm_pre==AR_FETCH) begin
+        if (arfsm_nxt==AR_FETCH) begin
             arid_r <= 0;
         end
-        else if (arfsm_pre==AR_LOAD) begin
+        else if (arfsm_nxt==AR_LOAD) begin
             arid_r <= 1;
         end
     end
@@ -259,10 +259,10 @@ always @(posedge clk) begin
         araddr_r <= 0;
     end
     else begin
-        if (arfsm_pre==AR_FETCH) begin
+        if (arfsm_nxt==AR_FETCH) begin
             araddr_r <= inst_addr;
         end
-        else if (arfsm_pre==AR_LOAD) begin
+        else if (arfsm_nxt==AR_LOAD) begin
             araddr_r <= data_addr;
         end
     end
@@ -295,7 +295,7 @@ always @(posedge clk) begin
         arvalid_r <= 0;
     end
     else begin
-        if (arfsm_pre==AR_FETCH&&arfsm_nxt==AR_FETCH || arfsm_pre==AR_LOAD&&arfsm_nxt==AR_LOAD) begin
+        if (arfsm_nxt==AR_FETCH || arfsm_nxt==AR_LOAD) begin
             arvalid_r <= 1;
         end
         else begin
@@ -312,7 +312,7 @@ always @(posedge clk) begin
         rready_r <= 0;
     end
     else begin
-        if (rfsm_pre==R_WAIT_FETCH&&rfsm_nxt==R_WAIT_FETCH || rfsm_pre==R_WAIT_LOAD&&rfsm_nxt==R_WAIT_LOAD) begin
+        if (rfsm_nxt==R_WAIT_FETCH || rfsm_nxt==R_WAIT_LOAD) begin
             rready_r <= 1;
         end      
         else begin
@@ -370,7 +370,7 @@ always @(posedge clk) begin
         awvalid_r <= 0;
     end
     else begin
-        if (awfsm_pre==AW_WAIT&&awfsm_nxt==AW_WAIT || awfsm_pre==AW_WAIT_AW&&awfsm_nxt==AW_WAIT_AW) begin
+        if (awfsm_nxt==AW_WAIT || awfsm_nxt==AW_WAIT_AW) begin
             awvalid_r <= 1;
         end
         else begin
@@ -410,7 +410,7 @@ always @(posedge clk) begin
         wvalid_r <= 0;
     end
     else begin
-        if (awfsm_pre==AW_WAIT&&awfsm_nxt==AW_WAIT || awfsm_pre==AW_WAIT_W&&awfsm_nxt==AW_WAIT_W) begin
+        if (awfsm_nxt==AW_WAIT || awfsm_nxt==AW_WAIT_W) begin
             wvalid_r <= 1;
         end
         else begin
@@ -426,7 +426,7 @@ always @(posedge clk) begin
         bready_r <= 0;
     end
     else begin
-        if (bfsm_pre==B_WAIT_STORE) begin
+        if (bfsm_nxt==B_WAIT_STORE) begin
             bready_r <= 1;
         end
         else begin

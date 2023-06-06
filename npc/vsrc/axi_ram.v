@@ -363,7 +363,7 @@ always @(posedge clk) begin
     end
 end
 
-assign data_sram_en    = mem_rd_en&&s_axi_rid_reg==1 || mem_wr_en;
+assign data_sram_en    = mem_rd_en&&s_axi_rid_next==1 || mem_wr_en;
 assign data_sram_wen   = mem_wr_en ? s_axi_wstrb : 8'b0;
 assign data_sram_wdata = s_axi_wdata;
 assign data_sram_addr  = mem_rd_en ? read_addr_reg : write_addr_reg;

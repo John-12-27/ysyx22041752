@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-03 20:31
+// Last Modified : 2023-06-06 20:30
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -53,25 +53,35 @@ wire        es_ready_go   ;
 
 reg  [`ysyx_22041752_DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;  
 
-wire ecall  ;
-wire mret   ;
-wire mul_u  ;
-wire mul_su ;
-wire mul_h  ;
-wire div_u  ;
-wire op_mul ;
-wire op_div ;
-wire op_rem ;
-wire op_add ;
-wire op_sub ;
-wire op_slt ;
-wire op_sltu;
-wire op_and ;
-wire op_or  ;
-wire op_xor ;
-wire op_sll ;
-wire op_srl ;
-wire op_sra ;
+wire ecall    ;
+wire mret     ;
+wire mul_u    ;
+wire mul_su   ;
+wire mul_h    ;
+wire div_u    ;
+wire jalr     ;
+wire beq      ;
+wire bne      ;
+wire blt      ;
+wire bge      ;
+wire bltu     ;
+wire bgeu     ;
+wire [12:0] es_imm_b;
+wire                              br_taken_pre ;
+wire [`ysyx_22041752_PC_WD-1:0]   br_target_pre;
+wire op_mul   ;
+wire op_div   ;
+wire op_rem   ;
+wire op_add   ;
+wire op_sub   ;
+wire op_slt   ;
+wire op_sltu  ;
+wire op_and   ;
+wire op_or    ;
+wire op_xor   ;
+wire op_sll   ;
+wire op_srl   ;
+wire op_sra   ;
 
 wire        res_sext    ;
 wire        res_zext    ;
@@ -106,6 +116,16 @@ assign {ecall         ,
         mul_u         ,
         mul_su        ,
         mul_h         ,
+        jalr          ,  
+        beq           ,  
+        bne           ,  
+        blt           ,  
+        bge           ,  
+        bltu          ,  
+        bgeu          ,  
+        br_taken_pre  ,
+        br_target_pre ,
+        es_imm_b      ,
         op_mul        ,
         op_div        ,
         op_rem        ,
@@ -160,6 +180,23 @@ assign es_to_ms_bus = {res_sext         ,
                        alu_result       ,  
                        es_pc               
                       };
+
+wire                            pre_error ;    
+wire [`ysyx_22041752_PC_WD-1:0] bj_addr   ;
+
+bjt_cal U_BJT_CAL_0(
+    .jalr                           ( jalr                                ),
+    .imm_i                          ( imm_i                               ),
+    .jalr_src1                      ( rs1_value[`ysyx_22041752_PC_WD-1:0] ),
+    .branch                         ( beq|bne|bge|blt|bgeu|bltu           ),
+    .imm_b                          ( es_imm_b                            ),
+    .es_pc                          ( es_pc                         ),
+    .b_taken_real                   ( alu_result[0]                 ),
+    .br_taken_pre                   ( br_taken_pre                  ),
+    .jt_pre                         ( br_target_pre                 ),
+    .pre_error                      ( pre_error                     ),
+    .bj_addr                        ( bj_addr                       )
+);
 
 reg  [1:0] expfsm_pre;
 wire [1:0] expfsm_nxt;
@@ -236,8 +273,8 @@ assign csr_wdata = expfsm_pre == W_MEPC   ? {32'b0, es_pc} :
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
-assign flush    = (ecall||mret||int_t_o) && es_valid;
-assign flush_pc = csr_rdata[31:0];
+assign flush    = (ecall||mret||int_t_o||pre_error) && es_valid;
+assign flush_pc = pre_error ? bj_addr : csr_rdata[`ysyx_22041752_PC_WD-1:0];
 
 assign alu_src1 = src_pc   ? {32'b0, es_pc} : 
                   src_0    ? 64'd0          :
@@ -268,6 +305,12 @@ ysyx_22041752_alu U_ALU_0(
     .mul_su          ( mul_su         ),
     .div_u           ( div_u          ),
     .mul_h           ( mul_h          ),
+    .beq             ( beq            ),  
+    .bne             ( bne            ),  
+    .blt             ( blt            ),  
+    .bge             ( bge            ),  
+    .bltu            ( bltu           ),  
+    .bgeu            ( bgeu           ),  
     .op_mul          ( op_mul         ),
     .op_div          ( op_div         ),
     .op_rem          ( op_rem         ),
@@ -291,7 +334,7 @@ ysyx_22041752_alu U_ALU_0(
 );
 
 assign data_addr= mem_addr[31:0];
-assign data_en  = (es_mem_re | es_mem_we) & es_valid;
+assign data_en  = (es_mem_re | es_mem_we) &&!data_ready && es_valid;
 assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                   es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
                   es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :

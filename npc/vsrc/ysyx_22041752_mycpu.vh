@@ -15,8 +15,8 @@
     `define ysyx_22041752_RESET_PC_VALUE    `ysyx_22041752_PC_WD'h7fff_fffc
 
     `define ysyx_22041752_BR_BUS_WD         33
-    `define ysyx_22041752_FS_TO_DS_BUS_WD   64
-    `define ysyx_22041752_DS_TO_ES_BUS_WD   264
+    `define ysyx_22041752_FS_TO_DS_BUS_WD   118
+    `define ysyx_22041752_DS_TO_ES_BUS_WD   317
     `define ysyx_22041752_ES_TO_MS_BUS_WD   107
     `define ysyx_22041752_MS_TO_WS_BUS_WD   102
     `define ysyx_22041752_WS_TO_RF_BUS_WD   70

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-04 10:15
+// Last Modified : 2023-06-06 20:04
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -18,8 +18,6 @@ module ysyx_22041752_IFU (
     
     input                                        ds_allowin     ,
     
-    input  [`ysyx_22041752_BR_BUS_WD       -1:0] br_bus         ,
-    
     output                                       fs_to_ds_valid ,
     output [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     
@@ -31,11 +29,12 @@ module ysyx_22041752_IFU (
 /* verilator lint_on UNUSEDSIGNAL */
     input                                        inst_valid     ,
 
+    input  [`ysyx_22041752_PC_WD       -1:0]     ra_data        ,
     input                                        flush          , 
     input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       
 `ifdef DPI_C
     ,
-    output [`ysyx_22041752_PC_WD-1:0]       debug_fs_pc
+    output [`ysyx_22041752_PC_WD-1:0]            debug_fs_pc
 `endif
 );
 
@@ -44,38 +43,67 @@ wire        fs_ready_go;
 wire        fs_allowin;
 wire        to_fs_valid;
 
-wire [`ysyx_22041752_PC_WD-1:0] seq_pc;
+wire [`ysyx_22041752_PC_WD-1:0] seq_bj_pc;
 wire [`ysyx_22041752_PC_WD-1:0] nextpc;
 
-wire                            br_taken;
-wire [`ysyx_22041752_PC_WD-1:0] br_target;
-assign {br_taken,br_target} = br_bus;
+wire fs_inst_jal  ;
+wire fs_inst_jalr ;
+wire fs_inst_beq  ;
+wire fs_inst_bne  ;
+wire fs_inst_blt  ;
+wire fs_inst_bge  ;
+wire fs_inst_bltu ;
+wire fs_inst_bgeu ;
+wire [12:0] imm_b ;
 
-wire [`ysyx_22041752_INST_WD-1:0] fs_inst;
+reg  [`ysyx_22041752_INST_WD-1:0] fs_inst;
 reg  [`ysyx_22041752_PC_WD-1:0]   fs_pc;
-assign fs_to_ds_bus = {fs_inst, fs_pc};
+wire                              br_taken;
+wire [`ysyx_22041752_PC_WD-1:0]   br_target;
+assign fs_to_ds_bus = {fs_inst      , 
+                       fs_pc        ,
+                       fs_inst_jal  ,
+                       fs_inst_jalr ,                       
+                       fs_inst_beq  ,
+                       fs_inst_bne  ,
+                       fs_inst_blt  ,
+                       fs_inst_bge  ,
+                       fs_inst_bltu ,
+                       fs_inst_bgeu ,
+                       br_taken     ,
+                       br_target    ,
+                       imm_b        
+                      };
 
 // pre-IF stage
-assign to_fs_valid  = ~reset && inst_ready;
 
-assign seq_pc       = fs_pc + 4;
-assign nextpc       = flush    ? flush_pc  :
-                      br_taken ? br_target : 
-                                 seq_pc    ; 
+assign nextpc       = flush ? flush_pc  :
+                              seq_bj_pc ; 
 
-// IF stage
-reg inst_en_r;
+reg [1:0] ftfsm_pre;
+reg [1:0] ftfsm_nxt;
+parameter IDLE    =0;
+parameter REQUEST =1;
+parameter RESPONSE=2;
+
 always @(posedge clk) begin
     if (reset) begin
-        inst_en_r <= 0;
+        ftfsm_pre <= IDLE;
     end
-    else if (fs_allowin) begin
-        inst_en_r <= inst_en;
+    else begin
+        ftfsm_pre <= ftfsm_nxt;
     end
 end
-assign fs_ready_go    = inst_en_r ? inst_valid : 1'b1;
+assign ftfsm_nxt = (ftfsm_pre==IDLE || ftfsm_pre==RESPONSE&&inst_valid) && !reset && fs_allowin ? REQUEST :
+                    ftfsm_pre==REQUEST                                  && inst_ready           ? RESPONSE:
+                    ftfsm_pre==RESPONSE                                 &&!(!reset&& fs_allowin)? IDLE    :
+                                                                                                  ftfsm_pre;
+
+assign to_fs_valid  = inst_valid;
+
+assign fs_ready_go    = inst_valid;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
-assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~br_taken && ~flush;
+assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~flush;
 always @(posedge clk) begin
     if (reset) begin
         fs_valid <= 1'b0;
@@ -94,9 +122,65 @@ always @(posedge clk) begin
     end
 end
 
-assign inst_en    = ~reset && fs_allowin;
+assign inst_en    = ftfsm_pre==REQUEST && !inst_ready;
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
+//assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
+always @(posedge clk) begin
+    if (fs_valid) begin
+        fs_inst <= inst_rdata[31:0];
+    end
+end
+
+/*=======================================================================================*/
+/*=======================================================================================*/
+/*=======================================================================================*/
+wire [ 6:0] opcode = fs_inst[ 6: 0];
+wire [ 2:0] funct3 = fs_inst[14:12];
+assign imm_b  = {fs_inst[31], fs_inst[7], fs_inst[30:25], fs_inst[11:8], 1'b0};
+wire [11:0] imm_i  = fs_inst[31:20]; 
+wire [20:0] imm_j  = {fs_inst[31], fs_inst[19:12], fs_inst[20], fs_inst[30:21], 1'b0}; 
+
+assign fs_inst_jal    = opcode == 7'b1101111;
+assign fs_inst_jalr   = opcode == 7'b1100111;
+assign fs_inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
+assign fs_inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
+assign fs_inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
+assign fs_inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
+assign fs_inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
+assign fs_inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+
+assign br_taken=(fs_inst_beq  || 
+                 fs_inst_bne  || 
+                 fs_inst_blt  || 
+                 fs_inst_bge  || 
+                 fs_inst_bltu || 
+                 fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr;
+
+
+wire [`ysyx_22041752_PC_WD-1:0] bt_a;
+wire [`ysyx_22041752_PC_WD-1:0] bt_b;
+wire [`ysyx_22041752_PC_WD-1:0] bt_c;
+
+assign bt_a = fs_inst_jalr ? ra_data : fs_pc;
+
+assign bt_b = (fs_inst_beq || fs_inst_bne || fs_inst_blt || fs_inst_bge || fs_inst_bltu || fs_inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
+               fs_inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
+                                                                                         {{11{imm_j[20]}},imm_j} ;
+
+assign bt_c = br_taken ? bt_b : 4;
+assign br_target = seq_bj_pc;
+
+/* verilator lint_off PINCONNECTEMPTY */
+ysyx_22041752_aser #(.WIDTH (32))
+U_ASER_1(
+    .a          ( bt_a      ),
+    .b          ( bt_c      ),
+    .sub        ( 1'b0      ),
+    .cout       (           ),
+    .result     ( seq_bj_pc )
+);
+/* verilator lint_on PINCONNECTEMPTY */
+
 
 `ifdef DPI_C
 assign debug_fs_pc = fs_pc;

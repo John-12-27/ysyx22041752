@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-04 20:00
+// Last Modified : 2023-06-06 10:24
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -64,7 +64,7 @@ wire [`ysyx_22041752_DS_TO_ES_BUS_WD -1:0]   ds_to_es_bus;
 wire [`ysyx_22041752_ES_TO_MS_BUS_WD -1:0]   es_to_ms_bus;
 wire [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0]   ms_to_ws_bus;
 wire [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus;
-wire [`ysyx_22041752_BR_BUS_WD       -1:0]   br_bus;
+wire [`ysyx_22041752_PC_WD           -1:0]   ra_data     ;
 wire [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus;
 wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus;
 wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus;
@@ -109,8 +109,6 @@ ysyx_22041752_IFU U_IFU_0(
     .reset          (reset          ),
     //allowin
     .ds_allowin     (ds_allowin     ),
-    //brbus
-    .br_bus         (br_bus         ),
     //outputs
     .fs_to_ds_valid (fs_to_ds_valid ),
     .fs_to_ds_bus   (fs_to_ds_bus   ),
@@ -121,6 +119,7 @@ ysyx_22041752_IFU U_IFU_0(
     .inst_rdata     (inst_rdata     ),
     .inst_valid     (inst_valid     ),
 
+    .ra_data        (ra_data        ),
     .flush          (flush          ),
     .flush_pc       (flush_pc       )
 `ifdef DPI_C
@@ -139,11 +138,11 @@ ysyx_22041752_IDU U_IDU_0(
     .fs_to_ds_bus   ( fs_to_ds_bus   ),
     .ds_to_es_valid ( ds_to_es_valid ),
     .ds_to_es_bus   ( ds_to_es_bus   ),
-    .br_bus         ( br_bus         ),
     .ws_to_rf_bus   ( ws_to_rf_bus   ),
     .es_forward_bus ( es_forward_bus ),
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
+    .ra_data        ( ra_data        ),
     .flush          ( flush          )
 `ifdef DPI_C
     ,
