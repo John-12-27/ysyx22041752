@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-06 10:24
+// Last Modified : 2023-06-07 19:59
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -49,6 +49,7 @@ module ysyx_22041752(
    
 wire         int_t;
 wire         flush;
+wire         pre_error;       
 wire [`ysyx_22041752_PC_WD-1:0] flush_pc  ;
 
 wire         ds_allowin;
@@ -120,7 +121,7 @@ ysyx_22041752_IFU U_IFU_0(
     .inst_valid     (inst_valid     ),
 
     .ra_data        (ra_data        ),
-    .flush          (flush          ),
+    .flush          (flush|pre_error),
     .flush_pc       (flush_pc       )
 `ifdef DPI_C
     ,
@@ -143,7 +144,7 @@ ysyx_22041752_IDU U_IDU_0(
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
     .ra_data        ( ra_data        ),
-    .flush          ( flush          )
+    .flush          ( flush|pre_error)
 `ifdef DPI_C
     ,
     .dpi_regs       ( dpi_regs       ),
@@ -170,7 +171,8 @@ ysyx_22041752_EXU U_EXU_0(
     .data_wdata     ( data_wdata      ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
-    .int_t_i        ( int_t           )
+    .int_t_i        ( int_t           ),
+    .bjpre_error    ( pre_error       )
 `ifdef DPI_C
     ,
     .dpi_csrs       ( dpi_csrs        ),

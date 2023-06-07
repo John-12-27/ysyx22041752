@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-06-06 10:20
+// Last Modified : 2023-06-07 16:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -217,7 +217,7 @@ assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
 assign ds_ready_go = ~(lw_read_after_write && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
-	if(reset)begin
+	if(reset || flush)begin
 		ds_valid <= 1'b0;
 	end
 	else if(ds_allowin)begin
@@ -470,8 +470,7 @@ assign op_add = inst_add  | inst_addw  | inst_auipc | inst_jal   | inst_jalr | i
 assign csrrs  = inst_csrrs;
 assign csrrc  = inst_csrrc;
 
-assign op_sub = inst_sub  | inst_subw |
-                inst_beq  | inst_bne  | inst_bge | inst_bgeu | inst_blt | inst_bltu;
+assign op_sub = inst_sub  | inst_subw;
 assign op_slt = inst_slti | inst_slt;
 assign op_sltu= inst_sltiu| inst_sltu;
 assign op_and = inst_andi | inst_and;

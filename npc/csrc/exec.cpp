@@ -60,30 +60,27 @@ static void single_cycle()
 #endif
     top->clk = 1; 	
 
-        if(top->inst_sram_en)
-        {
-            if(top->inst_sram_addr== 0)
-            {
-                printf("%lx\n", S.pc);
-                printf("%lx\n", fspc);
-                printf("%lx\n", espc);
-                assert(0);
-            }
-            top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
-        }
+        //if(top->inst_sram_en)
+        //{
+            //if(top->inst_sram_addr== 0)
+            //{
+                //printf("%lx\n", S.pc);
+                //printf("%lx\n", fspc);
+                //printf("%lx\n", espc);
+                //assert(0);
+            //}
+            //top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
+        //}
 
-        if(top->data_sram_en)
+        if(top->sram_en)
         {
             mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
             D.pc = M.pc;
             D.inst = M.inst;
-            if(!top->data_sram_wen)
+            top->sram_rdata = vaddr_read(top->sram_raddr);
+            if(top->sram_wen)
             {
-                top->data_sram_rdata = vaddr_read(top->data_sram_addr);
-            }
-            else
-            {
-                vaddr_write(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
+                vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
             }
         }
 

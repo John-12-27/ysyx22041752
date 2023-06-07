@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-06 11:29
+// Last Modified : 2023-06-07 20:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,15 +16,12 @@ module top (
     input         clk,
     input         reset,
 
-    output                                   inst_sram_en   ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_sram_addr ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_sram_rdata,
-
-    output                                   data_sram_en   ,
-    output [`ysyx_22041752_SRAM_WEN_WD -1:0] data_sram_wen  ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_sram_addr ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] data_sram_wdata,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_sram_rdata
+    output                                   sram_en    ,
+    output [`ysyx_22041752_SRAM_WEN_WD -1:0] sram_wen   ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_waddr ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_raddr ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_wdata ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_rdata
 );
    
 wire         awready ;
@@ -123,14 +120,12 @@ axi_ram U_RAM_0(
     .s_axi_rlast                    ( rlast   ),
     .s_axi_rvalid                   ( rvalid  ),
     .s_axi_rready                   ( rready  ),
-    .inst_sram_en                   ( inst_sram_en    ),
-    .inst_sram_addr                 ( inst_sram_addr  ),
-    .inst_sram_rdata                ( inst_sram_rdata ),
-    .data_sram_en                   ( data_sram_en    ),
-    .data_sram_wen                  ( data_sram_wen   ),
-    .data_sram_addr                 ( data_sram_addr  ),
-    .data_sram_wdata                ( data_sram_wdata ),
-    .data_sram_rdata                ( data_sram_rdata ) 
+    .sram_en                        ( sram_en    ),
+    .sram_wen                       ( sram_wen   ),
+    .sram_waddr                     ( sram_waddr ),
+    .sram_raddr                     ( sram_raddr ),
+    .sram_wdata                     ( sram_wdata ),
+    .sram_rdata                     ( sram_rdata ) 
 );
 
 endmodule

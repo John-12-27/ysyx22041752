@@ -190,19 +190,19 @@ long load_img(char *img)
     return size;
 }
 
-word_t vaddr_ifetch(paddr_t addr, uint8_t len)
-{
-    printf("addr=%lx\n", addr);
-    switch(len)
-    {
-        case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);
-        case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);
-        case 4:  printf("inst=%x\n", *(uint32_t *)(mem + addr - MBASEADDR));return *(uint32_t *)(mem + addr - MBASEADDR);
-        case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
-        default: assert(0);
-    }
-    return 0;
-}
+/*word_t vaddr_ifetch(paddr_t addr, uint8_t len)*/
+/*{*/
+    /*printf("addr=%lx\n", addr);*/
+    /*switch(len)*/
+    /*{*/
+        /*case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);*/
+        /*case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);*/
+        /*case 4:  printf("inst=%x\n", *(uint32_t *)(mem + addr - MBASEADDR));return *(uint32_t *)(mem + addr - MBASEADDR);*/
+        /*case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);*/
+        /*default: assert(0);*/
+    /*}*/
+    /*return 0;*/
+/*}*/
 
 word_t vaddr_read(vaddr_t vaddr)
 {

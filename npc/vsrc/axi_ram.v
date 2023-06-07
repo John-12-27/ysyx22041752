@@ -76,15 +76,12 @@ module axi_ram #
     output                   s_axi_rvalid,
     input                    s_axi_rready, 
 
-    output        inst_sram_en   ,
-    output [31:0] inst_sram_addr ,
-    input  [63:0] inst_sram_rdata,
-
-    output        data_sram_en   ,
-    output [ 7:0] data_sram_wen  ,
-    output [31:0] data_sram_addr ,
-    output [63:0] data_sram_wdata,
-    input  [63:0] data_sram_rdata
+    output            sram_en   ,
+    output     [ 7:0] sram_wen  ,
+    output     [31:0] sram_waddr,
+    output     [31:0] sram_raddr,
+    output     [63:0] sram_wdata,
+    input      [63:0] sram_rdata
 );
 
 //parameter VALID_ADDR_WIDTH = ADDR_WIDTH - $clog2(STRB_WIDTH);
@@ -158,7 +155,7 @@ assign s_axi_bresp = 2'b00;
 assign s_axi_bvalid = s_axi_bvalid_reg;
 assign s_axi_arready = s_axi_arready_reg;
 assign s_axi_rid = PIPELINE_OUTPUT ? s_axi_rid_pipe_reg : s_axi_rid_reg;
-assign s_axi_rdata = PIPELINE_OUTPUT ? s_axi_rdata_pipe_reg : s_axi_rdata_reg;
+assign s_axi_rdata = PIPELINE_OUTPUT ? s_axi_rdata_pipe_reg : sram_rdata; //s_axi_rdata_reg;
 assign s_axi_rresp = 2'b00;
 assign s_axi_rlast = PIPELINE_OUTPUT ? s_axi_rlast_pipe_reg : s_axi_rlast_reg;
 assign s_axi_rvalid = PIPELINE_OUTPUT ? s_axi_rvalid_pipe_reg : s_axi_rvalid_reg;
@@ -344,7 +341,7 @@ always @(posedge clk) begin
     //end
 
     if (mem_rd_en) begin
-        s_axi_rdata_reg <= read_id_reg==1 ? data_sram_rdata : inst_sram_rdata;
+        s_axi_rdata_reg <= sram_rdata;
     end
 
     if (!s_axi_rvalid_pipe_reg || s_axi_rready) begin
@@ -363,12 +360,11 @@ always @(posedge clk) begin
     end
 end
 
-assign data_sram_en    = mem_rd_en&&s_axi_rid_next==1 || mem_wr_en;
-assign data_sram_wen   = mem_wr_en ? s_axi_wstrb : 8'b0;
-assign data_sram_wdata = s_axi_wdata;
-assign data_sram_addr  = mem_rd_en ? read_addr_reg : write_addr_reg;
-assign inst_sram_en    = mem_rd_en&&s_axi_rid_reg==0;
-assign inst_sram_addr  = read_addr_reg;
+assign sram_en    = mem_rd_en | mem_wr_en;
+assign sram_wen   = mem_wr_en ? s_axi_wstrb : 8'b0;
 
+assign sram_wdata = s_axi_wdata;
+assign sram_waddr = write_addr_reg;
+assign sram_raddr = read_addr_reg;
 endmodule
 
