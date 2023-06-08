@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-06-03 16:34
+// Last Modified : 2023-06-07 16:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,53 +13,76 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_IDU (
-    input  wire                           clk           ,
-    input  wire                           reset         ,
-    //allowin
-    input  wire                           es_allowin    ,
-    output wire                           ds_allowin    ,
-    //from fs
-    input  wire                           fs_to_ds_valid,
-    input  wire [`FS_TO_DS_BUS_WD -1:0]   fs_to_ds_bus  ,
-    //to es
-    output wire                           ds_to_es_valid,
-    output wire [`DS_TO_ES_BUS_WD -1:0]   ds_to_es_bus  ,
-    //to fs
-    output wire [`BR_BUS_WD       -1:0]   br_bus        ,
-    //to rf: for write back
-    input  wire [`WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus  ,
-	//forward_bus
-	input  wire [`ES_FORWARD_BUS_WD -1:0] es_forward_bus,
-	input  wire [`FORWARD_BUS_WD -1:0]    ms_forward_bus,
-	input  wire [`FORWARD_BUS_WD -1:0]    ws_forward_bus,
+    input                                          clk           ,
+    input                                          reset         ,
+    
+    input                                          es_allowin    ,
+    output                                         ds_allowin    ,
+   
+    input                                          fs_to_ds_valid,
+    input  [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0]   fs_to_ds_bus  ,
+    
+    output                                         ds_to_es_valid,
+    output [`ysyx_22041752_DS_TO_ES_BUS_WD -1:0]   ds_to_es_bus  ,
+    
+    input  [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus  ,
+	
+	input  [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus,
+	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus,
+	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus,
 
-    input  wire                           flush         ,
+    output [`ysyx_22041752_PC_WD          -1:0]    ra_data       ,
+    input                                          flush         
 
+`ifdef DPI_C
+        ,
     //used to dpi-c debug
-    output wire [`RF_DATA_WD     -1:0]    dpi_regs [`RF_NUM-1:0],
-    output wire [                 0:0]    stop,
-    output wire [`INST_WD        -1:0]    debug_ds_inst
+    output [`ysyx_22041752_RF_DATA_WD     -1:0]    dpi_regs [`ysyx_22041752_RF_NUM-1:0],
+    output [                 0:0]    stop,
+    output [`ysyx_22041752_INST_WD        -1:0]    debug_ds_inst
+`endif
 );
 
 reg  ds_valid   ;
 wire ds_ready_go;
 
-reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
-wire [`INST_WD         -1:0] ds_inst;
-wire [`PC_WD           -1:0] ds_pc  ;
-assign {ds_inst,
-        ds_pc  } = fs_to_ds_bus_r;
+reg  [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
+wire [`ysyx_22041752_INST_WD         -1:0] ds_inst;
+wire [`ysyx_22041752_PC_WD           -1:0] ds_pc  ;
+wire inst_jal       ;
+wire inst_jalr      ;
+wire inst_beq       ;
+wire inst_bne       ;
+wire inst_blt       ;
+wire inst_bge       ;
+wire inst_bltu      ;
+wire inst_bgeu      ;
+wire [12:0] ds_imm_b;
+wire                              br_taken;
+wire [`ysyx_22041752_PC_WD-1:0]   br_target;
+
+assign {ds_inst  ,
+        ds_pc    ,
+        inst_jal ,  
+        inst_jalr,  
+        inst_beq ,  
+        inst_bne ,  
+        inst_blt ,  
+        inst_bge ,  
+        inst_bltu,  
+        inst_bgeu,
+        br_taken ,
+        br_target,
+        ds_imm_b 
+       } = fs_to_ds_bus_r;
 
 wire                   rf_we   ;
-wire [`RF_ADDR_WD-1:0] rf_waddr;
-wire [`RF_DATA_WD-1:0] rf_wdata;
+wire [`ysyx_22041752_RF_ADDR_WD-1:0] rf_waddr;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] rf_wdata;
 assign {rf_we   ,  //69:69
         rf_waddr,  //68:64
         rf_wdata   //63:0
        } = ws_to_rf_bus;
-
-wire              br_taken;
-wire [`PC_WD-1:0] br_target;
 
 wire mul_u  ;
 wire mul_su ;
@@ -99,10 +122,8 @@ wire        id_mem_re   ;
 wire [ 1:0] id_mem_bytes;
 wire [ 5:0] shamt;
 wire [19:0] imm_u;
-wire [20:0] imm_j;
 wire [11:0] imm_i;
 wire [11:0] imm_s;
-wire [12:0] imm_b;
 wire [11:0] rscsr;
 
 wire [ 6:0] opcode;
@@ -120,21 +141,20 @@ wire ms_rs2_hazard;
 wire ws_rs1_hazard;
 wire ws_rs2_hazard;
 
-wire [`RF_ADDR_WD-1:0] es_dest_reg;
-wire [`RF_ADDR_WD-1:0] ms_dest_reg;
-wire [`RF_ADDR_WD-1:0] ws_dest_reg;
-wire [`RF_DATA_WD-1:0] es_wreg_data;
-wire [`RF_DATA_WD-1:0] ms_wreg_data;
-wire [`RF_DATA_WD-1:0] ws_wreg_data;
-wire                   lw_read_after_write;
-wire                   es_forward_valid;
-wire                   ms_forward_valid;
-wire                   ws_forward_valid;
-wire [`RF_DATA_WD-1:0] data_r1;
-wire [`RF_DATA_WD-1:0] data_r2;
-wire [`RF_DATA_WD-1:0] rs1_value;
-wire [`RF_DATA_WD-1:0] rs2_value;
-assign br_bus       = {br_taken,br_target};
+wire [`ysyx_22041752_RF_ADDR_WD-1:0] es_dest_reg;
+wire [`ysyx_22041752_RF_ADDR_WD-1:0] ms_dest_reg;
+wire [`ysyx_22041752_RF_ADDR_WD-1:0] ws_dest_reg;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] es_wreg_data;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] ms_wreg_data;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] ws_wreg_data;
+wire                                 lw_read_after_write;
+wire                                 es_forward_valid;
+wire                                 ms_forward_valid;
+wire                                 ws_forward_valid;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] data_r1;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] data_r2;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] rs1_value;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] rs2_value;
 
 assign ds_to_es_bus = {inst_ecall    ,
                        inst_mret     ,
@@ -142,6 +162,16 @@ assign ds_to_es_bus = {inst_ecall    ,
                        mul_u         ,
                        mul_su        ,
                        mul_h         ,
+                       inst_jalr     ,  
+                       inst_beq      ,  
+                       inst_bne      ,  
+                       inst_blt      ,  
+                       inst_bge      ,  
+                       inst_bltu     ,  
+                       inst_bgeu     ,  
+                       br_taken      ,
+                       br_target     ,
+                       ds_imm_b      ,
                        op_mul        ,
                        op_div        ,
                        op_rem        ,
@@ -187,7 +217,7 @@ assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
 assign ds_ready_go = ~(lw_read_after_write && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
-	if(reset)begin
+	if(reset || flush)begin
 		ds_valid <= 1'b0;
 	end
 	else if(ds_allowin)begin
@@ -196,21 +226,16 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-	if (fs_to_ds_valid && ds_allowin) begin
+    if (reset) begin
+        fs_to_ds_bus_r <= 0;
+    end
+	else if (fs_to_ds_valid && ds_allowin) begin
         fs_to_ds_bus_r <= fs_to_ds_bus;
     end
 end
 
 wire inst_lui    ;
 wire inst_auipc  ;
-wire inst_jal    ;
-wire inst_jalr   ;
-wire inst_beq    ;
-wire inst_bne    ;
-wire inst_blt    ;
-wire inst_bge    ;
-wire inst_bltu   ;
-wire inst_bgeu   ;
 wire inst_lb     ;
 wire inst_lh     ;
 wire inst_lw     ;
@@ -271,8 +296,7 @@ wire inst_ecall  ;
 wire inst_mret   ;
 wire inst_ebreak ;
 wire inst_invalid;
-assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
-assign debug_ds_inst = ds_inst;
+
 assign inst_invalid = !(inst_lui   || 
                         inst_auipc || 
                         inst_jal   || 
@@ -353,10 +377,8 @@ assign sh_funct6 = funct7 [ 6: 1];
 assign shamt     = ds_inst[25:20];
 assign rscsr     = ds_inst[31:20];
 assign imm_u     = ds_inst[31:12];
-assign imm_j     = {ds_inst[31], ds_inst[19:12], ds_inst[20], ds_inst[30:21], 1'b0}; 
 assign imm_i     = ds_inst[31:20]; 
 assign imm_s     = {ds_inst[31:25], ds_inst[11:7]}; 
-assign imm_b     = {ds_inst[31], ds_inst[7], ds_inst[30:25], ds_inst[11:8], 1'b0};  
 
 assign inst_add    = funct7 == 7'b0000000 && funct3 == 3'b0   && opcode == 7'b0110011;
 assign inst_addw   = funct7 == 7'b0000000 && funct3 == 3'b0   && opcode == 7'b0111011;
@@ -398,14 +420,16 @@ assign inst_ebreak = funct7 == 7'b0000000 && funct3 == 3'b000 && opcode == 7'b11
 
 assign inst_lui    = opcode == 7'b0110111;
 assign inst_auipc  = opcode == 7'b0010111;
-assign inst_jal    = opcode == 7'b1101111;
-assign inst_jalr   = opcode == 7'b1100111;
-assign inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
-assign inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
-assign inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
-assign inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
-assign inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
-assign inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+
+//assign inst_jal    = opcode == 7'b1101111;
+//assign inst_jalr   = opcode == 7'b1100111;
+//assign inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
+//assign inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
+//assign inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
+//assign inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
+//assign inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
+//assign inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+
 assign inst_lb     = opcode == 7'b0000011 && funct3 == 3'b000;
 assign inst_lh     = opcode == 7'b0000011 && funct3 == 3'b001;
 assign inst_lw     = opcode == 7'b0000011 && funct3 == 3'b010;
@@ -482,6 +506,7 @@ assign id_mem_bytes = (inst_lb || inst_lbu || inst_sb) ? 2'b00 :
 //read from regfile
 ysyx_22041752_rf U_RF_0(
     .clk        ( clk      ),
+    .reset      ( reset    ),
     .addr_r1    ( rs1      ),
     .addr_r2    ( rs2      ),
     .data_r1    ( data_r1  ),
@@ -489,7 +514,12 @@ ysyx_22041752_rf U_RF_0(
     .addr_w     ( rf_waddr ),
     .we         ( rf_we    ),
     .data_w     ( rf_wdata ),
+    .ra_data    ( ra_data  )
+`ifdef DPI_C
+        ,
     .dpi_regs   ( dpi_regs )
+`endif
+
 );
 
 wire rs1_is_not_zero;
@@ -516,18 +546,16 @@ assign rs2_value = es_rs2_hazard ? es_wreg_data :
                    ws_rs2_hazard ? ws_wreg_data :
                                       data_r2   ;
 
+/*
+
 wire rs1_eq_rs2 ;
 wire rs1_l_rs2  ;
 wire rs1u_l_rs2u;
 wire bc_co      ;
-wire [`PC_WD-1:0] bt_a;
-wire [`PC_WD-1:0] bt_b;
-
-/* verilator lint_off UNUSEDSIGNAL */
-wire [`RF_DATA_WD-1:0] bc_r;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] bc_r;
 
 assign rs1u_l_rs2u=~bc_co;
-assign rs1_l_rs2  = bc_r[`RF_DATA_WD-1];
+assign rs1_l_rs2  = bc_r[`ysyx_22041752_RF_DATA_WD-1];
 assign rs1_eq_rs2 = rs1_value == rs2_value;
 assign br_taken = (   inst_beq  &&  rs1_eq_rs2
                    || inst_bne  && !rs1_eq_rs2
@@ -539,27 +567,18 @@ assign br_taken = (   inst_beq  &&  rs1_eq_rs2
 				   || inst_jalr
                   ) && ds_valid;
 
-ysyx_22041752_aser U_ASER_0(
+ysyx_22041752_aser #(.WIDTH ( 64 ))
+U_ASER_0(
     .a          ( rs1_value   ),
     .b          ( rs2_value   ),
     .sub        ( 1'b1        ),
     .cout       ( bc_co       ),
     .result     ( bc_r        )
 );
+*/
 
-assign bt_a = inst_jalr ? rs1_value[31:0] : ds_pc;
-assign bt_b = (inst_beq || inst_bne || inst_blt || inst_bge || inst_bltu || inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
-               inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
-                                                                                         {{11{imm_j[20]}},imm_j} ;
-
-/* verilator lint_off PINCONNECTEMPTY */
-ysyx_22041752_aser #(.WIDTH (32))
-U_ASER_1(
-    .a          ( bt_a      ),
-    .b          ( bt_b      ),
-    .sub        ( 1'b0      ),
-    .cout       (           ),
-    .result     ( br_target )
-);
-
+`ifdef DPI_C
+assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
+assign debug_ds_inst = ds_inst;
+`endif
 endmodule

@@ -38,6 +38,9 @@ uint8_t valid_flag = 0;
 uint8_t exp_flag   = 0;
 uint8_t mret_flag  = 0;
 
+paddr_t fspc;
+paddr_t espc;
+
 #ifdef DUMP_WAVE
 static void step_and_dump_wave()
 {
@@ -49,13 +52,40 @@ static void step_and_dump_wave()
 
 static void single_cycle()
 {
-    top->clk = 0; top->eval();
-    //top->clk = 1; top->eval();	
+    top->clk = 0; 
+
+    top->eval();
 #ifdef DUMP_WAVE
     step_and_dump_wave();
 #endif
-    //top->clk = 0; top->eval();
-    top->clk = 1; top->eval();	
+    top->clk = 1; 	
+
+        //if(top->inst_sram_en)
+        //{
+            //if(top->inst_sram_addr== 0)
+            //{
+                //printf("%lx\n", S.pc);
+                //printf("%lx\n", fspc);
+                //printf("%lx\n", espc);
+                //assert(0);
+            //}
+            //top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
+        //}
+
+        if(top->sram_en)
+        {
+            mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+            D.pc = M.pc;
+            D.inst = M.inst;
+            top->sram_rdata = vaddr_read(top->sram_raddr);
+            if(top->sram_wen)
+            {
+                vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
+            }
+        }
+
+    top->eval();
+
 #ifdef DUMP_WAVE
     step_and_dump_wave();
 #endif
@@ -132,66 +162,9 @@ static bool halt()
     return res;
 }
 
-bool inst_ract = false;
-bool mem_ract  = false;
-paddr_t fetch_addr;
-paddr_t mem_addr;
-word_t  mem_wdata;
-uint8_t mem_wen;
-paddr_t fspc;
-paddr_t espc;
 static void exec_once()
 {
-    top->clk = 0; 
-
-    if(inst_ract)
-    {
-        if(fetch_addr == 0)
-        {
-            printf("%lx\n", S.pc);
-            printf("%lx\n", fspc);
-            printf("%lx\n", espc);
-
-            assert(0);
-        }
-        inst_ract = false;
-        top->inst_sram_rdata = vaddr_ifetch(fetch_addr, 4);
-    }
-
-    if(top->inst_sram_en)
-    {
-        fetch_addr = top->inst_sram_addr;
-        inst_ract = true;
-    }
-
-    if(mem_ract)
-    {
-        mem_ract = false;
-        if(!mem_wen)
-        {
-            top->data_sram_rdata = vaddr_read(mem_addr);
-        }
-        else
-        {
-            vaddr_write(mem_addr, mem_wdata, mem_wen);
-        }
-    }
-
-    if(top->data_sram_en)
-    {
-        mem_ract = true;
-        mem_wdata  = top->data_sram_wdata;
-        mem_addr   = top->data_sram_addr;
-        mem_wen    = top->data_sram_wen;
-        mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-        D.pc = M.pc;
-        D.inst = M.inst;
-    }
-
-    top->eval();
-#ifdef DUMP_WAVE
-    step_and_dump_wave();
-#endif
+    single_cycle();
 }
 
 void reset(int n)
@@ -199,7 +172,14 @@ void reset(int n)
     top->reset = 1;
     while(n-- > 0)
     {
-        single_cycle();
+        top->clk = 0; top->eval();
+#ifdef DUMP_WAVE
+        step_and_dump_wave();
+#endif
+        top->clk = 1; top->eval();	
+#ifdef DUMP_WAVE
+        step_and_dump_wave();
+#endif
     }
     top->reset = 0;
     top->eval();
@@ -229,7 +209,7 @@ void exec(uint64_t n, bool batch)
 {
     static uint64_t boot_time = get_time_internal();
     static uint64_t cycle_count = 0;
-    svSetScope(svGetScopeFromName("TOP.top.u_dpi_c"));
+    svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
     switch (npc_state.state) 
     {
         case NPC_END: 
@@ -244,24 +224,6 @@ void exec(uint64_t n, bool batch)
         {
             exec_once();
             cycle_count++;
-            top->clk = 1;
-
-            if(top->inst_sram_en)
-            {
-                fetch_addr = top->inst_sram_addr;
-                inst_ract = true;
-            }
-
-            if(top->data_sram_en)
-            {
-                mem_ract = true;
-                mem_wdata  = top->data_sram_wdata;
-                mem_addr   = top->data_sram_addr;
-                mem_wen    = top->data_sram_wen;
-                mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-                D.pc = M.pc;
-                D.inst = M.inst;
-            }
 
             record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
                     if(halt())
@@ -273,10 +235,6 @@ void exec(uint64_t n, bool batch)
                         break;
                     }
             device_update();
-            top->eval();
-#ifdef DUMP_WAVE
-            step_and_dump_wave();
-#endif
         }
     }
     else

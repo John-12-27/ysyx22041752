@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-06-03 16:36
+// Last Modified : 2023-06-06 22:27
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,35 +15,40 @@
 
 module ysyx_22041752_alu(
 `ifndef DPI_C
-    input  wire        clk         ,
-    input  wire        reset       , 
-    input  wire        flush       ,
+    input         clk         ,
+    input         reset       , 
+    input         flush       ,
 `endif
-    input  wire        mul_u       ,
-    input  wire        mul_su      ,
-    input  wire        div_u       , 
-    input  wire        mul_h       ,
-    input  wire        op_mul      ,     
-    input  wire        op_div      ,
-    input  wire        op_rem      ,
-    input  wire        op_add      ,
-    input  wire        op_sub      ,
-    input  wire        op_slt      ,
-    input  wire        op_sltu     ,
-    input  wire        op_and      ,
-    input  wire        op_or       ,
-    input  wire        op_xor      ,
-    input  wire        op_sll      ,
-    input  wire        op_srl      ,
-    input  wire        op_sra      ,
-    input  wire        res_sext    ,
-    input  wire [63:0] alu_src1    ,
-    input  wire [63:0] alu_src2    ,
-    output wire [63:0] alu_result  ,
-    output wire [63:0] mem_result  ,
-    output wire        div_out_valid,
-    output wire        mul_out_valid
-    //output wire [63:0] mul_result
+    input         mul_u        ,
+    input         mul_su       ,
+    input         div_u        , 
+    input         mul_h        ,
+    input         beq          ,  
+    input         bne          ,  
+    input         blt          ,  
+    input         bge          ,  
+    input         bltu         ,  
+    input         bgeu         ,  
+    input         op_mul       ,     
+    input         op_div       ,
+    input         op_rem       ,
+    input         op_add       ,
+    input         op_sub       ,
+    input         op_slt       ,
+    input         op_sltu      ,
+    input         op_and       ,
+    input         op_or        ,
+    input         op_xor       ,
+    input         op_sll       ,
+    input         op_srl       ,
+    input         op_sra       ,
+    input         res_sext     ,
+    input  [63:0] alu_src1     ,
+    input  [63:0] alu_src2     ,
+    output [63:0] alu_result   ,
+    output [63:0] mem_result   ,
+    output        div_out_valid,
+    output        mul_out_valid
 );
 
 wire [63:0] mul_result;
@@ -58,6 +63,7 @@ wire [ 63:0] r_sll;
 wire [ 63:0] r_srl; 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [127:0] r_sra; 
+/* verilator lint_on UNUSEDSIGNAL */
 
 // 64-bit adder
 wire [63:0] adder_a;
@@ -68,8 +74,10 @@ wire        adder_cout;
 
 assign adder_a   = alu_src1;
 assign adder_b   = alu_src2;
-assign adder_cin = op_sub | op_slt | op_sltu;
-ysyx_22041752_aser U_ASER_0(
+assign adder_cin = op_sub | op_slt | op_sltu | 
+                   beq    | bne    | bge     | bgeu | blt | bltu;
+ysyx_22041752_aser #(.WIDTH (64))
+U_ASER_0(
     .a          ( adder_a      ),
     .b          ( adder_b      ),
     .sub        ( adder_cin    ),
@@ -89,6 +97,16 @@ assign r_sll = alu_src1 << alu_src2;
 assign r_srl = alu_src1 >> alu_src2; 
 assign r_sra = (res_sext ? {{96{alu_src1[31]}}, alu_src1[31:0]} : {{64{alu_src1[63]}}, alu_src1}) >> alu_src2;
 
+
+wire rs1_eq_rs2 ;
+wire rs1_l_rs2  ;
+wire rs1u_l_rs2u;
+
+assign rs1u_l_rs2u=~adder_cout;
+assign rs1_l_rs2  = adder_result[63];
+assign rs1_eq_rs2 = alu_src1==alu_src2;
+
+
 wire [63:0] res;
 assign res = ({64{op_add|op_sub }}&{adder_result[63:0]})
             |({64{op_slt|op_sltu}}&{r_slt       [63:0]})
@@ -100,7 +118,13 @@ assign res = ({64{op_add|op_sub }}&{adder_result[63:0]})
             |({64{op_sra        }}&{r_sra       [63:0]})
             |({64{op_mul        }}&{mul_result})
             |({64{op_div        }}&{div_result})
-            |({64{op_rem        }}&{rem_result});
+            |({64{op_rem        }}&{rem_result})
+            |({64{beq & rs1_eq_rs2}})
+            |({64{bne &!rs1_eq_rs2}})
+            |({64{blt & rs1_l_rs2}})
+            |({64{bge &!rs1_l_rs2}})
+            |({64{bltu& rs1u_l_rs2u}})
+            |({64{bgeu&!rs1u_l_rs2u}});
 assign alu_result = res_sext ? {{32{res[31]}}, res[31:0]} : res;
 
 assign mem_result = adder_result;
