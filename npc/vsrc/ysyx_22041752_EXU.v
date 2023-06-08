@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-07 22:44
+// Last Modified : 2023-06-08 16:43
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -37,7 +37,7 @@ module ysyx_22041752_EXU(
     output                                         flush         ,
     output [`ysyx_22041752_PC_WD-1:0]              flush_pc      ,
     input                                          int_t_i       , 
-
+    output                                         flush_pc_p4   ,
     output                                         bjpre_error   
 
 `ifdef DPI_C
@@ -188,16 +188,7 @@ wire                            pre_error  ;
 wire [`ysyx_22041752_PC_WD-1:0] bj_addr    ;
 wire                            br_taken_real = alu_result[0];
 
-//always @(posedge clk) begin
-    //if (reset) begin
-        //pre_error_r <= 0;
-    //end
-    //else begin
-        //pre_error_r <= pre_error;
-    //end
-//end
-
-assign bjpre_error = pre_error && es_valid;//!pre_error_r;
+assign bjpre_error = pre_error && es_valid;
 bjt_cal U_BJT_CAL_0(
     .jalr                           ( jalr                                ),
     .imm_i                          ( imm_i                               ),
@@ -287,8 +278,9 @@ assign csr_wdata = expfsm_pre == W_MEPC   ? {32'b0, es_pc} :
                    {64{csrrc}} & (rs1_value &~csr_rdata) |
                    {64{!csrrs && !csrrc}} & rs1_value;
 
-assign flush    = (ecall||mret||int_t_o) && es_valid;
-assign flush_pc = pre_error ? br_taken_real|jalr ? bj_addr : es_pc+4 : csr_rdata[`ysyx_22041752_PC_WD-1:0];
+assign flush       = (ecall||mret||int_t_o) && es_valid;
+assign flush_pc_p4 = pre_error && !(br_taken_real || jalr);
+assign flush_pc = pre_error ? br_taken_real||jalr ? bj_addr : es_pc : csr_rdata[`ysyx_22041752_PC_WD-1:0];
 
 assign alu_src1 = src_pc   ? {32'b0, es_pc} : 
                   src_0    ? 64'd0          :

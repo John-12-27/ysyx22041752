@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-07 22:44
+// Last Modified : 2023-06-08 16:36
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -31,7 +31,8 @@ module ysyx_22041752_IFU (
 
     input  [`ysyx_22041752_PC_WD       -1:0]     ra_data        ,
     input                                        flush          , 
-    input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       
+    input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       ,
+    input                                        flush_pc_p4    
 `ifdef DPI_C
     ,
     output [`ysyx_22041752_PC_WD-1:0]            debug_fs_pc
@@ -112,7 +113,7 @@ always @(posedge clk) begin
         flush_pc_r <= 0;
     end
     else if(flush) begin
-        flush_pc_r <= flush_pc;
+        flush_pc_r <= seq_bj_pc;
     end
 end
 
@@ -196,13 +197,16 @@ wire [`ysyx_22041752_PC_WD-1:0] bt_a;
 wire [`ysyx_22041752_PC_WD-1:0] bt_b;
 wire [`ysyx_22041752_PC_WD-1:0] bt_c;
 
-assign bt_a = fs_inst_jalr ? ra_data : fs_pc;
+assign bt_a = flush ? flush_pc : fs_inst_jalr ? ra_data : fs_pc;
 
 assign bt_b = (fs_inst_beq || fs_inst_bne || fs_inst_blt || fs_inst_bge || fs_inst_bltu || fs_inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
                fs_inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
                                                                                          {{11{imm_j[20]}},imm_j} ;
 
-assign bt_c = br_taken ? bt_b : 4;
+assign bt_c = flush &&!flush_pc_p4 ? 0    : 
+              flush && flush_pc_p4 ? 4    : 
+              br_taken             ? bt_b : 
+                                     4    ;
 assign br_target = seq_bj_pc;
 
 /* verilator lint_off PINCONNECTEMPTY */
