@@ -28,7 +28,7 @@ override ARGS ?= -b --itrace=$(BUILD_DIR)/nemu-log.txt --mtrace=$(BUILD_DIR)/mtr
 override ARGS += $(ARGS_DIFF)
 
 # Command to execute NEMU
-RISCV_TEST ?= rv64um-p-mul
+RISCV_TEST ?= rv64ui-p-jalr
 IMG ?= $(NEMU_HOME)/rv64uim-p/$(RISCV_TEST).bin
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 

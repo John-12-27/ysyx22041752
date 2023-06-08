@@ -19,7 +19,7 @@
 #include "typedef.h"
 #include "npc_state.h"
 
-#define CONFIG_DIFFTEST      1
+//#define CONFIG_DIFFTEST      1
 //#define CONFIG_WATCHPOINT    1
 //#define CONFIG_FTRACE        1
 
@@ -34,13 +34,13 @@
 #define CONFIG_SDCARD        1
 #define CONFIG_DTRACE_DIRECT 1
 
-#define CONFIG_ITRACE        1
+//#define CONFIG_ITRACE        1
 #define CONFIG_ITRACE_START  0x80000000
 #define CONFIG_ITRACE_END    0x80000000
 //#define CONFIG_ITRACE_COND   1
 #define CONFIG_ITRACE_DIRECT 1
 
-#define CONFIG_MTRACE        1
+//#define CONFIG_MTRACE        1
 #define CONFIG_PMTRACE_START 0x800002e0
 #define CONFIG_PMTRACE_END   0x800002e0
 //#define CONFIG_MTRACE_COND   1
