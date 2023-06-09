@@ -44,7 +44,6 @@ paddr_t espc;
 #ifdef DUMP_WAVE
 static void step_and_dump_wave()
 {
-    //top->eval();
     contextp->timeInc(1);
     tfp->dump(contextp->time());
 };
