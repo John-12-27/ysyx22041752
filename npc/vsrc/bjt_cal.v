@@ -5,7 +5,7 @@
 // Filename      : bjt_cal.v
 // Author        : Cw
 // Created On    : 2023-06-06 09:19
-// Last Modified : 2023-06-06 21:52
+// Last Modified : 2023-06-09 20:56
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -46,9 +46,13 @@ U_ASER_1(
 );
 /* verilator lint_on PINCONNECTEMPTY */
 
-assign pre_error = branch ? br_taken_pre != b_taken_real :
-                   jalr   ? bj_addr      != jt_pre       :
-                            1'b0                         ;
-                   
+wire br_err   = branch && (br_taken_pre!=b_taken_real);
+wire jalr_err = jalr   && (bj_addr     !=jt_pre);
+
+//assign pre_error = branch ? br_taken_pre != b_taken_real :
+                   //jalr   ? bj_addr      != jt_pre       :
+                            //1'b0                         ;
+assign pre_error = br_err || jalr_err;
+
 endmodule
 
