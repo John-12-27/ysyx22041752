@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-08 16:43
+// Last Modified : 2023-06-08 21:16
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,7 +29,6 @@ module ysyx_22041752_EXU(
 	output [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus,
 
     output                                         data_en       ,
-    input                                          data_ready    ,
     output [`ysyx_22041752_SRAM_WEN_WD -1:0]       data_wen      ,
     output [`ysyx_22041752_SRAM_ADDR_WD-1:0]       data_addr     ,
     output [`ysyx_22041752_SRAM_DATA_WD-1:0]       data_wdata    ,
@@ -225,8 +224,8 @@ wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
 wire div_out_valid;                                              
 wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
-wire mem_stall = data_en && !data_ready;
-assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !mem_stall;
+//wire mem_stall = data_en && !data_ready;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall;// && !mem_stall;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go &&!flush;
 always @(posedge clk) begin
@@ -340,7 +339,7 @@ ysyx_22041752_alu U_ALU_0(
 );
 
 assign data_addr= mem_addr[31:0];
-assign data_en  = (es_mem_re | es_mem_we) &&!data_ready && es_valid;
+assign data_en  = (es_mem_re | es_mem_we) &&/*!data_ready &&*/ es_valid;
 assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                   es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
                   es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :

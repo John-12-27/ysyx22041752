@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-06-07 16:29
+// Last Modified : 2023-06-08 22:46
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -217,7 +217,7 @@ assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
 assign ds_ready_go = ~(lw_read_after_write && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
-	if(reset || flush)begin
+	if(reset)begin
 		ds_valid <= 1'b0;
 	end
 	else if(ds_allowin)begin
@@ -295,7 +295,9 @@ wire inst_csrrc  ;
 wire inst_ecall  ;
 wire inst_mret   ;
 wire inst_ebreak ;
+/*verilator lint_off UNUSEDSIGNAL */
 wire inst_invalid;
+/*verilator lint_on UNUSEDSIGNAL */
 
 assign inst_invalid = !(inst_lui   || 
                         inst_auipc || 
@@ -578,7 +580,7 @@ U_ASER_0(
 */
 
 `ifdef DPI_C
-assign stop = (inst_invalid | inst_ebreak) & ds_valid ;
+assign stop = inst_ebreak & ds_valid ;
 assign debug_ds_inst = ds_inst;
 `endif
 endmodule

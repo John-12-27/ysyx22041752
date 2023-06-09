@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-08 16:43
+// Last Modified : 2023-06-08 21:17
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,35 +16,46 @@ module ysyx_22041752(
     input         clock,
     input         reset,
 
-    input          io_master_awready ,
-    output         io_master_awvalid ,
-    output [3:0]   io_master_awid    ,
-    output [31:0]  io_master_awaddr  ,
-    output [7:0]   io_master_awlen   ,
-    output [2:0]   io_master_awsize  ,
-    output [1:0]   io_master_awburst ,
-    input          io_master_wready  ,
-    output         io_master_wvalid  ,
-    output [63:0]  io_master_wdata   ,
-    output [7:0]   io_master_wstrb   ,
-    output         io_master_wlast   ,
-    output         io_master_bready  ,
-    input          io_master_bvalid  ,
-    input  [3:0]   io_master_bid     ,
-    input  [1:0]   io_master_bresp   ,
-    input          io_master_arready ,
-    output         io_master_arvalid ,
-    output [3:0]   io_master_arid    ,
-    output [31:0]  io_master_araddr  ,
-    output [7:0]   io_master_arlen   ,
-    output [2:0]   io_master_arsize  ,
-    output [1:0]   io_master_arburst ,
-    output         io_master_rready  ,
-    input          io_master_rvalid  ,
-    input  [3:0]   io_master_rid     ,
-    input  [63:0]  io_master_rdata   ,
-    input  [1:0]   io_master_rresp   ,
-    input          io_master_rlast   
+    output                                   inst_en    ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr  ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata ,
+
+    output                                   data_en    ,
+    output [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen   ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr  ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata
+
+    //input          io_master_awready ,
+    //output         io_master_awvalid ,
+    //output [3:0]   io_master_awid    ,
+    //output [31:0]  io_master_awaddr  ,
+    //output [7:0]   io_master_awlen   ,
+    //output [2:0]   io_master_awsize  ,
+    //output [1:0]   io_master_awburst ,
+    //input          io_master_wready  ,
+    //output         io_master_wvalid  ,
+    //output [63:0]  io_master_wdata   ,
+    //output [7:0]   io_master_wstrb   ,
+    //output         io_master_wlast   ,
+    //output         io_master_bready  ,
+    //input          io_master_bvalid  ,
+    //input  [3:0]   io_master_bid     ,
+    //input  [1:0]   io_master_bresp   ,
+    //input          io_master_arready ,
+    //output         io_master_arvalid ,
+    //output [3:0]   io_master_arid    ,
+    //output [31:0]  io_master_araddr  ,
+    //output [7:0]   io_master_arlen   ,
+    //output [2:0]   io_master_arsize  ,
+    //output [1:0]   io_master_arburst ,
+    //output         io_master_rready  ,
+    //input          io_master_rvalid  ,
+    //input  [3:0]   io_master_rid     ,
+    //input  [63:0]  io_master_rdata   ,
+    //input  [1:0]   io_master_rresp   ,
+    //input          io_master_rlast   
+
 );
    
 wire         int_t;
@@ -90,20 +101,20 @@ wire [                            0:0] stop;
 
 wire clk = clock;
 
-// fetch insts interface
-wire                                   inst_en   ;
-wire                                   inst_ready;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata;
-wire                                   inst_valid;
-// ld/store interface
-wire                                   data_en   ;
-wire                                   data_ready;
-wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata;
-wire                                   data_valid;
+//// fetch insts interface
+//wire                                   inst_en   ;
+//wire                                   inst_ready;
+//wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
+//wire [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata;
+//wire                                   inst_valid;
+//// ld/store interface
+//wire                                   data_en   ;
+//wire                                   data_ready;
+//wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
+//wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
+//wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;
+//wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata;
+//wire                                   data_valid;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -116,10 +127,8 @@ ysyx_22041752_IFU U_IFU_0(
     .fs_to_ds_bus   (fs_to_ds_bus   ),
 
     .inst_en        (inst_en        ),
-    .inst_ready     (inst_ready     ),
     .inst_addr      (inst_addr      ),
     .inst_rdata     (inst_rdata     ),
-    .inst_valid     (inst_valid     ),
 
     .ra_data        (ra_data        ),
     .flush          (flush|pre_error),
@@ -167,7 +176,6 @@ ysyx_22041752_EXU U_EXU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .es_forward_bus ( es_forward_bus  ),
     .data_en        ( data_en         ),
-    .data_ready     ( data_ready      ),
     .data_wen       ( data_wen        ),
     .data_addr      ( data_addr       ),
     .data_wdata     ( data_wdata      ),
@@ -215,7 +223,6 @@ ysyx_22041752_MEU U_MEU_0(
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
     .data_rdata     ( clint_rdat_v ? clint_rdata : data_rdata ),
-    .rdata_valid    ( clint_rdat_v ? 1'b1        : data_valid ),
     .ms_forward_bus ( ms_forward_bus  )
 );
 
@@ -238,51 +245,51 @@ ysyx_22041752_WBU U_WBU_0(
 `endif
 );
 
-ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
-    .clk                            ( clk                           ),
-    .reset                          ( reset                         ),
-    .inst_en                        ( inst_en                       ),
-    .inst_ready                     ( inst_ready                    ),
-    .inst_addr                      ( inst_addr                     ),
-    .inst_rdata                     ( inst_rdata                    ),
-    .inst_valid                     ( inst_valid                    ),
-    .data_en                        ( data_en                       ),
-    .data_ready                     ( data_ready                    ),
-    .data_wen                       ( data_wen                      ),
-    .data_addr                      ( data_addr                     ),
-    .data_wdata                     ( data_wdata                    ),
-    .data_rdata                     ( data_rdata                    ),
-    .data_valid                     ( data_valid                    ),
-    .arid                           ( io_master_arid                ),
-    .araddr                         ( io_master_araddr              ),
-    .arlen                          ( io_master_arlen               ),
-    .arsize                         ( io_master_arsize              ),
-    .arburst                        ( io_master_arburst             ),
-    .arvalid                        ( io_master_arvalid             ),
-    .arready                        ( io_master_arready             ),
-    .rid                            ( io_master_rid                 ),
-    .rdata                          ( io_master_rdata               ),
-    .rresp                          ( io_master_rresp               ),
-    .rlast                          ( io_master_rlast               ),
-    .rvalid                         ( io_master_rvalid              ),
-    .rready                         ( io_master_rready              ),
-    .awid                           ( io_master_awid                ),
-    .awaddr                         ( io_master_awaddr              ),
-    .awlen                          ( io_master_awlen               ),
-    .awsize                         ( io_master_awsize              ),
-    .awburst                        ( io_master_awburst             ),
-    .awvalid                        ( io_master_awvalid             ),
-    .awready                        ( io_master_awready             ),
-    .wdata                          ( io_master_wdata               ),
-    .wstrb                          ( io_master_wstrb               ),
-    .wlast                          ( io_master_wlast               ),
-    .wvalid                         ( io_master_wvalid              ),
-    .wready                         ( io_master_wready              ),
-    .bid                            ( io_master_bid                 ),
-    .bresp                          ( io_master_bresp               ),
-    .bvalid                         ( io_master_bvalid              ),
-    .bready                         ( io_master_bready              )
-);
+//ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
+    //.clk                            ( clk                           ),
+    //.reset                          ( reset                         ),
+    //.inst_en                        ( inst_en                       ),
+    //.inst_ready                     ( inst_ready                    ),
+    //.inst_addr                      ( inst_addr                     ),
+    //.inst_rdata                     ( inst_rdata                    ),
+    //.inst_valid                     ( inst_valid                    ),
+    //.data_en                        ( data_en                       ),
+    //.data_ready                     ( data_ready                    ),
+    //.data_wen                       ( data_wen                      ),
+    //.data_addr                      ( data_addr                     ),
+    //.data_wdata                     ( data_wdata                    ),
+    //.data_rdata                     ( data_rdata                    ),
+    //.data_valid                     ( data_valid                    ),
+    //.arid                           ( io_master_arid                ),
+    //.araddr                         ( io_master_araddr              ),
+    //.arlen                          ( io_master_arlen               ),
+    //.arsize                         ( io_master_arsize              ),
+    //.arburst                        ( io_master_arburst             ),
+    //.arvalid                        ( io_master_arvalid             ),
+    //.arready                        ( io_master_arready             ),
+    //.rid                            ( io_master_rid                 ),
+    //.rdata                          ( io_master_rdata               ),
+    //.rresp                          ( io_master_rresp               ),
+    //.rlast                          ( io_master_rlast               ),
+    //.rvalid                         ( io_master_rvalid              ),
+    //.rready                         ( io_master_rready              ),
+    //.awid                           ( io_master_awid                ),
+    //.awaddr                         ( io_master_awaddr              ),
+    //.awlen                          ( io_master_awlen               ),
+    //.awsize                         ( io_master_awsize              ),
+    //.awburst                        ( io_master_awburst             ),
+    //.awvalid                        ( io_master_awvalid             ),
+    //.awready                        ( io_master_awready             ),
+    //.wdata                          ( io_master_wdata               ),
+    //.wstrb                          ( io_master_wstrb               ),
+    //.wlast                          ( io_master_wlast               ),
+    //.wvalid                         ( io_master_wvalid              ),
+    //.wready                         ( io_master_wready              ),
+    //.bid                            ( io_master_bid                 ),
+    //.bresp                          ( io_master_bresp               ),
+    //.bvalid                         ( io_master_bvalid              ),
+    //.bready                         ( io_master_bready              )
+//);
 
 `ifdef DPI_C
 dpi_c u_dpi_c(

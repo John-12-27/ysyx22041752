@@ -1,6 +1,8 @@
 *.*
 *
-!*/
+!csrc/*
+!vsrc/*
+!rv64uim-p/*
 !Makefile
 !*.mk
 !*.sh
