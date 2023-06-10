@@ -16,6 +16,7 @@
 #include "memory.h"
 #include "monitor.h"
 #include "device.h"
+#include "keyboard.h"
 #include "tracer.h"
 #include "diff_dut.h"
 
@@ -72,7 +73,8 @@ static inline word_t paddr_read(paddr_t paddr)
 #ifdef CONFIG_DIFFTEST
         record_skip_pc(D.pc);
 #endif
-        word_t data = (word_t)vgactl_port_base[0];
+        i8042_data_io_handler();
+        word_t data = (word_t)i8042_data_port_base[0];
 #ifdef CONFIG_DTRACE
         if(dtrace_enable("keyboard"))
         {
@@ -192,13 +194,16 @@ long load_img(char *img)
 
 word_t vaddr_ifetch(paddr_t addr, uint8_t len)
 {
-    switch(len)
+    if((addr >= MBASEADDR) && (addr < (MBASEADDR + MEMSIZE)))
     {
-        case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);
-        case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);
-        case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);
-        case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
-        default: assert(0);
+        switch(len)
+        {
+            case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);
+            case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);
+            case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);
+            case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
+            default: assert(0);
+        }
     }
     return 0;
 }

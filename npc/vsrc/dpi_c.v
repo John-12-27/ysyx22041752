@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-03-30 16:54
+// Last Modified : 2023-06-06 18:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,22 +14,22 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module dpi_c (
-    input  wire                  clk              ,
-    input  wire                  stop             ,
-    input  wire                  ws_valid         ,
-    input  wire[`RF_DATA_WD-1:0] dpi_regs [31:0]  ,
-    input  wire[63:0]            dpi_csrs [3:0]   ,
-    input  wire[`PC_WD     -1:0] debug_wb_pc      ,
-    input  wire[`PC_WD     -1:0] debug_es_pc      ,
-    input  wire                  debug_es_exp     ,
-    input  wire                  debug_es_mret    ,
-    input  wire[`INST_WD   -1:0] debug_ds_inst    ,
+    input                    clk              ,
+    input                    stop             ,
+    input                    ws_valid         ,
+    input  [`ysyx_22041752_RF_DATA_WD-1:0] dpi_regs [31:0]  ,
+    input  [63:0]            dpi_csrs [3:0]   ,
+    input  [63:0] debug_wb_pc      ,
+    input  [63:0] debug_es_pc      ,
+    input                    debug_es_exp     ,
+    input                    debug_es_mret    ,
+    input  [`ysyx_22041752_INST_WD   -1:0] debug_ds_inst    ,
 
-    input  wire[`PC_WD     -1:0] debug_fs_pc      ,
+    input  [63:0] debug_fs_pc      ,
     /* verilator lint_off UNUSEDSIGNAL */
-    input  wire                  debug_wb_rf_wen  ,
-    input  wire[`RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
-    input  wire[`RF_DATA_WD-1:0] debug_wb_rf_wdata
+    input                    debug_wb_rf_wen  ,
+    input  [`ysyx_22041752_RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
+    input  [`ysyx_22041752_RF_DATA_WD-1:0] debug_wb_rf_wdata
     /* verilator lint_on UNUSEDSIGNAL */
 );
 
@@ -77,10 +77,10 @@ always @(posedge clk) begin
 	valid_r <= ws_valid;
 end
 
-reg [`INST_WD-1:0] inst_r0;
-reg [`INST_WD-1:0] inst_r1;
-reg [`INST_WD-1:0] inst_r2;
-reg [`INST_WD-1:0] inst_r3;
+reg [`ysyx_22041752_INST_WD-1:0] inst_r0;
+reg [`ysyx_22041752_INST_WD-1:0] inst_r1;
+reg [`ysyx_22041752_INST_WD-1:0] inst_r2;
+reg [`ysyx_22041752_INST_WD-1:0] inst_r3;
 always @(posedge clk) begin
     inst_r0 <= debug_ds_inst;   //exe_stage
 end
@@ -122,7 +122,7 @@ always @(posedge clk) begin
     mret_cmt <= mret_ws;
 end
 
-reg [`PC_WD-1:0] current_pc;
+reg [63:0] current_pc;
 always @(posedge clk) begin
 	current_pc <= debug_wb_pc;
 end
@@ -143,7 +143,7 @@ function void record();
     valid = valid_r;
     exp   = exp_cmt;
     mret  = mret_cmt;
-    pc    = current_pc;
+    pc    = current_pc ;
     fspc  = debug_fs_pc;
     espc  = debug_es_pc;
     dnpc  = debug_wb_pc;
@@ -155,7 +155,6 @@ function void mem_inst();
     output longint pc   ;
     output int     inst ;
     pc    = debug_es_pc;
-
     inst  = inst_r0 ;
 endfunction
 

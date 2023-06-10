@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "device.h"
+#include "keyboard.h"
 #include "npc_state.h"
 #include <assert.h>
 #include <SDL2/SDL.h>
@@ -40,11 +41,12 @@ static void init_screen() {
       SDL_TEXTUREACCESS_STATIC, SCREEN_W, SCREEN_H);
 }
 
-static inline void update_screen() {
-  SDL_UpdateTexture(texture, NULL, vmem, SCREEN_W * sizeof(uint32_t));
-  SDL_RenderClear(renderer);
-  SDL_RenderCopy(renderer, texture, NULL, NULL);
-  SDL_RenderPresent(renderer);
+static inline void update_screen() 
+{
+    SDL_UpdateTexture(texture, NULL, vmem, SCREEN_W * sizeof(uint32_t));
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
 }
 
 void vga_update_screen() 
@@ -87,6 +89,7 @@ void device_init()
 {
     getRTC_val();
     init_vga();
+    init_i8042();
 }
 
 void serial(word_t data, uint8_t wen)
@@ -102,8 +105,6 @@ void serial(word_t data, uint8_t wen)
     }
 }
 
-
-/*extern void send_key(uint8_t, bool);*/
 void device_update() 
 {
     static uint64_t last = 0;
@@ -116,26 +117,25 @@ void device_update()
 
     vga_update_screen();
 
-    /*SDL_Event event;*/
-    /*while (SDL_PollEvent(&event)) */
-    /*{*/
-        /*switch (event.type) */
-        /*{*/
-            /*case SDL_QUIT:*/
-                /*npc_state.state = NPC_QUIT;*/
-                /*break;*/
-      /*// If a key was pressed*/
-            /*case SDL_KEYDOWN:*/
-            /*case SDL_KEYUP: */
-                /*{*/
-                    /*uint8_t k = event.key.keysym.scancode;*/
-                    /*bool is_keydown = (event.key.type == SDL_KEYDOWN);*/
-                    /*send_key(k, is_keydown);*/
-                    /*break;*/
-                /*}*/
-        /*default: break;*/
-        /*}*/
-    /*}*/
-
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) 
+    {
+        switch (event.type) 
+        {
+            case SDL_QUIT:
+                npc_state.state = NPC_QUIT;
+                break;
+      // If a key was pressed
+            case SDL_KEYDOWN:
+            case SDL_KEYUP: 
+                {
+                    uint8_t k = event.key.keysym.scancode;
+                    bool is_keydown = (event.key.type == SDL_KEYDOWN);
+                    send_key(k, is_keydown);
+                    break;
+                }
+        default: break;
+        }
+    }
 }
 

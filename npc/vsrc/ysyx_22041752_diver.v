@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_diver.v
 // Author        : Cw
 // Created On    : 2022-12-14 14:01
-// Last Modified : 2023-06-03 14:52
+// Last Modified : 2023-06-10 19:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -15,20 +15,17 @@
 
 module ysyx_22041752_diver (
 `ifndef DPI_C
-    input  wire                   clk        ,
-    input  wire                   reset      ,
-    input  wire                   flush      ,
+    input                                       clk        ,
+    input                                       reset      ,
+    input                                       flush      ,
 `endif
-
-    input  wire [`RF_DATA_WD-1:0] dividend   ,
-    input  wire [`RF_DATA_WD-1:0] divisor    ,
-    input  wire                   div_valid  ,
-    //input  wire                   divw       ,
-    input  wire                   div_signed ,
-    //output wire                   div_ready  ,
-    output wire                   out_valid  ,
-    output reg  [`RF_DATA_WD-1:0] quotient   ,
-    output reg  [`RF_DATA_WD-1:0] remainder
+    input  [`ysyx_22041752_RF_DATA_WD-1:0]      dividend   ,
+    input  [`ysyx_22041752_RF_DATA_WD-1:0]      divisor    ,
+    input                                       div_valid  ,
+    input                                       div_signed ,
+    output                                      out_valid  ,
+    output reg  [`ysyx_22041752_RF_DATA_WD-1:0] quotient   ,
+    output reg  [`ysyx_22041752_RF_DATA_WD-1:0] remainder
 );
     
 `ifndef DPI_C
@@ -41,36 +38,39 @@ always @(posedge clk) begin
         count <= count + 1;
 end
 
-wire dividend_s  = div_signed & dividend[`RF_DATA_WD-1];
-wire divisor_s   = div_signed & divisor[`RF_DATA_WD-1];
+wire dividend_s  = div_signed & dividend[`ysyx_22041752_RF_DATA_WD-1];
+wire divisor_s   = div_signed & divisor[`ysyx_22041752_RF_DATA_WD-1];
 wire remainder_s = dividend_s;
 wire quotient_s  = div_signed & (dividend_s ^ divisor_s);
 
-wire [`RF_DATA_WD-1:0]   dividend_abs       ;
-wire [`RF_DATA_WD-1:0]   divisor_abs        ;
-wire [2*`RF_DATA_WD-1:0] dividend_abs_128   = {64'b0, dividend_abs};
-wire [`RF_DATA_WD:0]     divisor_abs_65     = {1'b0, divisor_abs};
-reg  [2*`RF_DATA_WD-1:0] result_abs_buffer  ;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]   dividend_abs       ;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]   divisor_abs        ;
+wire [2*`ysyx_22041752_RF_DATA_WD-1:0] dividend_abs_128   = {64'b0, dividend_abs};
+wire [`ysyx_22041752_RF_DATA_WD:0]     divisor_abs_65     = {1'b0, divisor_abs};
+reg  [2*`ysyx_22041752_RF_DATA_WD-1:0] result_abs_buffer  ;
 
-wire [`RF_DATA_WD-1:0] not_p1_i_1 = out_valid ? result_abs_buffer[2*`RF_DATA_WD-1:`RF_DATA_WD] : dividend;
-wire [`RF_DATA_WD-1:0] not_p1_i_2 = out_valid ? result_abs_buffer[`RF_DATA_WD-1:0] : divisor;
-wire [`RF_DATA_WD-1:0] not_p1_o_1 = ~not_p1_i_1 + 1;
-wire [`RF_DATA_WD-1:0] not_p1_o_2 = ~not_p1_i_2 + 1;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_i_1 = out_valid ? result_abs_buffer[2*`ysyx_22041752_RF_DATA_WD-1:`ysyx_22041752_RF_DATA_WD] : dividend;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_i_2 = out_valid ? result_abs_buffer[`ysyx_22041752_RF_DATA_WD-1:0] : divisor;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_o_1 = ~not_p1_i_1 + 1;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_o_2 = ~not_p1_i_2 + 1;
 
 assign dividend_abs = dividend_s ? not_p1_o_1 : dividend;
 assign divisor_abs  = divisor_s  ? not_p1_o_2 : divisor;
 
-wire [`RF_DATA_WD:0]     sub_result = result_abs_buffer[2*`RF_DATA_WD-1:`RF_DATA_WD-1] - divisor_abs_65;
-wire [2*`RF_DATA_WD-1:0] update_result = {(sub_result[`RF_DATA_WD] ? result_abs_buffer[2*`RF_DATA_WD-2:`RF_DATA_WD-1] : sub_result[`RF_DATA_WD-1:0]),result_abs_buffer[`RF_DATA_WD-2:0],(sub_result[`RF_DATA_WD] ? 1'b0 : 1'b1)};
+wire [`ysyx_22041752_RF_DATA_WD:0]     sub_result = result_abs_buffer[2*`ysyx_22041752_RF_DATA_WD-1:`ysyx_22041752_RF_DATA_WD-1] - divisor_abs_65;
+wire [2*`ysyx_22041752_RF_DATA_WD-1:0] update_result = {(sub_result[`ysyx_22041752_RF_DATA_WD] ? result_abs_buffer[2*`ysyx_22041752_RF_DATA_WD-2:`ysyx_22041752_RF_DATA_WD-1] : sub_result[`ysyx_22041752_RF_DATA_WD-1:0]),result_abs_buffer[`ysyx_22041752_RF_DATA_WD-2:0],(sub_result[`ysyx_22041752_RF_DATA_WD] ? 1'b0 : 1'b1)};
 
 always @(posedge clk) begin
-    if(count == 0)
+    if (reset) begin
+        result_abs_buffer <= 0;
+    end
+    else if (count == 0)
         result_abs_buffer <= dividend_abs_128;
     else
         result_abs_buffer <= update_result;
 end
 
-assign out_valid = div_valid && ((count == `RF_DATA_WD+1)                                                        || 
+assign out_valid = div_valid && ((count == `ysyx_22041752_RF_DATA_WD+1)                                                        || 
                    divisor == 0                                                                                  || 
                    (div_signed && (dividend == 64'h8000_0000_0000_0000) && (divisor == 64'hffff_ffff_ffff_ffff)));
 
@@ -85,7 +85,7 @@ always @(*) begin
         quotient = not_p1_o_2;
     end
     else begin
-        quotient = result_abs_buffer[`RF_DATA_WD-1:0];
+        quotient = result_abs_buffer[`ysyx_22041752_RF_DATA_WD-1:0];
     end
 end
 
@@ -100,7 +100,7 @@ always @(*) begin
         remainder = not_p1_o_1;
     end
     else begin
-        remainder = result_abs_buffer[2*`RF_DATA_WD-1:`RF_DATA_WD];
+        remainder = result_abs_buffer[2*`ysyx_22041752_RF_DATA_WD-1:`ysyx_22041752_RF_DATA_WD];
     end
 end
 
@@ -109,24 +109,24 @@ end
 /**************************************************************************************/
 `else
 
-wire dividend_s  = div_signed & dividend[`RF_DATA_WD-1];
-wire divisor_s   = div_signed & divisor[`RF_DATA_WD-1];
+wire dividend_s  = div_signed & dividend[`ysyx_22041752_RF_DATA_WD-1];
+wire divisor_s   = div_signed & divisor [`ysyx_22041752_RF_DATA_WD-1];
 wire remainder_s = dividend_s;
 wire quotient_s  = div_signed & (dividend_s ^ divisor_s);
 
-wire [`RF_DATA_WD-1:0]   dividend_abs       ;
-wire [`RF_DATA_WD-1:0]   divisor_abs        ;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]   dividend_abs       ;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]   divisor_abs        ;
 
-wire [`RF_DATA_WD-1:0] not_p1_i_1 = dividend;
-wire [`RF_DATA_WD-1:0] not_p1_i_2 = divisor;
-wire [`RF_DATA_WD-1:0] not_p1_o_1 = ~not_p1_i_1 + 1;
-wire [`RF_DATA_WD-1:0] not_p1_o_2 = ~not_p1_i_2 + 1;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_i_1 = dividend;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_i_2 = divisor;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_o_1 = ~not_p1_i_1 + 1;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] not_p1_o_2 = ~not_p1_i_2 + 1;
 
 assign dividend_abs = dividend_s ? not_p1_o_1 : dividend;
 assign divisor_abs  = divisor_s  ? not_p1_o_2 : divisor;
 
-wire [`RF_DATA_WD-1:0] quotient_abs  = dividend_abs / divisor_abs;
-wire [`RF_DATA_WD-1:0] remainder_abs = dividend_abs % divisor_abs;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] quotient_abs  = dividend_abs / divisor_abs;
+wire [`ysyx_22041752_RF_DATA_WD-1:0] remainder_abs = dividend_abs % divisor_abs;
 
 assign out_valid = div_valid;
 
