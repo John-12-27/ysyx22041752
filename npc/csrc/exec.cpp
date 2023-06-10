@@ -211,6 +211,7 @@ void exec(uint64_t n, bool batch)
 {
     static uint64_t boot_time = get_time_internal();
     static uint64_t cycle_count = 0;
+    static uint64_t instr_count = 0;
     svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
     switch (npc_state.state) 
     {
@@ -228,6 +229,10 @@ void exec(uint64_t n, bool batch)
             cycle_count++;
 
             record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+            if (valid_flag) 
+            {
+                instr_count++;
+            }
                     if(halt())
                     {
                         break;
@@ -267,6 +272,7 @@ void exec(uint64_t n, bool batch)
             Log("Spend %ldus, %ldms\n", spend_time, spend_time/1000);
             Log("Cycle_count = %ld, T = %ldus\n", cycle_count, spend_time/cycle_count);
             Log("Frequency = %ldHz\n", 1000000/(spend_time/cycle_count));
+            Log("inst_count= %ld, IPC = %f\n", instr_count, (float)instr_count / (float)cycle_count);
 
 
 #if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))
