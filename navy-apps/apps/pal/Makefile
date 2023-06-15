@@ -8,6 +8,8 @@ NAME = pal
 SRCS = $(shell find $(REPO_PATH)/src/ -name "*.c" -or -name "*.cpp")
 INC_PATH = $(REPO_PATH)/include
 LIBS += libminiSDL libfixedptc
+CFLAGS = -pg
+LDFLAGS = -pg 
 include $(NAVY_HOME)/Makefile
 
 install: install-file

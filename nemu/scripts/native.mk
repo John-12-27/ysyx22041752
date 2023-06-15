@@ -29,7 +29,8 @@ override ARGS += $(ARGS_DIFF)
 
 # Command to execute NEMU
 RISCV_TEST ?= rv64ui-p-jalr
-IMG ?= $(NEMU_HOME)/rv64uim-p/$(RISCV_TEST).bin
+#IMG ?= $(NEMU_HOME)/rv64uim-p/$(RISCV_TEST).bin
+IMG ?= $(NEMU_HOME)/pal.bin
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 
 run-env: $(BINARY) $(DIFF_REF_SO)

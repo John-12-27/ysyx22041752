@@ -24,6 +24,7 @@ static uint8_t key_snapshot[83] = {0};
 
 int SDL_PollEvent(SDL_Event *ev) 
 {
+
     char buf [64] = {'\0', };
     NDL_PollEvent(buf, sizeof(buf));
 
@@ -46,7 +47,7 @@ int SDL_PollEvent(SDL_Event *ev)
         }
     }
 
-    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+    for(int i = 1; i < 83; i++)
     {
         bool equal;
         if((strlen(&buf[3])-1) > strlen(keyname[i]))
@@ -68,6 +69,7 @@ int SDL_PollEvent(SDL_Event *ev)
 
 int SDL_WaitEvent(SDL_Event *event) 
 {
+    
     char buf [64] = {'\0', };
     NDL_PollEvent(buf, sizeof(buf));
 
@@ -91,7 +93,7 @@ int SDL_WaitEvent(SDL_Event *event)
         }
     }
 
-    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+    for(int i = 1; i < 83; i++)
     {
         bool equal;
         if((strlen(&buf[3])-1) > strlen(keyname[i]))
@@ -118,18 +120,18 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
 
 uint8_t* SDL_GetKeyState(int *numkeys) 
 {
+
     if(flag > 0)
     {
         key_snapshot[key_i] = 1;
         flag --;
     }
-
     for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
     {
         if((i == key_i) && (flag > 0))
             continue;
         key_snapshot[i] = 0;
     }
-
     return key_snapshot;
+
 }

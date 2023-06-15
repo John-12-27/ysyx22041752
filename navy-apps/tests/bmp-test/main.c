@@ -14,6 +14,6 @@ int main() {
   free(bmp);
   NDL_Quit();
   printf("Test ends! Spinning...\n");
-  while (1);
+  for (int i = 0; i < 10000; ++i) ;
   return 0;
 }
