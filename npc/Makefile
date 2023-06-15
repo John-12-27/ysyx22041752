@@ -99,7 +99,11 @@ gdb: build
 	@echo "---- debugging ----"
 	gdb -s $(OBJ_DIR)/V$(TOPNAME) --args $(OBJ_DIR)/V$(TOPNAME) $(OPTIONS) $(IMG_BIN) 
 
+gprof: 
+	gprof $(OBJ_DIR)/V$(TOPNAME) gmon.out > gprof_repo.txt
+
 clean :
 	-rm -rf $(BUILD_DIR) logs 
-	
+	-rm gmon.out
+	-rm gprof_repo.txt
 .PHONY: sim batch gdb clean build
