@@ -42,13 +42,13 @@ size_t events_read(void *buf, size_t offset, size_t len)
             tmp[1] = 'u';
         tmp[2] = ' ';
 
-        /*tmp[3] = (uint8_t)ev.keycode;*/
-        /*printf("keycode is %d\n", ev.keycode);*/
+        tmp[3] = (uint8_t)ev.keycode;
+        return 0;
 
-        uint8_t i = strlen(keyname[ev.keycode]);
-        strncpy(&tmp[3], keyname[ev.keycode], i);
-        tmp[i+1+2] = '\n';
-        return i+1+2;
+        /*uint8_t i = strlen(keyname[ev.keycode]);*/
+        /*strncpy(&tmp[3], keyname[ev.keycode], i);*/
+        /*tmp[i+1+2] = '\n';*/
+        /*return i+1+2;*/
     }
 }
 
@@ -83,7 +83,6 @@ size_t fb_write(const void *buf, size_t offset, size_t len)
         /*FB[i] = p[i];*/
     /*}*/
     /*io_write(AM_GPU_FBDRAW, FB[0], FB[1], (void*)FB[2], FB[3], FB[4], FB[5]);*/
-
 	int y = offset/(4*SCREEN_WIDTH);
 	int x = offset/4-y*SCREEN_WIDTH;
     io_write(AM_GPU_FBDRAW, x, y, (void*)buf, len/4, 1, 1);

@@ -17,14 +17,13 @@ int SDL_PushEvent(SDL_Event *ev) {
   return 0;
 }
 
-#define PRESSED_DELAY 100
-static uint8_t flag = 0;
+/*#define PRESSED_DELAY 100*/
+/*static uint8_t flag = 0;*/
 static uint8_t key_i = 0;
 static uint8_t key_snapshot[83] = {0};
 
 int SDL_PollEvent(SDL_Event *ev) 
 {
-
     char buf [64] = {'\0', };
     NDL_PollEvent(buf, sizeof(buf));
 
@@ -38,15 +37,23 @@ int SDL_PollEvent(SDL_Event *ev)
         switch(buf[1])
         {
             case 'd': ev->type = SDL_KEYDOWN; 
-                      flag = PRESSED_DELAY; break;
+                      ev->key.keysym.sym = buf[3];
+                      key_i = buf[3];
+                      break;
+                      /*flag = PRESSED_DELAY; break;*/
             case 'u': ev->type = SDL_KEYUP;   
-                      flag = 0; break;
+                      ev->key.keysym.sym = buf[3];
+                      key_i = 0;
+                      break;
+                      /*flag = 0; break;*/
             default :
                       printf("Err event type\n");
                       assert(0);
         }
     }
 
+
+/*    
     for(int i = 1; i < 83; i++)
     {
         bool equal;
@@ -63,13 +70,13 @@ int SDL_PollEvent(SDL_Event *ev)
             break;
         }
     }
+*/
 
     return 1;
 }
 
 int SDL_WaitEvent(SDL_Event *event) 
 {
-    
     char buf [64] = {'\0', };
     NDL_PollEvent(buf, sizeof(buf));
 
@@ -84,15 +91,22 @@ int SDL_WaitEvent(SDL_Event *event)
         switch(buf[1])
         {
             case 'd': event->type = SDL_KEYDOWN; 
-                      flag = PRESSED_DELAY; break;
+                      event->key.keysym.sym = buf[3];
+                      printf("wait event keysym = %d\n", event->key.keysym.sym);
+                      break;
+                      /*flag = PRESSED_DELAY; break;*/
             case 'u': event->type = SDL_KEYUP;   
-                      flag = 0; break;
+                      event->key.keysym.sym = buf[3];
+                      printf("wait event keysym = %d\n", event->key.keysym.sym);
+                      break;
+                      /*flag = 0; break;*/
             default :
                       printf("Err event type\n");
                       assert(0);
         }
     }
 
+/*
     for(int i = 1; i < 83; i++)
     {
         bool equal;
@@ -109,6 +123,7 @@ int SDL_WaitEvent(SDL_Event *event)
             break;
         }
     }
+*/
 
     return 1;
 }
@@ -120,18 +135,24 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
 
 uint8_t* SDL_GetKeyState(int *numkeys) 
 {
-
+    memset((void *)key_snapshot, 0, sizeof(key_snapshot));
+    if (key_i) 
+    {
+        key_snapshot[key_i] = 1;
+    }
+    return key_snapshot;
+/*
     if(flag > 0)
     {
         key_snapshot[key_i] = 1;
         flag --;
     }
-    for(int i = 1; i < 83/*(const int)sizeof(keyname)*/; i++)
+    for(int i = 1; i < 83; i++)
     {
         if((i == key_i) && (flag > 0))
             continue;
         key_snapshot[i] = 0;
     }
     return key_snapshot;
-
+*/
 }

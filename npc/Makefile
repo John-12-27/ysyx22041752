@@ -86,7 +86,6 @@ commit: build
 	@echo "---- COMMITED ----"	
 include ../Makefile
 
-IMG_BIN ?= $(NPC_HOME)/pal.bin
 sim: build
 	@echo
 	@echo "---- simulating ----"
