@@ -1,6 +1,7 @@
 #include <am.h>
 #include <nemu.h>
 #include <klib-macros.h>
+#include <klib.h>
 
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 
@@ -28,15 +29,17 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
 {
     uint32_t *now_vmem_base = (uint32_t *)FB_ADDR + ctl->y * SCREEN_WIDTH + ctl->x;
     uint32_t *now_pixel_base = (uint32_t *)ctl->pixels;
+
     for(int i = 0; i < ctl->h; i++) 
     {
-        for(int j = 0; j< ctl->w; j++) 
+        for(int j = 0; j < ctl->w; j++) 
         {
             now_vmem_base[j] = now_pixel_base[j];
         }
         now_vmem_base += SCREEN_WIDTH;
         now_pixel_base += ctl->w;
     }
+
     if(ctl->sync) 
     {
         outl(SYNC_ADDR, 1);

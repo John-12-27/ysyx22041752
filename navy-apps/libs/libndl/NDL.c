@@ -13,29 +13,11 @@ static int screen_w = 0, screen_h = 0;
 static int canvas_w = 0, canvas_h = 0;
 static int canvas_x = 0, canvas_y = 0;
 
-
 extern int open (const char *file, int flags, ...);
 extern ssize_t read (int fd, void *buf, size_t cnt);
 extern ssize_t write (int fd, const void *buf, size_t cnt);
 extern __off_t lseek(int fd, __off_t pos, int whence);
 extern int close (int fd);
-
-/*uint32_t NDL_GetTicks() */
-/*{*/
-    /*static bool first_flag = false;*/
-    /*static struct timeval tv_init;*/
-    /*struct timeval tv;*/
-    /*gettimeofday(&tv, NULL);*/
-    /*if(!first_flag)*/
-    /*{*/
-        /*first_flag = true;*/
-        /*tv_init = tv;*/
-    /*}*/
-    /*if(tv.tv_usec >= tv_init.tv_usec)*/
-        /*return (tv.tv_usec-tv_init.tv_usec)/1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
-    /*else*/
-        /*return (1000000 - tv_init.tv_usec + tv.tv_usec) / 1000 + 1000*(tv.tv_sec - tv_init.tv_sec);*/
-/*}*/
 
 uint32_t NDL_GetTicks() 
 {
@@ -99,11 +81,15 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h)
     assert(w<=screen_w); assert(h<=screen_h);
     int draw_x = x + canvas_x; int draw_y = y + canvas_y;
 
+    /*lseek(open("/dev/fb", 0, 0), 4*(draw_y*screen_w+draw_x), SEEK_SET);*/
+    /*write(open("/dev/fb", 0, 0), pixels, w*4*h);*/
+
     for(int i = 0; i < h; i++)
     {
         lseek(open("/dev/fb", 0, 0), 4*((draw_y+i)*screen_w+draw_x), SEEK_SET);
         write(open("/dev/fb", 0, 0), pixels+i*w, w*4);
     }
+
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
