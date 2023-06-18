@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-08 22:26
+// Last Modified : 2023-06-17 22:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -23,9 +23,8 @@ module ysyx_22041752_IFU (
     
     output                                       inst_en        ,
     output [`ysyx_22041752_SRAM_ADDR_WD-1:0]     inst_addr      ,
-/* verilator lint_off UNUSEDSIGNAL */
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0]     inst_rdata     ,
-/* verilator lint_on UNUSEDSIGNAL */
+    input  [`ysyx_22041752_INST_WD-1:0]          inst_rdata     ,
+    input                                        cache_miss     ,
 
     input  [`ysyx_22041752_PC_WD       -1:0]     ra_data        ,
     input                                        flush          , 
@@ -133,7 +132,7 @@ assign nextpc  = //flush       ? flush_pc   :
 
 assign to_fs_valid  = ~reset;//ftfsm_pre==GET_INST;
 
-assign fs_ready_go    = 1;//inst_valid;
+assign fs_ready_go    = !cache_miss;//inst_valid;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
 assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~flush;
 always @(posedge clk) begin
@@ -156,7 +155,7 @@ end
 
 assign inst_en    = to_fs_valid && fs_allowin; //(ftfsm_pre==REQUEST || ftfsm_pre==DROP_REQ) && !inst_ready;
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
+assign fs_inst    = inst_rdata;
 
 //always @(posedge clk) begin
     //if (ftfsm_pre==GET_INST || ftfsm_pre==DROPED) begin

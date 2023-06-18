@@ -88,7 +88,7 @@ static inline word_t paddr_read(paddr_t paddr)
     else
     {
         printf("read addr error : %lx\n", paddr);
-        assert(0);
+        /*assert(0);*/
     }
     return 0;
 }

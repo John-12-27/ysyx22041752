@@ -41,14 +41,8 @@ size_t events_read(void *buf, size_t offset, size_t len)
         else
             tmp[1] = 'u';
         tmp[2] = ' ';
-
         tmp[3] = (uint8_t)ev.keycode;
         return 0;
-
-        /*uint8_t i = strlen(keyname[ev.keycode]);*/
-        /*strncpy(&tmp[3], keyname[ev.keycode], i);*/
-        /*tmp[i+1+2] = '\n';*/
-        /*return i+1+2;*/
     }
 }
 

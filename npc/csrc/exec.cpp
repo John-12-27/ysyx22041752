@@ -59,32 +59,17 @@ static void single_cycle()
 #endif
     top->clk = 1; 	
 
-        if(top->inst_sram_en)
-        {
-            if(top->inst_sram_addr== 0)
+        top->sram_rdata = vaddr_read(top->sram_raddr);
+        //if(top->sram_en)
+        //{
+            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+            //D.pc = M.pc;
+            //D.inst = M.inst;
+            if(top->sram_en && top->sram_wen)
             {
-                printf("%lx\n", S.pc);
-                printf("%lx\n", fspc);
-                printf("%lx\n", espc);
-                //assert(0);
+                vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
             }
-            top->inst_sram_rdata = vaddr_ifetch(top->inst_sram_addr, 4);
-        }
-
-        if(top->data_sram_en)
-        {
-            mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
-            D.pc = M.pc;
-            D.inst = M.inst;
-            if(top->data_sram_wen)
-            {
-                vaddr_write(top->data_sram_addr, top->data_sram_wdata, top->data_sram_wen);
-            }
-            else 
-            {
-                top->data_sram_rdata = vaddr_read(top->data_sram_addr);
-            }
-        }
+        //}
 
     top->eval();
 
@@ -233,15 +218,19 @@ void exec(uint64_t n, bool batch)
             {
                 instr_count++;
             }
-                    if(halt())
-                    {
-                        break;
-                    }
-                    if(trace_diff_watch())
-                    {
-                        break;
-                    }
+            if(halt())
+            {
+                break;
+            }
+            if(trace_diff_watch())
+            {
+                break;
+            }
             device_update();
+            if(npc_state.state == NPC_QUIT)
+            {
+                break;
+            }
         }
     }
     else

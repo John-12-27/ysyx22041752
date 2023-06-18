@@ -32,6 +32,18 @@
     `define ysyx_22041752_CSR_ADDR_MCAUSE   12'h342
     `define ysyx_22041752_CSR_ADDR_MIP      12'h344
 
+
+    `define ysyx_22041752_ICACHE_SIZE         (4*1024)
+    `define ysyx_22041752_ICACHE_EN_WD        (`ysyx_22041752_ICACHE_SIZE / 1024)
+    `define ysyx_22041752_ICACHE_WAY          2
+    `define ysyx_22041752_ICACHE_SIZE_PERWAY  (`ysyx_22041752_ICACHE_SIZE / `ysyx_22041752_ICACHE_WAY)
+    `define ysyx_22041752_ICACHE_SIZE_PERLINE (128 / 8)
+    `define ysyx_22041752_ICACHE_LINE_PERWAY  (`ysyx_22041752_ICACHE_SIZE_PERWAY / `ysyx_22041752_ICACHE_SIZE_PERLINE)
+    `define ysyx_22041752_ICACHE_INDEX_WD     $clog2(`ysyx_22041752_ICACHE_LINE_PERWAY)
+    `define ysyx_22041752_ICACHE_OFFSET_WD    $clog2(`ysyx_22041752_ICACHE_SIZE_PERLINE)
+    `define ysyx_22041752_ICACHE_TAG_WD       `ysyx_22041752_PC_WD - `ysyx_22041752_ICACHE_OFFSET_WD - `ysyx_22041752_ICACHE_INDEX_WD
+    `define ysyx_22041752_RS_TO_CS_BUS_WD     36
+
     `define DPI_C
 `endif
 

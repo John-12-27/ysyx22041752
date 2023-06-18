@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-06-08 21:16
+// Last Modified : 2023-06-17 22:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -27,7 +27,7 @@ module ysyx_22041752_MEU (
     output [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus  ,
     
     input  [`ysyx_22041752_SRAM_DATA_WD    -1:0] data_rdata    ,
-    //input                                        rdata_valid   ,
+    input                                        rdata_valid   ,
 	
 	output [`ysyx_22041752_FORWARD_BUS_WD  -1:0] ms_forward_bus
 );
@@ -65,7 +65,7 @@ assign ms_to_ws_bus = {ms_rf_we       ,
                        ms_pc             
                       };
 
-assign ms_ready_go    = 1'b1; //ms_mem_re ? rdata_valid : 1'b1;
+assign ms_ready_go    = ms_mem_re ? rdata_valid : 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin

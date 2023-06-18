@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_regfiles.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:21
-// Last Modified : 2023-06-06 09:18
+// Last Modified : 2023-06-17 16:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -50,7 +50,6 @@ generate
             else if(we && (addr_w == i))
                 regs[i] <= data_w;
         end
-        
     end
 endgenerate
 

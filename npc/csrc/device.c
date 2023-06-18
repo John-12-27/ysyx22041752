@@ -123,9 +123,9 @@ void device_update()
         switch (event.type) 
         {
             case SDL_QUIT:
-                npc_state.state = NPC_QUIT;
-                break;
-      // If a key was pressed
+                    npc_state.state = NPC_QUIT;
+                    break;
+            // If a key was pressed
             case SDL_KEYDOWN:
             case SDL_KEYUP: 
                 {
@@ -134,7 +134,7 @@ void device_update()
                     send_key(k, is_keydown);
                     break;
                 }
-        default: break;
+            default: break;
         }
     }
 }
