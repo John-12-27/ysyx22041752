@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-17 22:29
+// Last Modified : 2023-06-18 22:08
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -155,13 +155,29 @@ end
 
 assign inst_en    = to_fs_valid && fs_allowin; //(ftfsm_pre==REQUEST || ftfsm_pre==DROP_REQ) && !inst_ready;
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata;
 
-//always @(posedge clk) begin
-    //if (ftfsm_pre==GET_INST || ftfsm_pre==DROPED) begin
-        //fs_inst <= inst_rdata[31:0];
-    //end
-//end
+reg inst_rdata_r_v;
+always @(posedge clk) begin
+    if (reset) begin
+        inst_rdata_r_v <= 0;
+    end
+    else if (!cache_miss && !ds_allowin) begin
+        inst_rdata_r_v <= 1;
+    end
+    else if (fs_to_ds_valid) begin
+        inst_rdata_r_v <= 0;
+    end
+end
+reg [`ysyx_22041752_INST_WD-1:0] inst_rdata_r;
+always @(posedge clk) begin
+    if (reset) begin
+        inst_rdata_r <= 0;
+    end
+    else if (!cache_miss && !ds_allowin && !inst_rdata_r_v) begin
+        inst_rdata_r <= inst_rdata;
+    end
+end
+assign fs_inst    = inst_rdata_r_v ? inst_rdata_r : inst_rdata;
 
 /*=======================================================================================*/
 /*=======================================================================================*/

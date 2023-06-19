@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_RDU.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-17 19:35
+// Last Modified : 2023-06-18 21:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,8 +26,8 @@ module ysyx_22041752_ICACHE_RDU (
     
 wire [`ysyx_22041752_ICACHE_INDEX_WD -1:0] index ;
 
-assign index = inst_addr[`ysyx_22041752_ICACHE_INDEX_WD -1:0];
-assign rs_to_cs_bus = {inst_addr, rden};
+assign index = inst_addr[`ysyx_22041752_ICACHE_INDEX_WD+`ysyx_22041752_ICACHE_OFFSET_WD -1:`ysyx_22041752_ICACHE_OFFSET_WD];
+assign rs_to_cs_bus = {inst_addr, ~rden};
 assign rs_to_cs_valid = inst_en;
 
 assign rden[0] = !(rs_to_cs_valid && cmp_allowin && !index[`ysyx_22041752_ICACHE_INDEX_WD-1]);

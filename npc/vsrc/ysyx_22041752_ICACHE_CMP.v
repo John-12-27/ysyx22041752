@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-17 23:04
+// Last Modified : 2023-06-18 21:26
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -203,15 +203,15 @@ assign inst_rdata = missfsm_pre == GET_1 ?
 
 reg replace = 0;
 
-assign wen[0] = missfsm_nxt==GET_1 && rden_cs[0] && replace==0 ;
-assign wen[1] = missfsm_nxt==GET_1 && rden_cs[1] && replace==0 ;
-assign wen[2] = missfsm_nxt==GET_1 && rden_cs[2] && replace==1 ;
-assign wen[3] = missfsm_nxt==GET_1 && rden_cs[3] && replace==1 ;
+assign wen[0] = ~(missfsm_nxt==GET_1 && rden_cs[0] && replace==0) ;
+assign wen[1] = ~(missfsm_nxt==GET_1 && rden_cs[1] && replace==0) ;
+assign wen[2] = ~(missfsm_nxt==GET_1 && rden_cs[2] && replace==1) ;
+assign wen[3] = ~(missfsm_nxt==GET_1 && rden_cs[3] && replace==1) ;
 
-assign bwen0  = ~(0);
-assign bwen1  = ~(0);
-assign bwen2  = ~(0);
-assign bwen3  = ~(0);
+assign bwen0  = 0;
+assign bwen1  = 0;
+assign bwen2  = 0;
+assign bwen3  = 0;
 
 assign wdata0 = {sram_rdata, line_lower};
 assign wdata1 = {sram_rdata, line_lower};

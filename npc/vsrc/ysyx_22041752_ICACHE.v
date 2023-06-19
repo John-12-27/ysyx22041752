@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-17 23:00
+// Last Modified : 2023-06-18 20:54
 // ---------------------------------------------------------------------------------
 // Description   : 2-way set associative cache
 //
@@ -140,20 +140,20 @@ ysyx_22041752_ICACHE_CMP U_ICACHE_CMP_0(
 S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_0(
     .Q                              ( data0                 ),
     .CLK                            ( clk                   ),
-    .CEN                            ( rden[0]|wen0          ),
+    .CEN                            ( rden[0]&wen0          ),
     .WEN                            ( wen0                  ),
     .BWEN                           ( bwen0                 ),
-    .A                              ( wen0 ? waddr0 : raddr ),
+    .A                              (!wen0 ? waddr0 : raddr ),
     .D                              ( wdata0                )
 );
 
 S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_1(
     .Q                              ( data1                 ),
     .CLK                            ( clk                   ),
-    .CEN                            ( rden[1]|wen1          ),
+    .CEN                            ( rden[1]&wen1          ),
     .WEN                            ( wen1                  ),
     .BWEN                           ( bwen1                 ),
-    .A                              ( wen1 ? waddr1 : raddr ),
+    .A                              (!wen1 ? waddr1 : raddr ),
     .D                              ( wdata1                )
 );
 
@@ -162,9 +162,9 @@ S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_0(
     .Q                              ( tag0                  ),
     .CLK                            ( clk                   ),
-    .CEN                            ( rden[0]|wen0          ),
+    .CEN                            ( rden[0]&wen0          ),
     .WEN                            ( wen0                  ),
-    .A                              ( wen0 ? waddr0 : raddr ),
+    .A                              (!wen0 ? waddr0 : raddr ),
     .D                              ( wtag0                 )
 );
 
@@ -172,9 +172,9 @@ S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_1(
     .Q                              ( tag1                  ),
     .CLK                            ( clk                   ),
-    .CEN                            ( rden[1]|wen1          ),
+    .CEN                            ( rden[1]&wen1          ),
     .WEN                            ( wen1                  ),
-    .A                              ( wen1 ? waddr1 : raddr ),
+    .A                              (!wen1 ? waddr1 : raddr ),
     .D                              ( wtag1                 )
 );
 
@@ -182,7 +182,7 @@ U_S011HD1P_X32Y2D128_1(
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
-    .addr                           ( wen0 ? waddr0 : raddr     ),
+    .addr                           (!wen0 ? waddr0 : raddr     ),
     .v_o                            ( v0                        ),
     .we                             ( wen0                      ),
     .v_i                            ( wv0                       )
@@ -190,7 +190,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
-    .addr                           ( wen1 ? waddr1 : raddr     ),
+    .addr                           (!wen1 ? waddr1 : raddr     ),
     .v_o                            ( v1                        ),
     .we                             ( wen1                      ),
     .v_i                            ( wv1                       )
@@ -205,20 +205,20 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
 S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_2(
     .Q                              ( data2                     ),
     .CLK                            ( clk                       ),
-    .CEN                            ( rden[2]|wen2              ),
+    .CEN                            ( rden[2]&wen2              ),
     .WEN                            ( wen2                      ),
     .BWEN                           ( bwen2                     ),
-    .A                              ( wen2 ? waddr2 : raddr     ),
+    .A                              (!wen2 ? waddr2 : raddr     ),
     .D                              ( wdata2                    )
 );
 
 S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_3(
     .Q                              ( data3                     ),
     .CLK                            ( clk),
-    .CEN                            ( rden[3]|wen3              ),
+    .CEN                            ( rden[3]&wen3              ),
     .WEN                            ( wen3                      ),
     .BWEN                           ( bwen3                     ),
-    .A                              ( wen3 ? waddr3 : raddr     ),
+    .A                              (!wen3 ? waddr3 : raddr     ),
     .D                              ( wdata3                    )
 );
 
@@ -227,9 +227,9 @@ S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_2(
     .Q                              ( tag2                      ),
     .CLK                            ( clk                       ),
-    .CEN                            ( rden[2]|wen2              ),
+    .CEN                            ( rden[2]&wen2              ),
     .WEN                            ( wen2                      ),
-    .A                              ( wen2 ? waddr2 : raddr     ),
+    .A                              (!wen2 ? waddr2 : raddr     ),
     .D                              ( wtag2                     )
 );
 
@@ -237,9 +237,9 @@ S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_3(
     .Q                              ( tag3                      ),
     .CLK                            ( clk                       ),
-    .CEN                            ( rden[3]|wen3              ),
+    .CEN                            ( rden[3]&wen3              ),
     .WEN                            ( wen3                      ),
-    .A                              ( wen3 ? waddr3 : raddr     ),
+    .A                              (!wen3 ? waddr3 : raddr     ),
     .D                              ( wtag3                     )
 );
 
@@ -247,7 +247,7 @@ U_S011HD1P_X32Y2D128_3(
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
-    .addr                           ( wen2 ? waddr2 : raddr     ),
+    .addr                           (!wen2 ? waddr2 : raddr     ),
     .v_o                            ( v2                        ),
     .we                             ( wen2                      ),
     .v_i                            ( wv2                       )
@@ -255,7 +255,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_3(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
-    .addr                           ( wen3 ? waddr3 : raddr     ),
+    .addr                           (!wen3 ? waddr3 : raddr     ),
     .v_o                            ( v3                        ),
     .we                             ( wen3                      ),
     .v_i                            ( wv3                       )

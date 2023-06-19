@@ -59,17 +59,17 @@ static void single_cycle()
 #endif
     top->clk = 1; 	
 
-        top->sram_rdata = vaddr_read(top->sram_raddr);
-        //if(top->sram_en)
-        //{
+        if(top->sram_en)
+        {
             //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
             //D.pc = M.pc;
             //D.inst = M.inst;
+            top->sram_rdata = vaddr_read(top->sram_raddr);
             if(top->sram_en && top->sram_wen)
             {
                 vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
             }
-        //}
+        }
 
     top->eval();
 
