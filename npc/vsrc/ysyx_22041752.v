@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-17 22:42
+// Last Modified : 2023-06-20 11:13
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -191,7 +191,7 @@ wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_rdata;
 wire                                   clint_rdat_v;
 
-ysyx_22041752_clint U_YSYX_22041752_CLINT_0(
+ysyx_22041752_clint U_CLINT_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .en                             ( clint_en                      ),
@@ -242,10 +242,10 @@ wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] icache_req_addr  ;
 wire                                   icache_ready     ;
 wire                                   icache_valid     ;
 wire [`ysyx_22041752_SRAM_DATA_WD-1:0] icache_rdata     ;
-ysyx_22041752_ICACHE U_YSYX_22041752_ICACHE_0(
+ysyx_22041752_ICACHE U_ICACHE_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
-    .flush                          ( flush                         ),
+    .flush                          ( flush|pre_error               ),
     .inst_en                        ( inst_en                       ),
     .inst_addr                      ( inst_addr                     ),
     .inst_rdata                     ( inst_rdata                    ),
@@ -258,7 +258,7 @@ ysyx_22041752_ICACHE U_YSYX_22041752_ICACHE_0(
 );
 
 
-ysyx_22041752_axiarbiter U_YSYX_22041752_AXIARBITER_0(
+ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .inst_en                        ( icache_req                    ),

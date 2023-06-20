@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-18 22:08
+// Last Modified : 2023-06-20 12:20
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -126,8 +126,31 @@ assign fs_to_ds_bus = {fs_inst      ,
     //end
 //end
 
+reg [`ysyx_22041752_PC_WD-1:0] flush_pc_r;
+always @(posedge clk) begin
+    if (reset) begin
+        flush_pc_r <= 0;
+    end
+    else if (flush && cache_miss) begin
+        flush_pc_r <= seq_bj_pc;
+    end
+end
+reg flush_pc_r_v;
+always @(posedge clk) begin
+    if (reset) begin
+        flush_pc_r_v <= 0;
+    end
+    else if (flush && cache_miss) begin
+        flush_pc_r_v <= 1;
+    end
+    else if (inst_en) begin
+        flush_pc_r_v <= 0;
+    end
+end
+
 assign nextpc  = //flush       ? flush_pc   :
                  //flush_pc_rv ? flush_pc_r :
+                 flush_pc_r_v  ? flush_pc_r :
                                seq_bj_pc  ; 
 
 assign to_fs_valid  = ~reset;//ftfsm_pre==GET_INST;

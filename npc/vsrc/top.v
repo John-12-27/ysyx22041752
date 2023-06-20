@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-18 22:30
+// Last Modified : 2023-06-19 22:01
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,13 +16,28 @@ module top (
     input         clk,
     input         reset,
 
-    output                                   sram_en    ,
+    output                                   sram_ren   ,
     output [`ysyx_22041752_SRAM_WEN_WD -1:0] sram_wen   ,
     output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_waddr ,
     output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_raddr ,
     output [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_wdata ,
     input  [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_rdata
+    
 );
+
+/*
+reg o;
+always @(posedge clk) begin
+    if (reset) begin
+        o <= 0;
+    end
+    else begin
+        o <= i;
+    end
+end
+assign out = o;
+endmodule
+*/
 
 wire         awready ;
 wire         awvalid ;
@@ -120,7 +135,7 @@ axi_ram U_RAM_0(
     .s_axi_rlast                    ( rlast   ),
     .s_axi_rvalid                   ( rvalid  ),
     .s_axi_rready                   ( rready  ),
-    .sram_en                        ( sram_en    ),
+    .sram_ren                       ( sram_ren   ),
     .sram_wen                       ( sram_wen   ),
     .sram_waddr                     ( sram_waddr ),
     .sram_raddr                     ( sram_raddr ),

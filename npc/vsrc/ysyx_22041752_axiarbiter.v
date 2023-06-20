@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-07 21:39
+// Last Modified : 2023-06-20 10:45
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -393,8 +393,13 @@ assign wstrb  = wstrb_r ;
 assign wlast  = wlast_r ;  
 assign wvalid = wvalid_r;  
 
-always @(*) begin
-    wdata_r = data_wdata;
+always @(posedge clk) begin
+    if (reset) begin
+        wdata_r <= 0;
+    end
+    else if (awfsm_nxt==AW_WAIT || awfsm_nxt==AW_WAIT_W) begin
+        wdata_r <= data_wdata;
+    end
 end
 
 always @(posedge clk) begin
