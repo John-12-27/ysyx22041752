@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-19 10:08
+// Last Modified : 2023-06-20 22:20
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -26,7 +26,7 @@ module ysyx_22041752_EXU(
     output                                         es_to_ms_valid,
     output [`ysyx_22041752_ES_TO_MS_BUS_WD -1:0]   es_to_ms_bus  ,
 
-	output [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus,
+	output [`ysyx_22041752_FORWARD_BUS_WD -1:0]    es_forward_bus,
 
     output                                         data_en       ,
     input                                          data_ready    ,
@@ -42,10 +42,13 @@ module ysyx_22041752_EXU(
 
 `ifdef DPI_C
         ,
+    output                           debug_es_bjpre_error,
     output [63:0]                    dpi_csrs [3:0] ,
     output                           es_exp         ,
     output                           es_mret        ,
-    output [`ysyx_22041752_PC_WD-1:0]debug_es_pc
+    output [`ysyx_22041752_PC_WD       -1:0] debug_es_pc,      
+    input  [`ysyx_22041752_INST_WD-1:0] debug_ds_inst,
+    output reg [`ysyx_22041752_INST_WD-1:0] debug_es_inst
 `endif
 
 );
@@ -189,7 +192,7 @@ wire [`ysyx_22041752_PC_WD-1:0] bj_addr    ;
 wire                            br_taken_real = alu_result[0];
 
 assign bjpre_error = pre_error && es_valid;
-bjt_cal U_BJT_CAL_0(
+ysyx_22041752_bjt_cal U_BJT_CAL_0(
     .jalr                           ( jalr                                ),
     .imm_i                          ( imm_i                               ),
     .jalr_src1                      ( rs1_value[`ysyx_22041752_PC_WD-1:0] ),
@@ -349,16 +352,20 @@ assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff :
 
 assign data_wdata = rs2_value;
 //forward_bus
-wire mem_read_after_write;
 wire es_forward_valid;
-assign mem_read_after_write = (es_mem_re) && es_valid;
 assign es_forward_valid = es_rf_we && es_valid;
-assign es_forward_bus = {mem_read_after_write,es_forward_valid,alu_result,rd};
+assign es_forward_bus = {es_mem_re&es_valid,es_forward_valid,alu_result,rd};
 
 `ifdef DPI_C
 assign es_exp = ecall && flush;
 assign es_mret  = mret && flush;
+always @(posedge clk) begin
+    if(ds_to_es_valid && es_allowin) begin
+        debug_es_inst <= debug_ds_inst;    
+    end
+end
 assign debug_es_pc = es_pc;
+assign debug_es_bjpre_error = bjpre_error;
 `endif
 endmodule
 

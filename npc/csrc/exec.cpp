@@ -37,9 +37,7 @@ uint8_t halt_flag  = 0;
 uint8_t valid_flag = 0;
 uint8_t exp_flag   = 0;
 uint8_t mret_flag  = 0;
-
-paddr_t fspc;
-paddr_t espc;
+uint8_t pre_err    = 0;
 
 #ifdef DUMP_WAVE
 static void step_and_dump_wave()
@@ -55,7 +53,7 @@ static void single_cycle()
 
         if(top->sram_ren)
         {
-            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst));   //结构体M记录访问存储器的pc和指令
+            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst), &pre_err);   //结构体M记录访问存储器的pc和指令
             //D.pc = M.pc;
             //D.inst = M.inst;
             top->sram_rdata = vaddr_read(top->sram_raddr);
@@ -213,7 +211,7 @@ void exec(uint64_t n, bool batch)
             cycle_count++;
 
             
-            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(fspc), (long long int*)&(espc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
             if (valid_flag) 
             {
                 instr_count++;

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-06-20 11:48
+// Last Modified : 2023-06-20 22:02
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -27,9 +27,9 @@ module ysyx_22041752_IDU (
     
     input  [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus  ,
 	
-	input  [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus,
-	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus,
-	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus,
+	input  [`ysyx_22041752_FORWARD_BUS_WD -1:0]    es_forward_bus,
+	input  [`ysyx_22041752_FORWARD_BUS_WD-1:0]     ms_forward_bus,
+	input  [`ysyx_22041752_WS_FORWARD_BUS_WD -1:0] ws_forward_bus,
 
     output [`ysyx_22041752_PC_WD          -1:0]    ra_data       ,
     input                                          flush         
@@ -38,7 +38,7 @@ module ysyx_22041752_IDU (
         ,
     //used to dpi-c debug
     output [`ysyx_22041752_RF_DATA_WD     -1:0]    dpi_regs [`ysyx_22041752_RF_NUM-1:0],
-    output [                 0:0]    stop,
+    output [                               0:0]    stop                                ,
     output [`ysyx_22041752_INST_WD        -1:0]    debug_ds_inst
 `endif
 );
@@ -147,7 +147,8 @@ wire [`ysyx_22041752_RF_ADDR_WD-1:0] ws_dest_reg;
 wire [`ysyx_22041752_RF_DATA_WD-1:0] es_wreg_data;
 wire [`ysyx_22041752_RF_DATA_WD-1:0] ms_wreg_data;
 wire [`ysyx_22041752_RF_DATA_WD-1:0] ws_wreg_data;
-wire                                 lw_read_after_write;
+wire                                 es_mem_re;
+wire                                 ms_mem_re;
 wire                                 es_forward_valid;
 wire                                 ms_forward_valid;
 wire                                 ws_forward_valid;
@@ -215,7 +216,8 @@ assign ds_to_es_bus = {inst_ecall    ,
 
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
-assign ds_ready_go = ~(lw_read_after_write && (es_rs1_hazard || es_rs2_hazard));
+assign ds_ready_go = !(ms_mem_re && (ms_rs1_hazard || ms_rs2_hazard) ||
+                       es_mem_re && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
 	if(reset || flush)begin
 		ds_valid <= 1'b0;
@@ -528,8 +530,8 @@ wire rs1_is_not_zero;
 wire rs2_is_not_zero;
 assign rs1_is_not_zero = |rs1;
 assign rs2_is_not_zero = |rs2;
-assign {lw_read_after_write,es_forward_valid,es_wreg_data,es_dest_reg} = es_forward_bus;
-assign {ms_forward_valid,ms_wreg_data,ms_dest_reg} = ms_forward_bus;
+assign {es_mem_re,es_forward_valid,es_wreg_data,es_dest_reg} = es_forward_bus;
+assign {ms_mem_re,ms_forward_valid,ms_wreg_data,ms_dest_reg} = ms_forward_bus;
 assign {ws_forward_valid,ws_wreg_data,ws_dest_reg} = ws_forward_bus;
 
 assign es_rs1_hazard = (es_dest_reg == rs1) && rs1_is_not_zero && es_forward_valid;
@@ -548,39 +550,9 @@ assign rs2_value = es_rs2_hazard ? es_wreg_data :
                    ws_rs2_hazard ? ws_wreg_data :
                                       data_r2   ;
 
-/*
-
-wire rs1_eq_rs2 ;
-wire rs1_l_rs2  ;
-wire rs1u_l_rs2u;
-wire bc_co      ;
-wire [`ysyx_22041752_RF_DATA_WD-1:0] bc_r;
-
-assign rs1u_l_rs2u=~bc_co;
-assign rs1_l_rs2  = bc_r[`ysyx_22041752_RF_DATA_WD-1];
-assign rs1_eq_rs2 = rs1_value == rs2_value;
-assign br_taken = (   inst_beq  &&  rs1_eq_rs2
-                   || inst_bne  && !rs1_eq_rs2
-                   || inst_blt  &&  rs1_l_rs2
-                   || inst_bge  && !rs1_l_rs2
-                   || inst_bltu &&  rs1u_l_rs2u
-                   || inst_bgeu && !rs1u_l_rs2u 
-                   || inst_jal
-				   || inst_jalr
-                  ) && ds_valid;
-
-ysyx_22041752_aser #(.WIDTH ( 64 ))
-U_ASER_0(
-    .a          ( rs1_value   ),
-    .b          ( rs2_value   ),
-    .sub        ( 1'b1        ),
-    .cout       ( bc_co       ),
-    .result     ( bc_r        )
-);
-*/
-
 `ifdef DPI_C
 assign stop = inst_ebreak & ds_valid ;
 assign debug_ds_inst = ds_inst;
 `endif
 endmodule
+

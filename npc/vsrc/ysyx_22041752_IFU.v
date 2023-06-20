@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-20 12:20
+// Last Modified : 2023-06-20 19:59
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -30,10 +30,6 @@ module ysyx_22041752_IFU (
     input                                        flush          , 
     input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       ,
     input                                        flush_pc_p4    
-`ifdef DPI_C
-    ,
-    output [`ysyx_22041752_PC_WD-1:0]            debug_fs_pc
-`endif
 );
 
 reg         fs_valid;
@@ -73,65 +69,12 @@ assign fs_to_ds_bus = {fs_inst      ,
                        imm_b        
                       };
 
-//// pre-IF stage
-//reg [2:0] ftfsm_pre;
-//reg [2:0] ftfsm_nxt;
-//parameter IDLE       =0;
-//parameter REQUEST    =1;
-//parameter RESPONSE   =2;
-//parameter GET_INST   =3;
-//parameter DROP_REQ   =4;
-//parameter DROP_RESP  =5;
-//parameter DROPED     =6;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //ftfsm_pre <= IDLE;
-    //end
-    //else begin
-        //ftfsm_pre <= ftfsm_nxt;
-    //end
-//end
-//assign ftfsm_nxt = (ftfsm_pre==IDLE || ftfsm_pre==GET_INST || ftfsm_pre==DROPED) && !reset && fs_allowin ? REQUEST    :
-                    //ftfsm_pre==REQUEST                                           && !flush && inst_ready ? RESPONSE   :
-                    //ftfsm_pre==REQUEST                                           &&  flush &&!inst_ready ? DROP_REQ   :
-                    //ftfsm_pre==REQUEST                                           &&  flush && inst_ready ? DROP_RESP  :
-                    //ftfsm_pre==RESPONSE                                          && !flush && inst_valid ? GET_INST   :
-                    //ftfsm_pre==RESPONSE                                          &&  flush &&!inst_valid ? DROP_RESP  :
-                    //ftfsm_pre==RESPONSE                                          &&  flush && inst_valid ? DROPED     :
-                    //ftfsm_pre==GET_INST                                                                  ? IDLE       :
-                    //ftfsm_pre==DROP_REQ                                          &&           inst_ready ? DROP_RESP  :
-                    //ftfsm_pre==DROP_RESP                                         &&           inst_valid ? DROPED     :
-                    //ftfsm_pre==DROPED                                                                    ? IDLE       :
-                                                                                                           //ftfsm_pre  ;
-
-//reg [`ysyx_22041752_PC_WD-1:0] flush_pc_r;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //flush_pc_r <= 0;
-    //end
-    //else if(flush) begin
-        //flush_pc_r <= seq_bj_pc;
-    //end
-//end
-//reg flush_pc_rv;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //flush_pc_rv <= 0;
-    //end
-    //else if (ftfsm_pre==DROPED) begin
-        //flush_pc_rv <= 1;
-    //end
-    //else if (flush_pc_rv && ftfsm_pre==GET_INST) begin
-        //flush_pc_rv <= 0;
-    //end
-//end
-
 reg [`ysyx_22041752_PC_WD-1:0] flush_pc_r;
 always @(posedge clk) begin
     if (reset) begin
         flush_pc_r <= 0;
     end
-    else if (flush && cache_miss) begin
+    else if (flush && !fs_ready_go) begin
         flush_pc_r <= seq_bj_pc;
     end
 end
@@ -140,7 +83,7 @@ always @(posedge clk) begin
     if (reset) begin
         flush_pc_r_v <= 0;
     end
-    else if (flush && cache_miss) begin
+    else if (flush && !fs_ready_go) begin
         flush_pc_r_v <= 1;
     end
     else if (inst_en) begin
@@ -153,11 +96,11 @@ assign nextpc  = //flush       ? flush_pc   :
                  flush_pc_r_v  ? flush_pc_r :
                                seq_bj_pc  ; 
 
-assign to_fs_valid  = ~reset;//ftfsm_pre==GET_INST;
+assign to_fs_valid  = ~reset;
 
 assign fs_ready_go    = !cache_miss;//inst_valid;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
-assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~flush;
+assign fs_to_ds_valid =  fs_valid && fs_ready_go && !flush && !flush_pc_r_v;
 always @(posedge clk) begin
     if (reset) begin
         fs_valid <= 1'b0;
@@ -176,7 +119,7 @@ always @(posedge clk) begin
     end
 end
 
-assign inst_en    = to_fs_valid && fs_allowin; //(ftfsm_pre==REQUEST || ftfsm_pre==DROP_REQ) && !inst_ready;
+assign inst_en    = to_fs_valid && fs_allowin; 
 assign inst_addr  = nextpc;
 
 reg inst_rdata_r_v;
@@ -235,8 +178,8 @@ wire [`ysyx_22041752_PC_WD-1:0] bt_c;
 assign bt_a = flush ? flush_pc : fs_inst_jalr ? ra_data : fs_pc;
 
 assign bt_b = (fs_inst_beq || fs_inst_bne || fs_inst_blt || fs_inst_bge || fs_inst_bltu || fs_inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
-               fs_inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
-                                                                                         {{11{imm_j[20]}},imm_j} ;
+               fs_inst_jalr                                                                              ? {{20{imm_i[11]}},imm_i} :
+                                                                                                           {{11{imm_j[20]}},imm_j} ;
 
 assign bt_c = flush &&!flush_pc_p4 ? 0    : 
               flush && flush_pc_p4 ? 4    : 
@@ -255,9 +198,5 @@ U_ASER_1(
 );
 /* verilator lint_on PINCONNECTEMPTY */
 
-
-`ifdef DPI_C
-assign debug_fs_pc = fs_pc;
-`endif
 endmodule
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-18 21:26
+// Last Modified : 2023-06-20 22:17
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -201,7 +201,15 @@ assign inst_rdata = missfsm_pre == GET_1 ?
                     offset_cs[`ysyx_22041752_ICACHE_OFFSET_WD-1:2] == 2 ? hit_line[ 95:64] : 
                /* offset_cs[`ysyx_22041752_ICACHE_OFFSET_WD-1:2] == 3 ?*/ hit_line[127:96] ;
 
-reg replace = 0;
+reg replace;
+always @(posedge clk) begin
+    if (reset) begin
+        replace <= 0;
+    end
+    else begin
+        replace <= ~replace;
+    end
+end
 
 assign wen[0] = ~(missfsm_nxt==GET_1 && rden_cs[0] && replace==0) ;
 assign wen[1] = ~(missfsm_nxt==GET_1 && rden_cs[1] && replace==0) ;

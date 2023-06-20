@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-20 11:13
+// Last Modified : 2023-06-20 22:24
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -68,19 +68,22 @@ wire [`ysyx_22041752_ES_TO_MS_BUS_WD -1:0]   es_to_ms_bus;
 wire [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0]   ms_to_ws_bus;
 wire [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]   ws_to_rf_bus;
 wire [`ysyx_22041752_PC_WD           -1:0]   ra_data     ;
-wire [`ysyx_22041752_ES_FORWARD_BUS_WD -1:0] es_forward_bus;
-wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ms_forward_bus;
-wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    ws_forward_bus;
+wire [`ysyx_22041752_FORWARD_BUS_WD -1:0]    es_forward_bus;
+wire [`ysyx_22041752_FORWARD_BUS_WD-1:0]     ms_forward_bus;
+wire [`ysyx_22041752_WS_FORWARD_BUS_WD -1:0] ws_forward_bus;
 
 `ifdef DPI_C
 // trace debug interface
-wire [`ysyx_22041752_PC_WD       -1:0] debug_fs_pc      ;
 wire [`ysyx_22041752_PC_WD       -1:0] debug_wb_pc      ;
 wire [`ysyx_22041752_PC_WD       -1:0] debug_es_pc      ;
+wire                                   debug_es_bjpre_error; 
 wire                                   debug_es_exp     ;
 wire                                   debug_es_mret    ;
 wire                                   debug_ws_valid   ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ds_inst    ;
+wire [`ysyx_22041752_INST_WD     -1:0] debug_es_inst    ;
+wire [`ysyx_22041752_INST_WD     -1:0] debug_ms_inst    ;
+wire [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst    ;
 wire                                   debug_wb_rf_wen  ;
 wire [`ysyx_22041752_RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
 wire [`ysyx_22041752_RF_DATA_WD  -1:0] debug_wb_rf_wdata;
@@ -124,10 +127,6 @@ ysyx_22041752_IFU U_IFU_0(
     .flush          (flush|pre_error),
     .flush_pc_p4    (flush_pc_p4    ),
     .flush_pc       (flush_pc       )
-`ifdef DPI_C
-    ,
-    .debug_fs_pc    (debug_fs_pc    )
-`endif
 );
 
 // ID stage
@@ -150,7 +149,7 @@ ysyx_22041752_IDU U_IDU_0(
     ,
     .dpi_regs       ( dpi_regs       ),
     .stop           ( stop           ),
-    .debug_ds_inst  ( debug_ds_inst  ) 
+    .debug_ds_inst  ( debug_ds_inst  )
 `endif
 );
 
@@ -177,10 +176,13 @@ ysyx_22041752_EXU U_EXU_0(
     .bjpre_error    ( pre_error       )
 `ifdef DPI_C
     ,
+    .debug_es_bjpre_error(debug_es_bjpre_error),
     .dpi_csrs       ( dpi_csrs        ),
     .es_exp         ( debug_es_exp    ),
     .es_mret        ( debug_es_mret   ),
-    .debug_es_pc    ( debug_es_pc     )
+    .debug_es_pc    ( debug_es_pc     ),
+    .debug_ds_inst  ( debug_ds_inst   ),
+    .debug_es_inst  ( debug_es_inst   )
 `endif
 );
 
@@ -216,6 +218,11 @@ ysyx_22041752_MEU U_MEU_0(
     .data_rdata     ( clint_rdat_v ? clint_rdata : data_rdata ),
     .rdata_valid    ( clint_rdat_v ? 1           : data_valid ),
     .ms_forward_bus ( ms_forward_bus  )
+`ifdef DPI_C
+    ,
+    .debug_es_inst  ( debug_es_inst   ),
+    .debug_ms_inst  ( debug_ms_inst   )
+`endif
 );
 
 // WB stage
@@ -230,6 +237,8 @@ ysyx_22041752_WBU U_WBU_0(
 `ifdef DPI_C
     ,
     .debug_ws_valid    ( debug_ws_valid    ),
+    .debug_ms_inst     ( debug_ms_inst     ),
+    .debug_ws_inst     ( debug_ws_inst     ),
     .debug_wb_pc	   ( debug_wb_pc	   ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
@@ -311,15 +320,16 @@ dpi_c u_dpi_c(
     .ws_valid          ( debug_ws_valid    ),
     .dpi_regs          ( dpi_regs          ),
     .dpi_csrs          ( dpi_csrs          ),
-    .debug_wb_pc       ( {32'd0,debug_wb_pc}       ),
-    .debug_es_pc       ( {32'd0,debug_es_pc}       ),
+    .debug_wb_pc       ({32'd0,debug_wb_pc}),
+    .debug_es_pc       ({32'd0,debug_es_pc}),
+    .debug_es_bjpre_error(debug_es_bjpre_error),
     .debug_es_exp      ( debug_es_exp      ),
     .debug_es_mret     ( debug_es_mret     ),
-    .debug_ds_inst     ( debug_ds_inst     ),
+    .debug_ws_inst     ( debug_ws_inst     ),
+    .debug_es_inst     ( debug_es_inst     ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
     .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata ),
-    .debug_fs_pc       ( {32'd0,debug_fs_pc}       )
+    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
 );
 `endif
 

@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-06 18:01
+// Last Modified : 2023-06-20 22:24
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,15 +19,16 @@ module dpi_c (
     input                    ws_valid         ,
     input  [`ysyx_22041752_RF_DATA_WD-1:0] dpi_regs [31:0]  ,
     input  [63:0]            dpi_csrs [3:0]   ,
-    input  [63:0] debug_wb_pc      ,
-    input  [63:0] debug_es_pc      ,
+    input  [63:0]            debug_wb_pc      ,
+    input  [63:0]            debug_es_pc      ,
+    input                    debug_es_bjpre_error,
     input                    debug_es_exp     ,
     input                    debug_es_mret    ,
-    input  [`ysyx_22041752_INST_WD   -1:0] debug_ds_inst    ,
+    input  [`ysyx_22041752_INST_WD   -1:0] debug_ws_inst    ,
+    input  [`ysyx_22041752_INST_WD   -1:0] debug_es_inst    ,
 
-    input  [63:0] debug_fs_pc      ,
     /* verilator lint_off UNUSEDSIGNAL */
-    input                    debug_wb_rf_wen  ,
+    input                                  debug_wb_rf_wen  ,
     input  [`ysyx_22041752_RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
     input  [`ysyx_22041752_RF_DATA_WD-1:0] debug_wb_rf_wdata
     /* verilator lint_on UNUSEDSIGNAL */
@@ -77,23 +78,6 @@ always @(posedge clk) begin
 	valid_r <= ws_valid;
 end
 
-reg [`ysyx_22041752_INST_WD-1:0] inst_r0;
-reg [`ysyx_22041752_INST_WD-1:0] inst_r1;
-reg [`ysyx_22041752_INST_WD-1:0] inst_r2;
-reg [`ysyx_22041752_INST_WD-1:0] inst_r3;
-always @(posedge clk) begin
-    inst_r0 <= debug_ds_inst;   //exe_stage
-end
-always @(posedge clk) begin
-    inst_r1 <= inst_r0;         //mem_stage
-end
-always @(posedge clk) begin
-    inst_r2 <= inst_r1;         //wb_stage
-end
-always @(posedge clk) begin     
-    inst_r3 <= inst_r2;         //done
-end
-
 reg exp_es1, exp_es2, exp_ms, exp_ws, exp_cmt;
 always @(posedge clk) begin
     exp_es1 <= debug_es_exp;
@@ -126,6 +110,10 @@ reg [63:0] current_pc;
 always @(posedge clk) begin
 	current_pc <= debug_wb_pc;
 end
+reg [31:0] current_inst;
+always @(posedge clk) begin
+    current_inst <= debug_ws_inst;
+end
 
 
 export "DPI-C" function record;
@@ -135,8 +123,6 @@ function void record();
     output bit     exp;
     output bit     mret;
     output longint pc   ;
-    output longint fspc ;
-    output longint espc ;
     output longint dnpc ;
     output int     inst ;
     halt  = stop_r3;
@@ -144,18 +130,18 @@ function void record();
     exp   = exp_cmt;
     mret  = mret_cmt;
     pc    = current_pc ;
-    fspc  = debug_fs_pc;
-    espc  = debug_es_pc;
     dnpc  = debug_wb_pc;
-    inst  = inst_r3 ;
+    inst  = current_inst;
 endfunction
 
 export "DPI-C" function mem_inst;
 function void mem_inst();
     output longint pc   ;
     output int     inst ;
+    output bit     bjpre_error;
     pc    = debug_es_pc;
-    inst  = inst_r0 ;
+    inst  = debug_es_inst;
+    bjpre_error = debug_es_bjpre_error;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);
