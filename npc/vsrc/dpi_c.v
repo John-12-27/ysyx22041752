@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-20 22:24
+// Last Modified : 2023-06-21 21:50
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -22,8 +22,10 @@ module dpi_c (
     input  [63:0]            debug_wb_pc      ,
     input  [63:0]            debug_es_pc      ,
     input                    debug_es_bjpre_error,
+    input                    debug_es_bj_inst ,
     input                    debug_es_exp     ,
     input                    debug_es_mret    ,
+    input                    debug_es_data_en ,
     input  [`ysyx_22041752_INST_WD   -1:0] debug_ws_inst    ,
     input  [`ysyx_22041752_INST_WD   -1:0] debug_es_inst    ,
 
@@ -122,26 +124,30 @@ function void record();
     output bit     valid;
     output bit     exp;
     output bit     mret;
+    output bit     bjpre_error;
+    output bit     bj_inst;
     output longint pc   ;
     output longint dnpc ;
     output int     inst ;
-    halt  = stop_r3;
-    valid = valid_r;
-    exp   = exp_cmt;
-    mret  = mret_cmt;
-    pc    = current_pc ;
-    dnpc  = debug_wb_pc;
-    inst  = current_inst;
+    halt        = stop_r3;
+    valid       = valid_r;
+    exp         = exp_cmt;
+    mret        = mret_cmt;
+    bjpre_error = debug_es_bjpre_error;
+    bj_inst     = debug_es_bj_inst;
+    pc          = current_pc ;
+    dnpc        = debug_wb_pc;
+    inst        = current_inst;
 endfunction
 
 export "DPI-C" function mem_inst;
 function void mem_inst();
     output longint pc   ;
     output int     inst ;
-    output bit     bjpre_error;
-    pc    = debug_es_pc;
-    inst  = debug_es_inst;
-    bjpre_error = debug_es_bjpre_error;
+    output bit     data_en;
+    pc          = debug_es_pc;
+    inst        = debug_es_inst;
+    data_en     = debug_es_data_en;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-20 22:24
+// Last Modified : 2023-06-21 15:47
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -77,8 +77,10 @@ wire [`ysyx_22041752_WS_FORWARD_BUS_WD -1:0] ws_forward_bus;
 wire [`ysyx_22041752_PC_WD       -1:0] debug_wb_pc      ;
 wire [`ysyx_22041752_PC_WD       -1:0] debug_es_pc      ;
 wire                                   debug_es_bjpre_error; 
+wire                                   debug_es_bj_inst ; 
 wire                                   debug_es_exp     ;
 wire                                   debug_es_mret    ;
+wire                                   debug_es_data_en ;
 wire                                   debug_ws_valid   ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ds_inst    ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_es_inst    ;
@@ -177,12 +179,14 @@ ysyx_22041752_EXU U_EXU_0(
 `ifdef DPI_C
     ,
     .debug_es_bjpre_error(debug_es_bjpre_error),
-    .dpi_csrs       ( dpi_csrs        ),
-    .es_exp         ( debug_es_exp    ),
-    .es_mret        ( debug_es_mret   ),
-    .debug_es_pc    ( debug_es_pc     ),
-    .debug_ds_inst  ( debug_ds_inst   ),
-    .debug_es_inst  ( debug_es_inst   )
+    .dpi_csrs            ( dpi_csrs        ),
+    .es_exp              ( debug_es_exp    ),
+    .es_mret             ( debug_es_mret   ),
+    .debug_es_bj_inst    ( debug_es_bj_inst),
+    .debug_es_data_en    ( debug_es_data_en),
+    .debug_es_pc         ( debug_es_pc     ),
+    .debug_ds_inst       ( debug_ds_inst   ),
+    .debug_es_inst       ( debug_es_inst   )
 `endif
 );
 
@@ -323,8 +327,10 @@ dpi_c u_dpi_c(
     .debug_wb_pc       ({32'd0,debug_wb_pc}),
     .debug_es_pc       ({32'd0,debug_es_pc}),
     .debug_es_bjpre_error(debug_es_bjpre_error),
+    .debug_es_bj_inst  ( debug_es_bj_inst  ),
     .debug_es_exp      ( debug_es_exp      ),
     .debug_es_mret     ( debug_es_mret     ),
+    .debug_es_data_en  ( debug_es_data_en  ),
     .debug_ws_inst     ( debug_ws_inst     ),
     .debug_es_inst     ( debug_es_inst     ),
     .debug_wb_rf_wen   ( debug_wb_rf_wen   ),

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-20 19:59
+// Last Modified : 2023-06-21 20:17
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -91,10 +91,8 @@ always @(posedge clk) begin
     end
 end
 
-assign nextpc  = //flush       ? flush_pc   :
-                 //flush_pc_rv ? flush_pc_r :
-                 flush_pc_r_v  ? flush_pc_r :
-                               seq_bj_pc  ; 
+assign nextpc  = flush_pc_r_v  ? flush_pc_r :
+                                 seq_bj_pc  ; 
 
 assign to_fs_valid  = ~reset;
 
@@ -154,14 +152,14 @@ assign imm_b  = {fs_inst[31], fs_inst[7], fs_inst[30:25], fs_inst[11:8], 1'b0};
 wire [11:0] imm_i  = fs_inst[31:20]; 
 wire [20:0] imm_j  = {fs_inst[31], fs_inst[19:12], fs_inst[20], fs_inst[30:21], 1'b0}; 
 
-assign fs_inst_jal    = opcode == 7'b1101111;
-assign fs_inst_jalr   = opcode == 7'b1100111;
-assign fs_inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
-assign fs_inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
-assign fs_inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
-assign fs_inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
-assign fs_inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
-assign fs_inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+assign fs_inst_jal  = opcode == 7'b1101111;
+assign fs_inst_jalr = opcode == 7'b1100111;
+assign fs_inst_beq  = opcode == 7'b1100011 && funct3 == 3'b000;
+assign fs_inst_bne  = opcode == 7'b1100011 && funct3 == 3'b001;
+assign fs_inst_blt  = opcode == 7'b1100011 && funct3 == 3'b100;
+assign fs_inst_bge  = opcode == 7'b1100011 && funct3 == 3'b101;
+assign fs_inst_bltu = opcode == 7'b1100011 && funct3 == 3'b110;
+assign fs_inst_bgeu = opcode == 7'b1100011 && funct3 == 3'b111;
 
 assign br_taken=(fs_inst_beq  || 
                  fs_inst_bne  || 

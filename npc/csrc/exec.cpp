@@ -33,11 +33,13 @@ VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
 Vtop* top;
 
-uint8_t halt_flag  = 0;
-uint8_t valid_flag = 0;
-uint8_t exp_flag   = 0;
-uint8_t mret_flag  = 0;
-uint8_t pre_err    = 0;
+uint8_t halt_flag   = 0;
+uint8_t valid_flag  = 0;
+uint8_t exp_flag    = 0;
+uint8_t mret_flag   = 0;
+uint8_t data_en_flag= 1;
+uint8_t pre_err     = 0;
+uint8_t bj_inst_flag= 0;
 
 #ifdef DUMP_WAVE
 static void step_and_dump_wave()
@@ -53,13 +55,25 @@ static void single_cycle()
 
         if(top->sram_ren)
         {
-            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst), &pre_err);   //结构体M记录访问存储器的pc和指令
-            //D.pc = M.pc;
-            //D.inst = M.inst;
+
+            //vaddr_t pc;
+            //word_t  inst;
+            //mem_inst((long long int*)&(pc), (int*)&(inst), &data_en_flag);   //结构体M记录访问存储器的pc和指令
+            //if (data_en_flag) 
+            //{
+                //M.pc   = pc;
+                //M.inst = inst;
+                //D.pc   = M.pc;
+                //D.inst = M.inst;
+            //}
+
             top->sram_rdata = vaddr_read(top->sram_raddr);
         }
         if(top->sram_wen)
         {
+            //mem_inst((long long int*)&(M.pc), (int*)&(M.inst), &data_en_flag);   //结构体M记录访问存储器的pc和指令
+            //D.pc   = M.pc;
+            //D.inst = M.inst;
             vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
         }
 
@@ -194,7 +208,9 @@ void exec(uint64_t n, bool batch)
     static uint64_t boot_time = get_time_internal();
     static uint64_t cycle_count = 0;
     static uint64_t instr_count = 0;
-    //svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
+    static uint64_t prerr_count = 0;
+    static uint64_t bjinst_count = 0;
+    svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
     switch (npc_state.state) 
     {
         case NPC_END: 
@@ -210,11 +226,18 @@ void exec(uint64_t n, bool batch)
             exec_once();
             cycle_count++;
 
-            
-            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
+            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), (long long int*)&(S.dnpc), (int*)&(S.inst));
             if (valid_flag) 
             {
                 instr_count++;
+            }
+            if (bj_inst_flag) 
+            {
+                bjinst_count++;
+                if (pre_err) 
+                {
+                    prerr_count++;
+                }
             }
             if(halt())
             {
@@ -261,6 +284,8 @@ void exec(uint64_t n, bool batch)
             Log("Cycle_count = %ld, T = %ldus\n", cycle_count, spend_time/cycle_count);
             Log("Frequency = %ldHz\n", 1000000/(spend_time/cycle_count));
             Log("inst_count= %ld, IPC = %f\n", instr_count, (float)instr_count / (float)cycle_count);
+            Log("branch_jump_count= %ld\n", bjinst_count);
+            Log("prediction_err_count= %ld, Accuracy = %f\n", prerr_count, ((float)bjinst_count- (float)prerr_count) / (float)(bjinst_count));
 
 
 #if (defined(CONFIG_ITRACE) && (!defined(CONFIG_ITRACE_DIRECT)))

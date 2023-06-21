@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-20 22:20
+// Last Modified : 2023-06-21 21:57
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -42,13 +42,15 @@ module ysyx_22041752_EXU(
 
 `ifdef DPI_C
         ,
-    output                           debug_es_bjpre_error,
-    output [63:0]                    dpi_csrs [3:0] ,
-    output                           es_exp         ,
-    output                           es_mret        ,
-    output [`ysyx_22041752_PC_WD       -1:0] debug_es_pc,      
-    input  [`ysyx_22041752_INST_WD-1:0] debug_ds_inst,
-    output reg [`ysyx_22041752_INST_WD-1:0] debug_es_inst
+    output                                   debug_es_bjpre_error,
+    output                                   debug_es_bj_inst    ,
+    output [63:0]                            dpi_csrs [3:0]      ,
+    output                                   es_exp              ,
+    output                                   es_mret             ,
+    output                                   debug_es_data_en    ,
+    output [`ysyx_22041752_PC_WD       -1:0] debug_es_pc         ,      
+    input  [`ysyx_22041752_INST_WD-1:0]      debug_ds_inst       ,
+    output reg [`ysyx_22041752_INST_WD-1:0]  debug_es_inst
 `endif
 
 );
@@ -366,6 +368,8 @@ always @(posedge clk) begin
 end
 assign debug_es_pc = es_pc;
 assign debug_es_bjpre_error = bjpre_error;
+assign debug_es_data_en = es_mem_re && !data_ready && es_valid && ms_allowin;
+assign debug_es_bj_inst = (beq | bne | blt | bge | bgeu | bltu | jalr) && es_valid;
 `endif
 endmodule
 

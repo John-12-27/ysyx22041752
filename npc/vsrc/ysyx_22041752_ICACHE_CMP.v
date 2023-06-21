@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-20 22:17
+// Last Modified : 2023-06-21 20:54
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -99,11 +99,11 @@ wire [`ysyx_22041752_ICACHE_INDEX_WD -1:0] index_cs ;
 wire [`ysyx_22041752_ICACHE_EN_WD    -1:0] rden_cs  ;
 assign {tag_cs, index_cs, offset_cs, rden_cs} = rs_to_cs_bus_r;
 
-wire hit_w0 = rden_cs[0]&valid[0] && tag0==tag_cs ||
-              rden_cs[1]&valid[1] && tag1==tag_cs ;
+wire hit_w0 = missfsm_pre==IDLE && (rden_cs[0]&valid[0] && tag0==tag_cs ||
+                                    rden_cs[1]&valid[1] && tag1==tag_cs );
 
-wire hit_w1 = rden_cs[2]&valid[2] && tag2==tag_cs ||
-              rden_cs[3]&valid[3] && tag3==tag_cs ;
+wire hit_w1 = missfsm_pre==IDLE && (rden_cs[2]&valid[2] && tag2==tag_cs ||
+                                    rden_cs[3]&valid[3] && tag3==tag_cs );
 
 wire [127:0] hit_line = hit_w0 ? rden_cs[0] ? data0 : data1 :
                                  rden_cs[2] ? data2 : data3 ;
