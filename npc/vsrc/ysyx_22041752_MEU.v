@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-06-20 21:58
+// Last Modified : 2023-06-23 22:16
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -32,8 +32,13 @@ module ysyx_22041752_MEU (
 	output [`ysyx_22041752_FORWARD_BUS_WD-1:0]   ms_forward_bus
 `ifdef DPI_C
     ,
-    input  [`ysyx_22041752_INST_WD         -1:0] debug_es_inst ,
-    output reg [`ysyx_22041752_INST_WD         -1:0] debug_ms_inst 
+    input                                        debug_es_out_of_mem    ,
+    input  [`ysyx_22041752_INST_WD         -1:0] debug_es_inst          ,
+    output reg [`ysyx_22041752_INST_WD     -1:0] debug_ms_inst          ,
+    output reg                                   debug_ms_out_of_mem    ,
+
+    output [`ysyx_22041752_SRAM_DATA_WD    -1:0] debug_ms_data_rdata    ,
+    output                                       debug_ms_rdata_valid   
 `endif
 
 );
@@ -106,11 +111,18 @@ assign ms_forward_valid = ms_rf_we && ms_valid;
 assign ms_forward_bus   = {ms_mem_re&ms_valid, ms_forward_valid,ms_final_result,rd};
 
 `ifdef DPI_C
-    always @(posedge clk) begin
-	    if (es_to_ms_valid && ms_allowin) begin
-            debug_ms_inst <= debug_es_inst;
-        end
+always @(posedge clk) begin
+    if (es_to_ms_valid && ms_allowin) begin
+        debug_ms_inst <= debug_es_inst;
     end
+end
+always @(posedge clk) begin
+    if (es_to_ms_valid && ms_allowin) begin
+        debug_ms_out_of_mem <= debug_es_out_of_mem;
+    end
+end
+assign debug_ms_rdata_valid = ms_mem_re&rdata_valid;
+assign debug_ms_data_rdata  = data_rdata;
 `endif
 
 endmodule

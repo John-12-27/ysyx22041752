@@ -24,18 +24,25 @@ void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) =
 void (*ref_difftest_pc_cpy)(vaddr_t *pc, bool direction) = NULL;
 void (*ref_difftest_gpr_cpy)(word_t *gpr, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
-void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET) = NULL;
+void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc) = NULL;
 
-static bool skipped = false;
+static bool is_skip_ref = false;
 static int  skip_dut_nr_inst = 0;
 
-word_t skip_pc[SKIP_BUF_LEN] = {0,};
-
-/*void difftest_skip_ref() */
-/*{*/
-    /*is_skip_ref = true;*/
-    /*skip_dut_nr_inst = 0;*/
-/*}*/
+// this is used to let ref skip instructions which
+// can not produce consistent behavior with NEMU
+void difftest_skip_ref() 
+{
+    is_skip_ref = true;
+    // If such an instruction is one of the instruction packing in QEMU
+    // (see below), we end the process of catching up with QEMU's pc to
+    // keep the consistent behavior in our best.
+    // Note that this is still not perfect: if the packed instructions
+    // already write some memory, and the incoming instruction in NEMU
+    // will load that memory, we will encounter false negative. But such
+    // situation is infrequent.
+    skip_dut_nr_inst = 0;
+}
 
 void difftest_skip_dut(int nr_ref, int nr_dut) 
 {
@@ -56,7 +63,6 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
         printf("REF_NEXTPC\t0x%lx\n",ref_r->pc);
         printf("NPC_NEXTPC\t0x%lx\n",pc);
         printf("=========================================" ANSI_NONE "\n");
-        /*assert(0);*/
         return false;
     }
 
@@ -67,12 +73,9 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
         {
             printf(ANSI_BG_RED "=========================================\n");
             printf("ERROR_PC\t0x%lx\n",cpu.pc);
-            /*printf("REF_PC\t0x%lx\n",ref_r->pc);*/
             printf("REF_GPR[%d]\t0x%lx\n",i,ref_r->gpr[i]);
-            /*printf("NPC_PC\t0x%lx\n",pc);*/
             printf("NPC_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);
             printf("=========================================" ANSI_NONE "\n");
-            /*assert(0);*/
             return false;
         }
     }
@@ -119,7 +122,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_exec = (void (*)(uint64_t))dlsym(handle, "difftest_exec");
     assert(ref_difftest_exec);
     
-    ref_difftest_raise_intr = (void (*)(uint64_t, bool))dlsym(handle, "difftest_raise_intr");
+    ref_difftest_raise_intr = (void (*)(uint64_t, bool, paddr_t))dlsym(handle, "difftest_raise_intr");
     assert(ref_difftest_raise_intr);
     
     void (*ref_difftest_init)(int) = (void (*)(int))dlsym(handle, "difftest_init");
@@ -133,13 +136,6 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
 }
 
-void record_skip_pc(vaddr_t pc)
-{
-    skip_pc[0] = pc;
-}
-
-extern uint8_t exp_flag;
-extern uint8_t mret_flag;
 bool difftest_step(vaddr_t pc, vaddr_t npc) 
 {
     CPU_state ref_r;
@@ -162,23 +158,13 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
         return false;
     }
 
-    if(skipped)
-    {
-        skipped = false;
-        ref_difftest_pc_cpy(&S.pc, DIFFTEST_TO_REF);
-    }
-
-    for(int i = SKIP_BUF_LEN-1; i > 0; i--)
-    {
-        skip_pc[i] = skip_pc[i-1];
-    }
-    skip_pc[0] = 0;
-
-    if (skip_pc[SKIP_BUF_LEN-1] == S.pc || S.pc==0x80001068 || S.pc==0x8000106c)
+    if (is_skip_ref)
     {
         // to skip the checking of an instruction, just copy the reg state to reference design
-        skipped = true;
-        ref_difftest_gpr_cpy(cpu.gpr,DIFFTEST_TO_REF);
+        vaddr_t next_pc = pc+4;
+        ref_difftest_pc_cpy(&next_pc, DIFFTEST_TO_REF);
+        ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
+        is_skip_ref = false;
         return false;
     }
 

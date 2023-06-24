@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-21 21:50
+// Last Modified : 2023-06-23 22:05
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -25,13 +25,20 @@ module dpi_c (
     input                    debug_es_bj_inst ,
     input                    debug_es_exp     ,
     input                    debug_es_mret    ,
-    input                    debug_es_data_en ,
-    input  [`ysyx_22041752_INST_WD   -1:0] debug_ws_inst    ,
-    input  [`ysyx_22041752_INST_WD   -1:0] debug_es_inst    ,
+    input                    debug_es_data_ren,
+    input                    debug_es_data_wen,
+    input                    debug_ms_rdata_valid,
+
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_ms_data_rdata ,
+    input  [63:0]                            debug_es_data_addr  ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata ,
+    input  [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst       ,
+    input                                    debug_ws_out_of_mem ,
+    input  [`ysyx_22041752_INST_WD     -1:0] debug_es_inst       ,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input                                  debug_wb_rf_wen  ,
-    input  [`ysyx_22041752_RF_ADDR_WD-1:0] debug_wb_rf_wnum ,
+    input                                  debug_wb_rf_wen       ,
+    input  [`ysyx_22041752_RF_ADDR_WD-1:0] debug_wb_rf_wnum      ,
     input  [`ysyx_22041752_RF_DATA_WD-1:0] debug_wb_rf_wdata
     /* verilator lint_on UNUSEDSIGNAL */
 );
@@ -116,38 +123,54 @@ reg [31:0] current_inst;
 always @(posedge clk) begin
     current_inst <= debug_ws_inst;
 end
-
+reg current_out_of_mem;
+always @(posedge clk) begin
+    current_out_of_mem <= debug_ws_out_of_mem;
+end
 
 export "DPI-C" function record;
 function void record();
-    output bit     halt ;
-    output bit     valid;
-    output bit     exp;
-    output bit     mret;
-    output bit     bjpre_error;
-    output bit     bj_inst;
-    output longint pc   ;
-    output longint dnpc ;
-    output int     inst ;
-    halt        = stop_r3;
-    valid       = valid_r;
-    exp         = exp_cmt;
-    mret        = mret_cmt;
-    bjpre_error = debug_es_bjpre_error;
-    bj_inst     = debug_es_bj_inst;
-    pc          = current_pc ;
-    dnpc        = debug_wb_pc;
-    inst        = current_inst;
+    output bit     halt         ;
+    output bit     valid        ;
+    output bit     exp          ;
+    output bit     mret         ;
+    output bit     bjpre_error  ;
+    output bit     bj_inst      ;
+    output longint pc           ;
+    output bit     out_of_mem   ;
+    output longint dnpc         ;
+    output int     inst         ;
+    halt        = stop_r3               ;
+    valid       = valid_r               ;
+    exp         = exp_cmt               ;
+    mret        = mret_cmt              ;
+    bjpre_error = debug_es_bjpre_error  ;
+    bj_inst     = debug_es_bj_inst      ;
+    pc          = current_pc            ;
+    out_of_mem  = current_out_of_mem    ;
+    dnpc        = debug_wb_pc           ;
+    inst        = current_inst          ;
 endfunction
 
 export "DPI-C" function mem_inst;
 function void mem_inst();
     output longint pc   ;
     output int     inst ;
-    output bit     data_en;
+    output bit     data_ren;
+    output bit     data_wen;
+    output longint data_addr;
+    output longint data_wdata;
+    output longint data_rdata;
+    output bit     rdata_v   ;
+
     pc          = debug_es_pc;
     inst        = debug_es_inst;
-    data_en     = debug_es_data_en;
+    data_ren    = debug_es_data_ren;
+    data_wen    = debug_es_data_wen;
+    data_addr   = debug_es_data_addr;
+    data_wdata  = debug_es_data_wdata;
+    data_rdata  = debug_ms_data_rdata;
+    rdata_v     = debug_ms_rdata_valid;
 endfunction
 
 import "DPI-C" context function void set_gpr_ptr(input logic [63:0] a[]);

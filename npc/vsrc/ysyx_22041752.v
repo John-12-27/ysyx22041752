@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-21 15:47
+// Last Modified : 2023-06-23 22:50
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -80,12 +80,20 @@ wire                                   debug_es_bjpre_error;
 wire                                   debug_es_bj_inst ; 
 wire                                   debug_es_exp     ;
 wire                                   debug_es_mret    ;
-wire                                   debug_es_data_en ;
+wire                                   debug_es_data_ren;
+wire                                   debug_es_data_wen;
+wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] debug_es_data_addr;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata;
 wire                                   debug_ws_valid   ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ds_inst    ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_es_inst    ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ms_inst    ;
+wire [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_ms_data_rdata;
+wire                                   debug_ms_rdata_valid;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst    ;
+wire                                   debug_es_out_of_mem;
+wire                                   debug_ms_out_of_mem;
+wire                                   debug_ws_out_of_mem;
 wire                                   debug_wb_rf_wen  ;
 wire [`ysyx_22041752_RF_ADDR_WD  -1:0] debug_wb_rf_wnum ;
 wire [`ysyx_22041752_RF_DATA_WD  -1:0] debug_wb_rf_wdata;
@@ -183,7 +191,11 @@ ysyx_22041752_EXU U_EXU_0(
     .es_exp              ( debug_es_exp    ),
     .es_mret             ( debug_es_mret   ),
     .debug_es_bj_inst    ( debug_es_bj_inst),
-    .debug_es_data_en    ( debug_es_data_en),
+    .debug_es_data_addr  ( debug_es_data_addr),
+    .debug_es_out_of_mem ( debug_es_out_of_mem),
+    .debug_es_data_ren   ( debug_es_data_ren),
+    .debug_es_data_wen   ( debug_es_data_wen),
+    .debug_es_data_wdata ( debug_es_data_wdata),
     .debug_es_pc         ( debug_es_pc     ),
     .debug_ds_inst       ( debug_ds_inst   ),
     .debug_es_inst       ( debug_es_inst   )
@@ -225,28 +237,34 @@ ysyx_22041752_MEU U_MEU_0(
 `ifdef DPI_C
     ,
     .debug_es_inst  ( debug_es_inst   ),
-    .debug_ms_inst  ( debug_ms_inst   )
+    .debug_ms_inst  ( debug_ms_inst   ),
+    .debug_ms_data_rdata    (debug_ms_data_rdata),
+    .debug_es_out_of_mem    (debug_es_out_of_mem),
+    .debug_ms_out_of_mem    (debug_ms_out_of_mem),
+    .debug_ms_rdata_valid   (debug_ms_rdata_valid)
 `endif
 );
 
 // WB stage
 ysyx_22041752_WBU U_WBU_0(
-    .clk               ( clk               ),
-    .reset             ( reset             ),
-    .ws_allowin        ( ws_allowin        ),
-    .ms_to_ws_valid    ( ms_to_ws_valid    ),
-    .ms_to_ws_bus      ( ms_to_ws_bus      ),
-    .ws_to_rf_bus      ( ws_to_rf_bus      ),
-    .ws_forward_bus    ( ws_forward_bus    )
+    .clk                    ( clk               ),
+    .reset                  ( reset             ),
+    .ws_allowin             ( ws_allowin        ),
+    .ms_to_ws_valid         ( ms_to_ws_valid    ),
+    .ms_to_ws_bus           ( ms_to_ws_bus      ),
+    .ws_to_rf_bus           ( ws_to_rf_bus      ),
+    .ws_forward_bus         ( ws_forward_bus    )
 `ifdef DPI_C
     ,
-    .debug_ws_valid    ( debug_ws_valid    ),
-    .debug_ms_inst     ( debug_ms_inst     ),
-    .debug_ws_inst     ( debug_ws_inst     ),
-    .debug_wb_pc	   ( debug_wb_pc	   ),
-    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
-    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
+    .debug_ws_valid         ( debug_ws_valid    ),
+    .debug_ms_inst          ( debug_ms_inst     ),
+    .debug_ms_out_of_mem    (debug_ms_out_of_mem),
+    .debug_ws_inst          ( debug_ws_inst     ),
+    .debug_ws_out_of_mem    (debug_ws_out_of_mem),
+    .debug_wb_pc	        ( debug_wb_pc	    ),
+    .debug_wb_rf_wen        ( debug_wb_rf_wen   ),
+    .debug_wb_rf_wnum       ( debug_wb_rf_wnum  ),
+    .debug_wb_rf_wdata      ( debug_wb_rf_wdata )
 `endif
 );
 
@@ -319,23 +337,29 @@ ysyx_22041752_axiarbiter U_AXIARBITER_0(
 
 `ifdef DPI_C
 dpi_c u_dpi_c(
-    .clk               ( clk               ),
-    .stop              ( stop              ),
-    .ws_valid          ( debug_ws_valid    ),
-    .dpi_regs          ( dpi_regs          ),
-    .dpi_csrs          ( dpi_csrs          ),
-    .debug_wb_pc       ({32'd0,debug_wb_pc}),
-    .debug_es_pc       ({32'd0,debug_es_pc}),
-    .debug_es_bjpre_error(debug_es_bjpre_error),
-    .debug_es_bj_inst  ( debug_es_bj_inst  ),
-    .debug_es_exp      ( debug_es_exp      ),
-    .debug_es_mret     ( debug_es_mret     ),
-    .debug_es_data_en  ( debug_es_data_en  ),
-    .debug_ws_inst     ( debug_ws_inst     ),
-    .debug_es_inst     ( debug_es_inst     ),
-    .debug_wb_rf_wen   ( debug_wb_rf_wen   ),
-    .debug_wb_rf_wnum  ( debug_wb_rf_wnum  ),
-    .debug_wb_rf_wdata ( debug_wb_rf_wdata )
+    .clk                    (  clk                       ),
+    .stop                   (  stop                      ),
+    .ws_valid               (  debug_ws_valid            ),
+    .dpi_regs               (  dpi_regs                  ),
+    .dpi_csrs               (  dpi_csrs                  ),
+    .debug_wb_pc            ( {32'd0,debug_wb_pc}        ),
+    .debug_es_pc            ( {32'd0,debug_es_pc}        ),
+    .debug_es_bjpre_error   ( debug_es_bjpre_error       ),
+    .debug_es_bj_inst       ( debug_es_bj_inst           ),
+    .debug_es_exp           ( debug_es_exp               ),
+    .debug_es_mret          ( debug_es_mret              ),
+    .debug_es_data_ren      ( debug_es_data_ren          ),
+    .debug_es_data_wen      ( debug_es_data_wen          ),
+    .debug_ms_rdata_valid   ( debug_ms_rdata_valid       ),
+    .debug_ms_data_rdata    ( debug_ms_data_rdata        ),
+    .debug_es_data_addr     ( {32'b0,debug_es_data_addr} ),
+    .debug_es_data_wdata    ( debug_es_data_wdata        ),
+    .debug_ws_inst          ( debug_ws_inst              ),
+    .debug_ws_out_of_mem    ( debug_ws_out_of_mem        ),
+    .debug_es_inst          ( debug_es_inst              ),
+    .debug_wb_rf_wen        ( debug_wb_rf_wen            ),
+    .debug_wb_rf_wnum       ( debug_wb_rf_wnum           ),
+    .debug_wb_rf_wdata      ( debug_wb_rf_wdata          )
 );
 `endif
 

@@ -104,6 +104,4 @@ gprof:
 
 clean :
 	-rm -rf $(BUILD_DIR) logs 
-	-rm gmon.out
-	-rm gprof_repo.txt
 .PHONY: sim batch gdb clean build

@@ -93,12 +93,12 @@ void difftest_exec(uint64_t n)
 }
 
 extern Decode s;
-void difftest_raise_intr(word_t NO, bool MRET) 
+void difftest_raise_intr(word_t NO, bool MRET, paddr_t pc) 
 {
     if(MRET)
         cpu.pc = isa_mret_intr();
     else
-        cpu.pc = isa_raise_intr(&s, NO, cpu.pc);
+        cpu.pc = isa_raise_intr(&s, NO, pc);
 }
 
 void difftest_init(int port) 

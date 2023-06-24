@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-21 21:57
+// Last Modified : 2023-06-24 18:29
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -47,7 +47,11 @@ module ysyx_22041752_EXU(
     output [63:0]                            dpi_csrs [3:0]      ,
     output                                   es_exp              ,
     output                                   es_mret             ,
-    output                                   debug_es_data_en    ,
+    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] debug_es_data_addr  ,
+    output                                   debug_es_out_of_mem ,
+    output                                   debug_es_data_ren   ,
+    output                                   debug_es_data_wen   ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata ,
     output [`ysyx_22041752_PC_WD       -1:0] debug_es_pc         ,      
     input  [`ysyx_22041752_INST_WD-1:0]      debug_ds_inst       ,
     output reg [`ysyx_22041752_INST_WD-1:0]  debug_es_inst
@@ -189,7 +193,6 @@ assign es_to_ms_bus = {res_sext         ,
                       };
 
 wire                            pre_error  ;
-//reg                             pre_error_r;
 wire [`ysyx_22041752_PC_WD-1:0] bj_addr    ;
 wire                            br_taken_real = alu_result[0];
 
@@ -221,10 +224,10 @@ always @(posedge clk) begin
         expfsm_pre <= expfsm_nxt;
     end
 end
-assign expfsm_nxt = expfsm_pre == IDLE && (ecall || int_t_o) ? W_MEPC   :
-                    expfsm_pre == W_MEPC                     ? W_MCAUSE :
-                    expfsm_pre == W_MCAUSE                   ? IDLE     :
-                                                               expfsm_pre;
+assign expfsm_nxt = expfsm_pre == IDLE && (ecall || int_t_o)&&es_valid ? W_MEPC   :
+                    expfsm_pre == W_MEPC                               ? W_MCAUSE :
+                    expfsm_pre == W_MCAUSE                             ? IDLE     :
+                                                                         expfsm_pre;
 
 wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
@@ -257,7 +260,7 @@ wire [63:0] csr_wdata;
 wire [63:0] csr_rdata;
 wire        int_t_o  ;
 
-ysyx_22041752_csr U_YSYX_22041752_CSR_0(
+ysyx_22041752_csr U_CSR_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .wen                            ( csr_we                        ),
@@ -366,10 +369,15 @@ always @(posedge clk) begin
         debug_es_inst <= debug_ds_inst;    
     end
 end
-assign debug_es_pc = es_pc;
+assign debug_es_pc          = es_pc;
 assign debug_es_bjpre_error = bjpre_error;
-assign debug_es_data_en = es_mem_re && !data_ready && es_valid && ms_allowin;
-assign debug_es_bj_inst = (beq | bne | blt | bge | bgeu | bltu | jalr) && es_valid;
+assign debug_es_data_ren    = data_en && es_mem_re;
+assign debug_es_data_wen    = es_mem_we && data_ready;
+assign debug_es_bj_inst     = (beq | bne | blt | bge | bgeu | bltu | jalr) && es_valid;
+assign debug_es_data_addr   = data_addr;
+assign debug_es_data_wdata  = data_wdata;
+wire access_mem = (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
+assign debug_es_out_of_mem  = data_ready && !access_mem;
 `endif
 endmodule
 

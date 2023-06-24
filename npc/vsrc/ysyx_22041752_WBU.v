@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_WBU.v
 // Author        : Cw
 // Created On    : 2022-11-21 16:21
-// Last Modified : 2023-06-20 22:01
+// Last Modified : 2023-06-23 21:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,25 +14,27 @@
 
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_WBU (
-    input                      clk           ,
-    input                      reset         ,
+    input                                         clk           ,
+    input                                         reset         ,
     
-    output                          ws_allowin    ,
+    output                                        ws_allowin    ,
     
-    input                           ms_to_ws_valid,
+    input                                         ms_to_ws_valid,
     input  [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0]  ms_to_ws_bus  ,
     
     output [`ysyx_22041752_WS_TO_RF_BUS_WD -1:0]  ws_to_rf_bus  ,
    
-	output [`ysyx_22041752_WS_FORWARD_BUS_WD  -1:0]  ws_forward_bus
+	output [`ysyx_22041752_WS_FORWARD_BUS_WD-1:0] ws_forward_bus
 `ifdef DPI_C
     ,
-    output wire [`ysyx_22041752_PC_WD           -1:0]  debug_wb_pc   ,
-    output wire                                        debug_ws_valid,
-    output wire                                        debug_wb_rf_wen ,
-    output wire [`ysyx_22041752_RF_ADDR_WD      -1:0]  debug_wb_rf_wnum,
-    output wire [`ysyx_22041752_RF_DATA_WD      -1:0]  debug_wb_rf_wdata,
-    output reg  [`ysyx_22041752_INST_WD         -1:0]  debug_ws_inst,
+    output wire [`ysyx_22041752_PC_WD           -1:0]  debug_wb_pc            ,
+    output wire                                        debug_ws_valid         ,
+    output wire                                        debug_wb_rf_wen        ,
+    output wire [`ysyx_22041752_RF_ADDR_WD      -1:0]  debug_wb_rf_wnum       ,
+    output wire [`ysyx_22041752_RF_DATA_WD      -1:0]  debug_wb_rf_wdata      ,
+    input                                              debug_ms_out_of_mem    ,
+    output reg  [`ysyx_22041752_INST_WD         -1:0]  debug_ws_inst          ,
+    output reg                                         debug_ws_out_of_mem    ,
     input       [`ysyx_22041752_INST_WD         -1:0]  debug_ms_inst
 `endif
 );
@@ -99,6 +101,11 @@ assign debug_wb_rf_wdata = ws_r;
 always @(posedge clk) begin
     if(ms_to_ws_valid && ws_allowin) begin
         debug_ws_inst <= debug_ms_inst;    
+    end
+end
+always @(posedge clk) begin
+    if(ms_to_ws_valid && ws_allowin) begin
+        debug_ws_out_of_mem <= debug_ms_out_of_mem;    
     end
 end
 `endif

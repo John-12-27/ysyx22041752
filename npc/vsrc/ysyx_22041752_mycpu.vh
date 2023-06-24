@@ -45,6 +45,9 @@
     `define ysyx_22041752_ICACHE_TAG_WD       `ysyx_22041752_PC_WD - `ysyx_22041752_ICACHE_OFFSET_WD - `ysyx_22041752_ICACHE_INDEX_WD
     `define ysyx_22041752_RS_TO_CS_BUS_WD     36
 
+    `define ysyx_22041752_MEM_BASEADDR        32'h80000000
+    `define ysyx_22041752_MEM_SIZE            32'h08000000
+
     `define DPI_C
 `endif
 
