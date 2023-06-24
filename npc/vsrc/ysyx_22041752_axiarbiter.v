@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-20 10:45
+// Last Modified : 2023-06-24 20:57
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -204,7 +204,8 @@ always @(posedge clk) begin
         data_ready_r <= 0;
     end
     else begin
-        data_ready_r <= arfsm_nxt==AR_LOAD || awfsm_nxt==AW_WAIT;
+        data_ready_r <= data_en && data_wen==0 && arfsm_nxt==AR_LOAD || 
+                        data_en && data_wen!=0 && awfsm_nxt==AW_WAIT ;
     end
 end
 
@@ -222,7 +223,8 @@ always @(posedge clk) begin
         data_valid_r <= 0;
     end
     else begin
-        data_valid_r <= rfsm_nxt==R_GET_DATA;
+        data_valid_r <= rfsm_nxt==R_GET_DATA || 
+                        bfsm_nxt==B_GET      ;
     end
 end
 

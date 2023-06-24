@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_RDU.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-18 21:26
+// Last Modified : 2023-06-24 19:48
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,15 +13,15 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_ICACHE_RDU (
-    input                                       inst_en        ,
-    input  [`ysyx_22041752_PC_WD-1:0]           inst_addr      ,
+    input                                           inst_en        ,
+    input  [`ysyx_22041752_PC_WD-1:0]               inst_addr      ,
 
-    input                                       cmp_allowin    ,
-    output                                      rs_to_cs_valid ,
-    output [`ysyx_22041752_RS_TO_CS_BUS_WD-1:0] rs_to_cs_bus   ,
+    input                                           cmp_allowin    ,
+    output                                          rs_to_cs_valid ,
+    output [`ysyx_22041752_IRS_TO_ICS_BUS_WD-1:0]   rs_to_cs_bus   ,
 
-    output [`ysyx_22041752_ICACHE_EN_WD   -1:0] rden           ,
-    output [                               5:0] raddr
+    output [`ysyx_22041752_ICACHE_EN_WD     -1:0]   rden           ,
+    output [                                 5:0]   raddr
 );
     
 wire [`ysyx_22041752_ICACHE_INDEX_WD -1:0] index ;

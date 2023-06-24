@@ -2,43 +2,47 @@
 //                 Copyright (c) 2023 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : ysyx_22041752_ICACHE.v
+// Filename      : ysyx_22041752_DCACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-24 19:49
+// Last Modified : 2023-06-24 20:25
 // ---------------------------------------------------------------------------------
-// Description   : 2-way set associative cache
+// Description   : 4-way set associative cache
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-module ysyx_22041752_ICACHE(
+module ysyx_22041752_DCACHE(
     input clk  ,
     input reset,
     input flush,
 
-    input                                    inst_en    ,
-    input  [`ysyx_22041752_PC_WD  -1:0]      inst_addr  ,
-    output [`ysyx_22041752_INST_WD-1:0]      inst_rdata ,
+    input                                    data_en    ,
+    input  [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen   ,
+    input  [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr  ,
+    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata ,
     output                                   cache_miss ,
 
     output                                   sram_req   ,
     input                                    sram_ready ,
+    output [`ysyx_22041752_SRAM_WEN_WD -1:0] sram_wen   ,
     output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_addr  ,
+    output [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_wdata ,
     input  [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_rdata ,
     input                                    sram_valid 
 );
     
-wire [`ysyx_22041752_ICACHE_EN_WD   -1:0] rden       ;
+wire [`ysyx_22041752_DCACHE_EN_WD   -1:0] rden       ;
 wire [                               5:0] raddr      ;
 
-wire                                        cmp_allowin    ;
-wire                                        rs_to_cs_valid ;
-wire [`ysyx_22041752_IRS_TO_ICS_BUS_WD-1:0] rs_to_cs_bus   ;
+wire                                      cmp_allowin    ;
+wire                                      rs_to_cs_valid ;
+wire [`ysyx_22041752_DRS_TO_DCS_BUS_WD-1:0] rs_to_cs_bus   ;
 
 ysyx_22041752_ICACHE_RDU U_ICACHE_RDU_0(
-    .inst_en                ( inst_en                       ),
-    .inst_addr              ( inst_addr                     ),
+    .inst_en                ( data_en                       ),
+    .inst_addr              ( data_addr                     ),
     .cmp_allowin            ( cmp_allowin                   ),
     .rs_to_cs_valid         ( rs_to_cs_valid                ),
     .rs_to_cs_bus           ( rs_to_cs_bus                  ),
@@ -46,10 +50,10 @@ ysyx_22041752_ICACHE_RDU U_ICACHE_RDU_0(
     .raddr                  ( raddr                         )
 );
 
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag0 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag1 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag2 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag3 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag0 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag1 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag2 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag3 ;
 wire [128                           -1:0]  data0;
 wire [128                           -1:0]  data1;
 wire [128                           -1:0]  data2;
@@ -70,10 +74,10 @@ wire [128                           -1:0]  wdata0;
 wire [128                           -1:0]  wdata1;         
 wire [128                           -1:0]  wdata2;         
 wire [128                           -1:0]  wdata3;         
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  wtag0 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  wtag1 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  wtag2 ;
-wire [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  wtag3 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  wtag0 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  wtag1 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  wtag2 ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  wtag3 ;
 wire                                       wv0   ;
 wire                                       wv1   ;
 wire                                       wv2   ;
@@ -147,16 +151,6 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_0(
     .D                              ( wdata0                )
 );
 
-S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_1(
-    .Q                              ( data1                 ),
-    .CLK                            ( clk                   ),
-    .CEN                            ( rden[1]&wen1          ),
-    .WEN                            ( wen1                  ),
-    .BWEN                           ( bwen1                 ),
-    .A                              (!wen1 ? waddr1 : raddr ),
-    .D                              ( wdata1                )
-);
-
 // the first way tag
 S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_0(
@@ -168,6 +162,28 @@ U_S011HD1P_X32Y2D128_0(
     .D                              ( wtag0                 )
 );
 
+// the first way valid 
+ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
+    .clk                            ( clk                       ),
+    .reset                          ( reset                     ),
+    .addr                           (!wen0 ? waddr0 : raddr     ),
+    .v_o                            ( v0                        ),
+    .we                             ( wen0                      ),
+    .v_i                            ( wv0                       )
+);
+
+// the second way data
+S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_1(
+    .Q                              ( data1                 ),
+    .CLK                            ( clk                   ),
+    .CEN                            ( rden[1]&wen1          ),
+    .WEN                            ( wen1                  ),
+    .BWEN                           ( bwen1                 ),
+    .A                              (!wen1 ? waddr1 : raddr ),
+    .D                              ( wdata1                )
+);
+
+// the second way tag
 S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_1(
     .Q                              ( tag1                  ),
@@ -178,15 +194,7 @@ U_S011HD1P_X32Y2D128_1(
     .D                              ( wtag1                 )
 );
 
-// the first way valid 
-ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
-    .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
-    .addr                           (!wen0 ? waddr0 : raddr     ),
-    .v_o                            ( v0                        ),
-    .we                             ( wen0                      ),
-    .v_i                            ( wv0                       )
-);
+// the second way valid
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
@@ -196,12 +204,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
     .v_i                            ( wv1                       )
 );
 
-
-/*=================================================================================*/
-/*=================================================================================*/
-/*=================================================================================*/
-
-// the second way data
+// the third way data
 S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_2(
     .Q                              ( data2                     ),
     .CLK                            ( clk                       ),
@@ -212,17 +215,7 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_2(
     .D                              ( wdata2                    )
 );
 
-S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_3(
-    .Q                              ( data3                     ),
-    .CLK                            ( clk),
-    .CEN                            ( rden[3]&wen3              ),
-    .WEN                            ( wen3                      ),
-    .BWEN                           ( bwen3                     ),
-    .A                              (!wen3 ? waddr3 : raddr     ),
-    .D                              ( wdata3                    )
-);
-
-// the second way tag
+// the third way tag
 S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_2(
     .Q                              ( tag2                      ),
@@ -233,6 +226,28 @@ U_S011HD1P_X32Y2D128_2(
     .D                              ( wtag2                     )
 );
 
+// the third way valid 
+ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
+    .clk                            ( clk                       ),
+    .reset                          ( reset                     ),
+    .addr                           (!wen2 ? waddr2 : raddr     ),
+    .v_o                            ( v2                        ),
+    .we                             ( wen2                      ),
+    .v_i                            ( wv2                       )
+);
+
+// the fourth way data
+S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_3(
+    .Q                              ( data3                     ),
+    .CLK                            ( clk),
+    .CEN                            ( rden[3]&wen3              ),
+    .WEN                            ( wen3                      ),
+    .BWEN                           ( bwen3                     ),
+    .A                              (!wen3 ? waddr3 : raddr     ),
+    .D                              ( wdata3                    )
+);
+
+// the fourth way tag
 S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_ICACHE_TAG_WD))
 U_S011HD1P_X32Y2D128_3(
     .Q                              ( tag3                      ),
@@ -243,15 +258,7 @@ U_S011HD1P_X32Y2D128_3(
     .D                              ( wtag3                     )
 );
 
-// the second way valid 
-ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
-    .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
-    .addr                           (!wen2 ? waddr2 : raddr     ),
-    .v_o                            ( v2                        ),
-    .we                             ( wen2                      ),
-    .v_i                            ( wv2                       )
-);
+// the fourth way valid 
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_3(
     .clk                            ( clk                       ),
     .reset                          ( reset                     ),
