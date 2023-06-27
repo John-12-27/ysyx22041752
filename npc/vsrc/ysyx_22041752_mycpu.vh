@@ -2,9 +2,9 @@
 `ifndef _MY_CPU_H_
 `define _MY_CPU_H_
 
-    `define ysyx_22041752_SRAM_ADDR_WD      32
-    `define ysyx_22041752_SRAM_DATA_WD      64
-    `define ysyx_22041752_SRAM_WEN_WD        8
+    `define ysyx_22041752_DATA_ADDR_WD      32
+    `define ysyx_22041752_DATA_DATA_WD      64
+    `define ysyx_22041752_DATA_WEN_WD       64
     `define ysyx_22041752_RF_ADDR_WD         5
     `define ysyx_22041752_RF_DATA_WD        64
     `define ysyx_22041752_RF_WEN_WD          8
@@ -18,7 +18,7 @@
     `define ysyx_22041752_PS_TO_FS_BUS_WD   `ysyx_22041752_PC_WD
     `define ysyx_22041752_FS_TO_DS_BUS_WD   118
     `define ysyx_22041752_DS_TO_ES_BUS_WD   317
-    `define ysyx_22041752_ES_TO_MS_BUS_WD   107
+    `define ysyx_22041752_ES_TO_MS_BUS_WD   111
     `define ysyx_22041752_MS_TO_WS_BUS_WD   102
     `define ysyx_22041752_WS_TO_RF_BUS_WD   70
     `define ysyx_22041752_FORWARD_BUS_WD    71
@@ -53,11 +53,13 @@
     `define ysyx_22041752_DCACHE_LINE_PERWAY  (`ysyx_22041752_DCACHE_SIZE_PERWAY / `ysyx_22041752_DCACHE_SIZE_PERLINE)
     `define ysyx_22041752_DCACHE_INDEX_WD     $clog2(`ysyx_22041752_DCACHE_LINE_PERWAY)
     `define ysyx_22041752_DCACHE_OFFSET_WD    $clog2(`ysyx_22041752_DCACHE_SIZE_PERLINE)
-    `define ysyx_22041752_DCACHE_TAG_WD       `ysyx_22041752_SRAM_ADDR_WD - `ysyx_22041752_DCACHE_OFFSET_WD - `ysyx_22041752_DCACHE_INDEX_WD
-    `define ysyx_22041752_DRS_TO_DCS_BUS_WD   108
+    `define ysyx_22041752_DCACHE_TAG_WD       `ysyx_22041752_DATA_ADDR_WD - `ysyx_22041752_DCACHE_OFFSET_WD - `ysyx_22041752_DCACHE_INDEX_WD
+    `define ysyx_22041752_DRS_TO_DCS_BUS_WD   164
 
     `define ysyx_22041752_MEM_BASEADDR        32'h80000000
     `define ysyx_22041752_MEM_SIZE            32'h08000000
+    `define ysyx_22041752_MTIME_OFFSET        32'h0000_bff8
+    `define ysyx_22041752_MTIMECMP_OFFSET     32'h0000_4000
 
     `define DPI_C
 `endif

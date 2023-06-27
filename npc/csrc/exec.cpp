@@ -100,7 +100,7 @@ static bool trace_diff_watch()
     D.pc   = M.pc;
     D.inst = M.inst;
 
-    paddr_t raddr;
+    static paddr_t raddr;
 #ifdef CONFIG_MTRACE
     if (rdata_v && (raddr >= MBASEADDR) && (raddr < (MBASEADDR + MEMSIZE))) 
     {
@@ -182,7 +182,7 @@ static bool trace_diff_watch()
                 log_device(&D, "serial", data_wdata, false);
             }
         }
-        else if(paddr == CONFIG_GPU_SYNC_MMIO)
+        else if(data_addr == CONFIG_GPU_SYNC_MMIO)
         {
             if(dtrace_enable("vgactl"))
             {
@@ -190,7 +190,7 @@ static bool trace_diff_watch()
                 log_device(&D, "vgactl", data_wdata, false);
             }
         }
-        else if((paddr >= CONFIG_GPU_FBDRAW_MMIO) && (paddr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
+        else if((data_addr >= CONFIG_GPU_FBDRAW_MMIO) && (data_addr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
         {
             if(dtrace_enable("vmem"))
             {
@@ -238,10 +238,12 @@ static bool trace_diff_watch()
 #endif
 
 #ifdef CONFIG_DIFFTEST
-        if (out_of_mem_flag) 
-        {
-            difftest_skip_ref();
-        }
+
+        //if (out_of_mem_flag) 
+        //{
+            //difftest_skip_ref();
+        //}
+
         res = difftest_step(S.pc, S.dnpc);
 #endif
 #ifdef CONFIG_WATCHPOINT

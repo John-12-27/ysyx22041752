@@ -2,27 +2,27 @@
 //                 Copyright (c) 2023 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : ysyx_22041752_ICACHE_V.v
+// Filename      : ysyx_22041752_DCACHE_VD.v
 // Author        : Cw
 // Created On    : 2023-06-17 16:46
-// Last Modified : 2023-06-26 20:57
+// Last Modified : 2023-06-26 20:59
 // ---------------------------------------------------------------------------------
-// Description   : valid table for cache
+// Description   : valid/dirty table for cache
 //
 //
 // -FHDR----------------------------------------------------------------------------
-module ysyx_22041752_ICACHE_V (
+module ysyx_22041752_DCACHE_VD (
     input  clk  ,
     input  reset,
 
     input  [5:0] addr ,
-    output reg   v_o  ,
+    output reg   o    ,
     input        en   ,
     input        we   ,
-    input        v_i
+    input        in
 );
     
-reg [63:0] valid;
+reg [63:0] dat;
 
 genvar i;
 generate
@@ -30,21 +30,22 @@ generate
         :Write_Regs
         always @(posedge clk) begin
             if (reset) begin
-                valid[i] <= 0;
+                dat[i] <= 0;
             end
             else if(!we && (addr == i))
-                valid[i] <= v_i;
+                dat[i] <= in;
         end
     end
 endgenerate
 
 always @(posedge clk) begin
     if (reset) begin
-        v_o <= 0;
+        o <= 0;
     end
-    else if(en) begin
-        v_o <= valid[addr];
+    else if(!en) begin
+        o <= dat[addr];
     end
 end
+
 endmodule
 

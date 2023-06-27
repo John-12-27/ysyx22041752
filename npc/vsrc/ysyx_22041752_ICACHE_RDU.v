@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_RDU.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-24 19:48
+// Last Modified : 2023-06-27 17:13
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -28,12 +28,12 @@ wire [`ysyx_22041752_ICACHE_INDEX_WD -1:0] index ;
 
 assign index = inst_addr[`ysyx_22041752_ICACHE_INDEX_WD+`ysyx_22041752_ICACHE_OFFSET_WD -1:`ysyx_22041752_ICACHE_OFFSET_WD];
 assign rs_to_cs_bus = {inst_addr, ~rden};
-assign rs_to_cs_valid = inst_en;
+assign rs_to_cs_valid = 1'b1;
 
-assign rden[0] = !(rs_to_cs_valid && cmp_allowin && !index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
-assign rden[2] = !(rs_to_cs_valid && cmp_allowin && !index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
-assign rden[1] = !(rs_to_cs_valid && cmp_allowin &&  index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
-assign rden[3] = !(rs_to_cs_valid && cmp_allowin &&  index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
+assign rden[0] = !(inst_en && cmp_allowin && !index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
+assign rden[2] = !(inst_en && cmp_allowin && !index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
+assign rden[1] = !(inst_en && cmp_allowin &&  index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
+assign rden[3] = !(inst_en && cmp_allowin &&  index[`ysyx_22041752_ICACHE_INDEX_WD-1]);
 
 assign raddr = index[5:0];
 

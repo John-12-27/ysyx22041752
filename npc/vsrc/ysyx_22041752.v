@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-23 22:50
+// Last Modified : 2023-06-27 21:43
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -82,13 +82,13 @@ wire                                   debug_es_exp     ;
 wire                                   debug_es_mret    ;
 wire                                   debug_es_data_ren;
 wire                                   debug_es_data_wen;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] debug_es_data_addr;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] debug_es_data_addr;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] debug_es_data_wdata;
 wire                                   debug_ws_valid   ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ds_inst    ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_es_inst    ;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ms_inst    ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_ms_data_rdata;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] debug_ms_data_rdata;
 wire                                   debug_ms_rdata_valid;
 wire [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst    ;
 wire                                   debug_es_out_of_mem;
@@ -106,17 +106,17 @@ wire clk = clock;
 
 // fetch insts interface
 wire                                   inst_en   ;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr ;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ;
 wire [`ysyx_22041752_INST_WD-1:0]      inst_rdata;
 wire                                   icache_miss;
 // ld/store interface
 wire                                   data_en   ;
-wire                                   data_ready;
-wire [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen  ;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata;
-wire                                   data_valid;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] data_wen  ;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] data_addr ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] data_wdata;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] data_rdata;
+wire                                   dcache_miss;
+wire                                   write_hit ;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -175,10 +175,10 @@ ysyx_22041752_EXU U_EXU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .es_forward_bus ( es_forward_bus  ),
     .data_en        ( data_en         ),
-    .data_ready     ( data_ready      ),
     .data_wen       ( data_wen        ),
     .data_addr      ( data_addr       ),
     .data_wdata     ( data_wdata      ),
+    .write_hit      ( write_hit       ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_t_i        ( int_t           ),
@@ -204,9 +204,9 @@ ysyx_22041752_EXU U_EXU_0(
 
 wire                                   clint_en    = data_en;
 wire                                   clint_wen   = |data_wen ;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] clint_addr  = data_addr ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_wdata = data_wdata;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] clint_rdata;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] clint_addr  = data_addr ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] clint_wdata = data_wdata;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] clint_rdata;
 wire                                   clint_rdat_v;
 
 ysyx_22041752_clint U_CLINT_0(
@@ -232,7 +232,7 @@ ysyx_22041752_MEU U_MEU_0(
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
     .data_rdata     ( clint_rdat_v ? clint_rdata : data_rdata ),
-    .rdata_valid    ( clint_rdat_v ? 1           : data_valid ),
+    .cache_miss     ( clint_rdat_v ? 0           : dcache_miss),
     .ms_forward_bus ( ms_forward_bus  )
 `ifdef DPI_C
     ,
@@ -269,10 +269,10 @@ ysyx_22041752_WBU U_WBU_0(
 );
 
 wire                                   icache_req       ;
-wire [`ysyx_22041752_SRAM_ADDR_WD-1:0] icache_req_addr  ;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] icache_req_addr  ;
 wire                                   icache_ready     ;
 wire                                   icache_valid     ;
-wire [`ysyx_22041752_SRAM_DATA_WD-1:0] icache_rdata     ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] icache_rdata     ;
 ysyx_22041752_ICACHE U_ICACHE_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
@@ -288,6 +288,31 @@ ysyx_22041752_ICACHE U_ICACHE_0(
     .sram_valid                     ( icache_valid                  )
 );
 
+wire                                   dcache_req   ;
+wire                                   dcache_ready ;
+wire                                   dcache_wen   ;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] dcache_addr  ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] dcache_wdata ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] dcache_rdata ;
+wire                                   dcache_valid ;
+ysyx_22041752_DCACHE U_DCACHE_0(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .data_en                        ( data_en                       ),
+    .data_wen                       ( data_wen                      ),
+    .data_addr                      ( data_addr                     ),
+    .data_wdata                     ( data_wdata                    ),
+    .data_rdata                     ( data_rdata                    ),
+    .cache_miss                     ( dcache_miss                   ),
+    .write_hit                      ( write_hit                     ),
+    .sram_req                       ( dcache_req                    ),
+    .sram_ready                     ( dcache_ready                  ),
+    .sram_wen                       ( dcache_wen                    ),
+    .sram_addr                      ( dcache_addr                   ),
+    .sram_wdata                     ( dcache_wdata                  ),
+    .sram_rdata                     ( dcache_rdata                  ),
+    .sram_valid                     ( dcache_valid                  )
+);
 
 ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .clk                            ( clk                           ),
@@ -297,13 +322,13 @@ ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .inst_addr                      ( icache_req_addr               ),
     .inst_rdata                     ( icache_rdata                  ),
     .inst_valid                     ( icache_valid                  ),
-    .data_en                        ( data_en                       ),
-    .data_ready                     ( data_ready                    ),
-    .data_wen                       ( data_wen                      ),
-    .data_addr                      ( data_addr                     ),
-    .data_wdata                     ( data_wdata                    ),
-    .data_rdata                     ( data_rdata                    ),
-    .data_valid                     ( data_valid                    ),
+    .data_en                        ( dcache_req                    ),
+    .data_ready                     ( dcache_ready                  ),
+    .data_wen                       ( dcache_wen                    ),
+    .data_addr                      ( dcache_addr                   ),
+    .data_wdata                     ( dcache_wdata                  ),
+    .data_rdata                     ( dcache_rdata                  ),
+    .data_valid                     ( dcache_valid                  ),
     .arid                           ( io_master_arid                ),
     .araddr                         ( io_master_araddr              ),
     .arlen                          ( io_master_arlen               ),

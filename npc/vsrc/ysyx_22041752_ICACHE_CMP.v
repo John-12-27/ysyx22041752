@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-21 20:54
+// Last Modified : 2023-06-27 18:51
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -20,7 +20,7 @@ module ysyx_22041752_ICACHE_CMP (
 
     output                                       cmp_allowin    ,
     input                                        rs_to_cs_valid ,
-    input  [`ysyx_22041752_RS_TO_CS_BUS_WD-1:0]  rs_to_cs_bus   ,
+    input  [`ysyx_22041752_IRS_TO_ICS_BUS_WD-1:0]rs_to_cs_bus   ,
 
     input  [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag0           ,
     input  [`ysyx_22041752_ICACHE_TAG_WD  -1:0]  tag1           ,
@@ -55,15 +55,14 @@ module ysyx_22041752_ICACHE_CMP (
     output                                       wv1            ,
     output                                       wv2            ,
     output                                       wv3            ,
-    
 
     output [`ysyx_22041752_INST_WD        -1:0]  inst_rdata     ,
     output                                       cache_miss     ,
 
     output                                       sram_req       ,
     input                                        sram_ready     ,
-    output [`ysyx_22041752_SRAM_ADDR_WD   -1:0]  sram_addr      ,
-    input  [`ysyx_22041752_SRAM_DATA_WD   -1:0]  sram_rdata     ,
+    output [`ysyx_22041752_DATA_ADDR_WD   -1:0]  sram_addr      ,
+    input  [`ysyx_22041752_DATA_DATA_WD   -1:0]  sram_rdata     ,
     input                                        sram_valid     
 );
     
@@ -81,7 +80,7 @@ end
 assign cmp_allowin = !cs_valid || cs_ready_go;
 assign cs_ready_go = missfsm_pre==IDLE && !cache_miss || missfsm_pre==GET_1 || missfsm_pre==DROPED_1;
 
-reg [`ysyx_22041752_RS_TO_CS_BUS_WD-1:0] rs_to_cs_bus_r;
+reg [`ysyx_22041752_IRS_TO_ICS_BUS_WD-1:0] rs_to_cs_bus_r;
 always @(posedge clk) begin
     if (reset) begin
         rs_to_cs_bus_r <= 0;
@@ -109,8 +108,7 @@ wire [127:0] hit_line = hit_w0 ? rden_cs[0] ? data0 : data1 :
                                  rden_cs[2] ? data2 : data3 ;
 
 
-assign cache_miss = cs_valid && !(hit_w0 || hit_w1 || missfsm_pre==GET_1);
-
+assign cache_miss = |rden_cs && cs_valid && !(hit_w0 || hit_w1 || missfsm_pre==GET_1);
 
 reg  [3:0] missfsm_pre;
 wire [3:0] missfsm_nxt;
@@ -169,7 +167,7 @@ wire [`ysyx_22041752_PC_WD-1 :0] inst_addr_cs = {tag_cs, index_cs, offset_cs};
 assign sram_req = (missfsm_pre==REQUEST_0 || missfsm_pre==REQUEST_1 || missfsm_pre==DROP_REQ_0 || missfsm_pre==DROP_REQ_1) && !sram_ready;
 assign sram_addr= (missfsm_pre==REQUEST_0 || missfsm_pre==DROP_REQ_0) ? {inst_addr_cs[`ysyx_22041752_PC_WD-1:4], 4'b0000} : {inst_addr_cs[`ysyx_22041752_PC_WD-1:4], 4'b1000};
 
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] line_lower;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] line_lower;
 always @(posedge clk) begin
     if (reset) begin
         line_lower <= 0;
@@ -178,7 +176,7 @@ always @(posedge clk) begin
         line_lower <= sram_rdata;
     end
 end
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] line_upper;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] line_upper;
 always @(posedge clk) begin
     if (reset) begin
         line_upper <= 0;

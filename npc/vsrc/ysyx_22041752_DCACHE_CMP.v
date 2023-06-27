@@ -5,14 +5,13 @@
 // Filename      : ysyx_22041752_DCACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-24 22:52
+// Last Modified : 2023-06-27 20:58
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-
 module ysyx_22041752_DCACHE_CMP (
     input  clk    ,
     input  reset  ,
@@ -59,17 +58,17 @@ module ysyx_22041752_DCACHE_CMP (
     output                                       wd1            ,
     output                                       wd2            ,
     output                                       wd3            ,
-    
 
-    output [`ysyx_22041752_SRAM_DATA_WD   -1:0]  data_rdata     ,
+    output [`ysyx_22041752_DATA_DATA_WD   -1:0]  data_rdata     ,
     output                                       cache_miss     ,
+    output                                       write_hit      ,
 
     output                                       sram_req       ,
     input                                        sram_ready     ,
-    output [`ysyx_22041752_SRAM_WEN_WD    -1:0]  sram_wen       ,
-    output [`ysyx_22041752_SRAM_ADDR_WD   -1:0]  sram_addr      ,
-    output [`ysyx_22041752_SRAM_DATA_WD   -1:0]  sram_wdata     ,
-    input  [`ysyx_22041752_SRAM_DATA_WD   -1:0]  sram_rdata     ,
+    output                                       sram_wen       ,
+    output [`ysyx_22041752_DATA_ADDR_WD   -1:0]  sram_addr      ,
+    output [`ysyx_22041752_DATA_DATA_WD   -1:0]  sram_wdata     ,
+    input  [`ysyx_22041752_DATA_DATA_WD   -1:0]  sram_rdata     ,
     input                                        sram_valid     
 );
     
@@ -103,8 +102,8 @@ wire [`ysyx_22041752_ICACHE_OFFSET_WD-1:0] offset_cs;
 wire [`ysyx_22041752_DCACHE_TAG_WD   -1:0] tag_cs   ;
 wire [`ysyx_22041752_DCACHE_INDEX_WD -1:0] index_cs ;
 wire [`ysyx_22041752_DCACHE_EN_WD    -1:0] rden_cs  ;
-wire [`ysyx_22041752_SRAM_DATA_WD    -1:0] data_wdata;
-wire [`ysyx_22041752_SRAM_WEN_WD     -1:0] data_wen ;
+wire [`ysyx_22041752_DATA_DATA_WD    -1:0] data_wdata;
+wire [`ysyx_22041752_DATA_WEN_WD     -1:0] data_wen ;
 assign {tag_cs, index_cs, offset_cs, data_wdata, data_wen, rden_cs} = rs_to_cs_bus_r;
 
 wire hit_w0 = missfsm_pre==IDLE && (rden_cs[0]&valid[0] && tag0==tag_cs);
@@ -117,10 +116,10 @@ wire [127:0] hit_line = {128{hit_w0}} & data0 |
                         {128{hit_w2}} & data2 |
                         {128{hit_w3}} & data3 ;
 
-wire write_hit = (hit_w0||hit_w1||hit_w2||hit_w3) && data_wen!=0;
+assign write_hit = (hit_w0||hit_w1||hit_w2||hit_w3) && data_wen!=0;
 
-assign cache_miss = cs_valid && !(hit_w0 || hit_w1 || hit_w2 || hit_w3 || missfsm_pre==READ_DONE_1);
-wire   miss_write = cache_miss && data_wen;
+assign cache_miss = |rden_cs && cs_valid && !(hit_w0 || hit_w1 || hit_w2 || hit_w3 || missfsm_pre==READ_DONE_1);
+wire   miss_write = cache_miss &&|data_wen;
 wire   miss_read  = cache_miss &&!miss_write;
 
 reg  [3:0] missfsm_pre;
@@ -186,20 +185,21 @@ always @(posedge clk) begin
     end
 end
 
-assign missfsm_nxt = missfsm_pre==IDLE          &&  cache_miss     ? MISS         :
-                     missfsm_pre==MISS          &&  dirty[replace] ? WRITE_REQ_0  :
-                     missfsm_pre==MISS          && !dirty[replace] ? READ_REQ_0   :
-                     missfsm_pre==WRITE_REQ_0   &&  sram_ready     ? WRITE_RESP_0 :
-                     missfsm_pre==WRITE_RESP_0  &&  sram_valid     ? WRITE_DONE_0 :
-                     missfsm_pre==WRITE_DONE_0                     ? WRITE_REQ_1  :
-                     missfsm_pre==WRITE_REQ_1   &&  sram_ready     ? WRITE_RESP_1 :
-                     missfsm_pre==WRITE_RESP_1  &&  sram_valid     ? WRITE_DONE_1 :
-                     missfsm_pre==READ_REQ_0    &&  sram_ready     ? READ_RESP_0  :
-                     missfsm_pre==READ_RESP_0   &&  sram_valid     ? READ_DONE_0  :
-                     missfsm_pre==READ_DONE_0                      ? READ_REQ_1   :
-                     missfsm_pre==READ_REQ_1    &&  sram_ready     ? READ_RESP_1  :
-                     missfsm_pre==READ_RESP_1   &&  sram_valid     ? READ_DONE_1  :
-                                                                     missfsm_pre  ;
+assign missfsm_nxt =(missfsm_pre==IDLE||missfsm_pre==READ_DONE_1) &&  cache_miss     ? MISS         :
+                     missfsm_pre==MISS                            &&  dirty[replace] ? WRITE_REQ_0  :
+                     missfsm_pre==MISS                            && !dirty[replace] ? READ_REQ_0   :
+                     missfsm_pre==WRITE_REQ_0                     &&  sram_ready     ? WRITE_RESP_0 :
+                     missfsm_pre==WRITE_RESP_0                    &&  sram_valid     ? WRITE_DONE_0 :
+                     missfsm_pre==WRITE_DONE_0                                       ? WRITE_REQ_1  :
+                     missfsm_pre==WRITE_REQ_1                     &&  sram_ready     ? WRITE_RESP_1 :
+                     missfsm_pre==WRITE_RESP_1                    &&  sram_valid     ? WRITE_DONE_1 :
+                     missfsm_pre==READ_REQ_0                      &&  sram_ready     ? READ_RESP_0  :
+                     missfsm_pre==READ_RESP_0                     &&  sram_valid     ? READ_DONE_0  :
+                     missfsm_pre==READ_DONE_0                                        ? READ_REQ_1   :
+                     missfsm_pre==READ_REQ_1                      &&  sram_ready     ? READ_RESP_1  :
+                     missfsm_pre==READ_RESP_1                     &&  sram_valid     ? READ_DONE_1  :
+                     missfsm_pre==READ_DONE_1                                        ? IDLE         :
+                                                                                       missfsm_pre  ;
 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [`ysyx_22041752_PC_WD-1 :0] data_addr_cs = {tag_cs, index_cs, offset_cs};
@@ -211,13 +211,15 @@ wire [`ysyx_22041752_PC_WD-1 :0] replace_addr = {tag, index_cs, offset_cs};
 /* verilator lint_on UNUSEDSIGNAL */
 assign sram_req = (missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1 || 
                    missfsm_pre==READ_REQ_0  || missfsm_pre==READ_REQ_1  ) && !sram_ready;
-assign sram_addr= missfsm_pre==READ_REQ_0 ? {data_addr_cs[`ysyx_22041752_SRAM_ADDR_WD-1:4], 4'b0000} :
-                  missfsm_pre==READ_REQ_1 ? {data_addr_cs[`ysyx_22041752_SRAM_ADDR_WD-1:4], 4'b1000} :
-                  missfsm_pre==WRITE_REQ_0? {replace_addr[`ysyx_22041752_SRAM_ADDR_WD-1:4], 4'b0000} :
-            /* missfsm_pre==WRITE_REQ_1? */ {replace_addr[`ysyx_22041752_SRAM_ADDR_WD-1:4], 4'b1000} ;
+assign sram_addr= missfsm_pre==READ_REQ_0 ? {data_addr_cs[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b0000} :
+                  missfsm_pre==READ_REQ_1 ? {data_addr_cs[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} :
+                  missfsm_pre==WRITE_REQ_0? {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b0000} :
+            /* missfsm_pre==WRITE_REQ_1? */ {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} ;
                   
+assign sram_wen   = (missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1);
+assign sram_wdata = data_wdata;
 
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] line_lower;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] line_lower;
 always @(posedge clk) begin
     if (reset) begin
         line_lower <= 0;
@@ -226,7 +228,7 @@ always @(posedge clk) begin
         line_lower <= sram_rdata;
     end
 end
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] line_upper;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] line_upper;
 always @(posedge clk) begin
     if (reset) begin
         line_upper <= 0;
@@ -239,60 +241,29 @@ end
 wire [127:0] new_line = {line_upper, line_lower}; 
 
 assign data_rdata = missfsm_pre == READ_DONE_1 ?
-                    !offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? new_line[63:0] : new_line[127:64]
+                    offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? new_line[127:64] : 
+                                                                   new_line[ 63: 0]
                                                :
-                    !offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? hit_line[63:0] : hit_line[127:64];
-
+                    offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? hit_line[127:64] : 
+                                                                   hit_line[ 63: 0] ;
 
 assign wen[0] = ~(missfsm_nxt==READ_DONE_1 && replace==0 || write_hit && hit_w0) ;
 assign wen[1] = ~(missfsm_nxt==READ_DONE_1 && replace==1 || write_hit && hit_w1) ;
 assign wen[2] = ~(missfsm_nxt==READ_DONE_1 && replace==2 || write_hit && hit_w2) ;
 assign wen[3] = ~(missfsm_nxt==READ_DONE_1 && replace==3 || write_hit && hit_w3) ;
 
-wire [63:0] wen_lower = data_wen==8'hff ? {        64{1'b1} } :
-                        data_wen==8'h0f ? {32'b0, {32{1'b1}}} :
-                        data_wen==8'h03 ? {48'b0, {16{1'b1}}} :
-                                          {56'b0, { 8{1'b1}}} ;
-wire [63:0] wen_upper = wen_lower;
-
-assign bwen0  = ~(missfsm_nxt==READ_DONE_1 && replace==0 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {wen_upper,64'b0} : {64'b0,wen_lower});
-assign bwen1  = ~(missfsm_nxt==READ_DONE_1 && replace==1 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {wen_upper,64'b0} : {64'b0,wen_lower});
-assign bwen2  = ~(missfsm_nxt==READ_DONE_1 && replace==2 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {wen_upper,64'b0} : {64'b0,wen_lower});
-assign bwen3  = ~(missfsm_nxt==READ_DONE_1 && replace==3 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {wen_upper,64'b0} : {64'b0,wen_lower});
+assign bwen0  = ~(missfsm_nxt==READ_DONE_1 && replace==0 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
+assign bwen1  = ~(missfsm_nxt==READ_DONE_1 && replace==1 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
+assign bwen2  = ~(missfsm_nxt==READ_DONE_1 && replace==2 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
+assign bwen3  = ~(missfsm_nxt==READ_DONE_1 && replace==3 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
 
 reg [127:0] write_newline; 
 always @(*) begin
-    if (offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD]) begin
-        case (data_wen)
-            8'hff: begin
-                write_newline = {data_wdata, line_lower};
-            end
-            8'h0f: begin
-                write_newline = {sram_rdata[63:32], data_wdata[31:0], line_lower};
-            end
-            8'h03: begin
-                write_newline = {sram_rdata[63:16], data_wdata[15:0], line_lower};
-            end
-            default: begin
-                write_newline = {sram_rdata[63: 8], data_wdata[ 7:0], line_lower};
-            end
-        endcase
+    if (offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1]) begin
+        write_newline = {(sram_rdata& ~data_wen) | (data_wen&data_wdata),line_lower};
     end
     else begin
-        case (data_wen)
-            8'hff: begin
-                write_newline = {sram_rdata, data_wdata};
-            end
-            8'h0f: begin
-                write_newline = {sram_rdata, line_lower[63:32], data_wdata[31:0]};
-            end                                        
-            8'h03: begin                               
-                write_newline = {sram_rdata, line_lower[63:16], data_wdata[15:0]};
-            end                                        
-            default: begin                             
-                write_newline = {sram_rdata, line_lower[63: 8], data_wdata[ 7:0]};
-            end
-        endcase
+        write_newline = {sram_rdata,(line_lower& ~data_wen)|(data_wen&data_wdata)};
     end
 end
 
@@ -311,10 +282,10 @@ assign wv1  = 1'b1;
 assign wv2  = 1'b1;
 assign wv3  = 1'b1;
 
-assign wv0  = write_hit || miss_write;
-assign wv1  = write_hit || miss_write;
-assign wv2  = write_hit || miss_write;
-assign wv3  = write_hit || miss_write;
+assign wd0  = write_hit || miss_write;
+assign wd1  = write_hit || miss_write;
+assign wd2  = write_hit || miss_write;
+assign wd3  = write_hit || miss_write;
 
 assign waddr0 = index_cs;
 assign waddr1 = index_cs;

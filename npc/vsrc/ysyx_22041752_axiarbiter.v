@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-24 20:57
+// Last Modified : 2023-06-27 18:42
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,15 +19,15 @@ module ysyx_22041752_axiarbiter (
     //from IFU & LSU
     input                                    inst_en    ,
     output                                   inst_ready ,
-    input  [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_addr  ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata ,
+    input  [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr  ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] inst_rdata ,
     output                                   inst_valid ,
     input                                    data_en    ,
     output                                   data_ready ,
-    input  [`ysyx_22041752_SRAM_WEN_WD -1:0] data_wen   ,
-    input  [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_addr  ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_wdata ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata ,
+    input									 data_wen   ,
+    input  [`ysyx_22041752_DATA_ADDR_WD-1:0] data_addr  ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] data_wdata ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] data_rdata ,
     output                                   data_valid ,
 
     //axi_interface
@@ -132,7 +132,7 @@ always @(posedge clk) begin
     end
 end
 
-assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) &&  data_en&&(|data_wen)      ? AW_WAIT    :
+assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) &&  data_en&&data_wen      ? AW_WAIT    :
                     awfsm_pre==AW_WAIT                      &&  awready&&wready ? AW_OK      :
                     awfsm_pre==AW_WAIT                      &&  awready         ? AW_WAIT_W  :
                     awfsm_pre==AW_WAIT                      &&  wready          ? AW_WAIT_AW :
@@ -160,10 +160,10 @@ assign bfsm_nxt = (bfsm_pre==B_IDLE || bfsm_pre==B_GET) && awfsm_pre==AW_OK ? B_
                                                                               bfsm_pre     ;
 
 reg                                   inst_ready_r ;
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_rdata_r ;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] inst_rdata_r ;
 reg                                   inst_valid_r ;
 reg                                   data_ready_r ;
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] data_rdata_r ;
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] data_rdata_r ;
 reg                                   data_valid_r ;
 assign inst_ready = inst_ready_r;
 assign inst_rdata = inst_rdata_r;
@@ -409,7 +409,7 @@ always @(posedge clk) begin
         wstrb_r <= 0;
     end
     else if (awfsm_nxt==AW_WAIT || awfsm_nxt==AW_WAIT_W) begin
-        wstrb_r <= data_wen;
+        wstrb_r <= {8{data_wen}};
     end
 end
 

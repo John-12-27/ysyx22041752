@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-24 19:49
+// Last Modified : 2023-06-27 18:47
 // ---------------------------------------------------------------------------------
 // Description   : 2-way set associative cache
 //
@@ -24,8 +24,8 @@ module ysyx_22041752_ICACHE(
 
     output                                   sram_req   ,
     input                                    sram_ready ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_addr  ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_rdata ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_addr  ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata ,
     input                                    sram_valid 
 );
     
@@ -184,6 +184,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
     .reset                          ( reset                     ),
     .addr                           (!wen0 ? waddr0 : raddr     ),
     .v_o                            ( v0                        ),
+    .en                             ( rden[0]&wen0              ),
     .we                             ( wen0                      ),
     .v_i                            ( wv0                       )
 );
@@ -192,6 +193,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
     .reset                          ( reset                     ),
     .addr                           (!wen1 ? waddr1 : raddr     ),
     .v_o                            ( v1                        ),
+    .en                             ( rden[1]&wen1              ),
     .we                             ( wen1                      ),
     .v_i                            ( wv1                       )
 );
@@ -249,6 +251,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
     .reset                          ( reset                     ),
     .addr                           (!wen2 ? waddr2 : raddr     ),
     .v_o                            ( v2                        ),
+    .en                             ( rden[2]&wen2              ),
     .we                             ( wen2                      ),
     .v_i                            ( wv2                       )
 );
@@ -257,6 +260,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_3(
     .reset                          ( reset                     ),
     .addr                           (!wen3 ? waddr3 : raddr     ),
     .v_o                            ( v3                        ),
+    .en                             ( rden[3]&wen3              ),
     .we                             ( wen3                      ),
     .v_i                            ( wv3                       )
 );

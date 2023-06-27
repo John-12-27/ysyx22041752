@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-19 22:01
+// Last Modified : 2023-06-27 18:52
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -17,11 +17,11 @@ module top (
     input         reset,
 
     output                                   sram_ren   ,
-    output [`ysyx_22041752_SRAM_WEN_WD -1:0] sram_wen   ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_waddr ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] sram_raddr ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_wdata ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] sram_rdata
+    output [							7:0] sram_wen   ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_waddr ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_raddr ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata
     
 );
 

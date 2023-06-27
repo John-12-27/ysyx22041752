@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-24 18:29
+// Last Modified : 2023-06-27 18:36
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,10 +29,10 @@ module ysyx_22041752_EXU(
 	output [`ysyx_22041752_FORWARD_BUS_WD -1:0]    es_forward_bus,
 
     output                                         data_en       ,
-    input                                          data_ready    ,
-    output [`ysyx_22041752_SRAM_WEN_WD -1:0]       data_wen      ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0]       data_addr     ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0]       data_wdata    ,
+    output [`ysyx_22041752_DATA_WEN_WD -1:0]       data_wen      ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0]       data_addr     ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0]       data_wdata    ,
+    input										   write_hit     ,
 
     output                                         flush         ,
     output [`ysyx_22041752_PC_WD-1:0]              flush_pc      ,
@@ -47,11 +47,11 @@ module ysyx_22041752_EXU(
     output [63:0]                            dpi_csrs [3:0]      ,
     output                                   es_exp              ,
     output                                   es_mret             ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] debug_es_data_addr  ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] debug_es_data_addr  ,
     output                                   debug_es_out_of_mem ,
     output                                   debug_es_data_ren   ,
     output                                   debug_es_data_wen   ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] debug_es_data_wdata ,
     output [`ysyx_22041752_PC_WD       -1:0] debug_es_pc         ,      
     input  [`ysyx_22041752_INST_WD-1:0]      debug_ds_inst       ,
     output reg [`ysyx_22041752_INST_WD-1:0]  debug_es_inst
@@ -111,15 +111,16 @@ wire        es_csr_we   ;
 wire        es_mem_we   ;
 wire        es_mem_re   ;
 wire [ 1:0] es_mem_bytes;
+wire [ 2:0] es_addr_offset;
 wire [ 5:0] shamt;
 wire [19:0] imm_u;
 wire [11:0] imm_i;
 wire [11:0] imm_s;
 wire [11:0] rscsr;
 wire [ 4:0] rd;
-wire [`ysyx_22041752_RF_DATA_WD-1:0] rs1_value;
-wire [`ysyx_22041752_RF_DATA_WD-1:0] rs2_value;
-wire [`ysyx_22041752_PC_WD     -1:0] es_pc  ;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]    rs1_value;
+wire [`ysyx_22041752_RF_DATA_WD-1:0]    rs2_value;
+wire [`ysyx_22041752_PC_WD     -1:0]    es_pc  ;
 
 assign {ecall         ,
         mret          ,
@@ -184,8 +185,10 @@ wire [63:0] alu_result ;
 
 assign es_to_ms_bus = {res_sext         ,  
                        res_zext         ,
+                       es_addr_offset   ,
 					   es_mem_bytes     ,  
 					   es_mem_re        ,  
+                       es_mem_we        ,
 					   es_rf_we         ,  
                        rd               ,  
                        alu_result       ,  
@@ -233,8 +236,9 @@ wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
 wire div_out_valid;                                              
 wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
-wire mem_stall = data_en && !data_ready;
-assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !mem_stall;
+wire data_pren;
+wire cache_compete	  = write_hit && data_pren;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !cache_compete;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go &&!flush;
 always @(posedge clk) begin
@@ -347,19 +351,83 @@ ysyx_22041752_alu U_ALU_0(
     .mul_out_valid   ( mul_out_valid  )
 );
 
+assign es_addr_offset=data_addr[2:0];
 assign data_addr= mem_addr[31:0];
-assign data_en  = (es_mem_re | es_mem_we) && !data_ready && es_valid && ms_allowin;
-assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
-                  es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
-                  es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
-                  es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 8'h01 :
-                                                                   8'h00 ;
+assign data_pren= (es_mem_re | es_mem_we) && es_valid && ms_allowin;
+assign data_en  = data_pren && !cache_compete;
 
-assign data_wdata = rs2_value;
+assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 64'hffff_ffff_ffff_ffff : 
+                  es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 
+										   es_addr_offset[2]	 ? 64'hffff_ffff_0000_0000 :
+																   64'h0000_0000_ffff_ffff :
+                  es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 
+
+										   es_addr_offset[2]	 ?
+									 es_addr_offset[1:0]== 2'b00 ? 64'h0000_ffff_0000_0000 :
+									 es_addr_offset[1:0]== 2'b01 ? 64'h00ff_ff00_0000_0000 :
+								/*es_addr_offset[1:0]== 2'10 ?*/   64'hffff_0000_0000_0000 
+																 :
+									 es_addr_offset[1:0]== 2'b00 ? 64'h0000_0000_0000_ffff :
+									 es_addr_offset[1:0]== 2'b01 ? 64'h0000_0000_00ff_ff00 :
+									 es_addr_offset[1:0]== 2'b10 ? 64'h0000_0000_ffff_0000 :
+							    /*es_addr_offset[1:0]== 2'b11 ?*/  64'h0000_00ff_ff00_0000 :
+
+                  es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 
+									es_addr_offset[2:0]== 3'b000 ? 64'h0000_0000_0000_00ff :
+									es_addr_offset[2:0]== 3'b001 ? 64'h0000_0000_0000_ff00 :
+									es_addr_offset[2:0]== 3'b010 ? 64'h0000_0000_00ff_0000 :
+									es_addr_offset[2:0]== 3'b011 ? 64'h0000_0000_ff00_0000 :
+									es_addr_offset[2:0]== 3'b100 ? 64'h0000_00ff_0000_0000 :
+									es_addr_offset[2:0]== 3'b101 ? 64'h0000_ff00_0000_0000 :
+									es_addr_offset[2:0]== 3'b110 ? 64'h00ff_0000_0000_0000 :
+							/*es_addr_offset[2:0]== 3'b111 ?*/     64'hff00_0000_0000_0000 :
+
+                                                                   64'h0000_0000_0000_0000 ;
+
+reg [`ysyx_22041752_DATA_DATA_WD-1:0] shift_data;
+always @(*) begin
+    case (es_addr_offset)
+        3'b000: begin
+            shift_data = rs2_value;
+        end
+        3'b001: begin
+            shift_data = rs2_value << 8;
+        end
+        3'b010: begin
+            shift_data = rs2_value << 16;
+        end
+        3'b011: begin
+            shift_data = rs2_value << 24;
+        end
+        3'b100: begin
+            shift_data = rs2_value << 32;
+        end
+        3'b101: begin
+            shift_data = rs2_value << 40;
+        end
+        3'b110: begin
+            shift_data = rs2_value << 48;
+        end
+        default: begin
+            shift_data = rs2_value << 56;
+        end
+    endcase
+end
+
+/* verilator lint_off UNUSEDSIGNAL */
+wire addr_err = es_mem_bytes==2'b11 && data_addr[3:2]!=2'b00 && data_en;
+/* verilator lint_on UNUSEDSIGNAL */
+
+assign data_wdata = shift_data;
 //forward_bus
 wire es_forward_valid;
 assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {es_mem_re&es_valid,es_forward_valid,alu_result,rd};
+
+
+
+
+
 
 `ifdef DPI_C
 assign es_exp = ecall && flush;
@@ -372,12 +440,12 @@ end
 assign debug_es_pc          = es_pc;
 assign debug_es_bjpre_error = bjpre_error;
 assign debug_es_data_ren    = data_en && es_mem_re;
-assign debug_es_data_wen    = es_mem_we && data_ready;
+assign debug_es_data_wen    = es_mem_we && es_to_ms_valid && ms_allowin;
 assign debug_es_bj_inst     = (beq | bne | blt | bge | bgeu | bltu | jalr) && es_valid;
 assign debug_es_data_addr   = data_addr;
 assign debug_es_data_wdata  = data_wdata;
-wire access_mem = (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
-assign debug_es_out_of_mem  = data_ready && !access_mem;
+wire access_mem = data_en && (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
+assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && !access_mem;
 `endif
 endmodule
 

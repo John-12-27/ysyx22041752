@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-23 22:05
+// Last Modified : 2023-06-27 18:47
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,9 +29,9 @@ module dpi_c (
     input                    debug_es_data_wen,
     input                    debug_ms_rdata_valid,
 
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_ms_data_rdata ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] debug_ms_data_rdata ,
     input  [63:0]                            debug_es_data_addr  ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] debug_es_data_wdata ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] debug_es_data_wdata ,
     input  [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst       ,
     input                                    debug_ws_out_of_mem ,
     input  [`ysyx_22041752_INST_WD     -1:0] debug_es_inst       ,

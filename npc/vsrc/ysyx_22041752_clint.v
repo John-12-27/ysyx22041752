@@ -5,15 +5,13 @@
 // Filename      : ysyx_22041752_clint.v
 // Author        : Cw
 // Created On    : 2023-05-26 20:44
-// Last Modified : 2023-06-02 17:38
+// Last Modified : 2023-06-27 21:46
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-`define ysyx_22041752_MTIME_OFFSET 32'h0000_bff8
-`define ysyx_22041752_MTIMECMP_OFFSET 32'h0000_4000
 
 module ysyx_22041752_clint (
     input  clk          ,

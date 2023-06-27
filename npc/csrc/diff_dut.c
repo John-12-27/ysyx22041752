@@ -65,8 +65,6 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
         printf("=========================================" ANSI_NONE "\n");
         return false;
     }
-
-
     for(int i = 0; i < 32; i++)
     {
         if(ref_r->gpr[i] != cpu.gpr[i])
@@ -79,7 +77,6 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
             return false;
         }
     }
-
     return true;
 }
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-21 20:17
+// Last Modified : 2023-06-27 21:28
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -22,7 +22,7 @@ module ysyx_22041752_IFU (
     output [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     
     output                                       inst_en        ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0]     inst_addr      ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0]     inst_addr      ,
     input  [`ysyx_22041752_INST_WD-1:0]          inst_rdata     ,
     input                                        cache_miss     ,
 
@@ -125,7 +125,7 @@ always @(posedge clk) begin
     if (reset) begin
         inst_rdata_r_v <= 0;
     end
-    else if (!cache_miss && !ds_allowin) begin
+    else if (fs_to_ds_valid && !ds_allowin) begin
         inst_rdata_r_v <= 1;
     end
     else if (fs_to_ds_valid) begin
@@ -137,7 +137,7 @@ always @(posedge clk) begin
     if (reset) begin
         inst_rdata_r <= 0;
     end
-    else if (!cache_miss && !ds_allowin && !inst_rdata_r_v) begin
+    else if (fs_to_ds_valid && !ds_allowin && !inst_rdata_r_v) begin
         inst_rdata_r <= inst_rdata;
     end
 end
@@ -161,12 +161,12 @@ assign fs_inst_bge  = opcode == 7'b1100011 && funct3 == 3'b101;
 assign fs_inst_bltu = opcode == 7'b1100011 && funct3 == 3'b110;
 assign fs_inst_bgeu = opcode == 7'b1100011 && funct3 == 3'b111;
 
-assign br_taken=(fs_inst_beq  || 
-                 fs_inst_bne  || 
-                 fs_inst_blt  || 
-                 fs_inst_bge  || 
-                 fs_inst_bltu || 
-                 fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr;
+assign br_taken=fs_valid && ((fs_inst_beq  || 
+                              fs_inst_bne  || 
+                              fs_inst_blt  || 
+                              fs_inst_bge  || 
+                              fs_inst_bltu || 
+                              fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr);
 
 
 wire [`ysyx_22041752_PC_WD-1:0] bt_a;
