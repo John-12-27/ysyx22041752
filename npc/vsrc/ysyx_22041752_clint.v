@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_clint.v
 // Author        : Cw
 // Created On    : 2023-05-26 20:44
-// Last Modified : 2023-06-27 21:46
+// Last Modified : 2023-06-28 10:48
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -22,7 +22,6 @@ module ysyx_22041752_clint (
     input  [31:0]     addr  ,
     input  [63:0]     wdata ,
     output reg [63:0] rdata ,
-    output reg        rdat_v,
 
     output            int_t_o
 );
@@ -61,14 +60,6 @@ always @(posedge clk) begin
         else if (addr==`ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET) begin
             rdata <= mtimecmp;
         end
-    end
-end
-
-always @(posedge clk) begin
-    if(reset)
-        rdat_v <= 1'b0;
-    else begin
-        rdat_v <= en && !wen && ((addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIME_OFFSET) || (addr == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET));
     end
 end
 

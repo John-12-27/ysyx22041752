@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-27 18:36
+// Last Modified : 2023-06-28 16:55
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -444,8 +444,8 @@ assign debug_es_data_wen    = es_mem_we && es_to_ms_valid && ms_allowin;
 assign debug_es_bj_inst     = (beq | bne | blt | bge | bgeu | bltu | jalr) && es_valid;
 assign debug_es_data_addr   = data_addr;
 assign debug_es_data_wdata  = data_wdata;
-wire access_mem = data_en && (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
-assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && !access_mem;
+wire access_mem = (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
+assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && data_en && !access_mem;
 `endif
 endmodule
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-27 20:58
+// Last Modified : 2023-06-28 20:21
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -193,6 +193,7 @@ assign missfsm_nxt =(missfsm_pre==IDLE||missfsm_pre==READ_DONE_1) &&  cache_miss
                      missfsm_pre==WRITE_DONE_0                                       ? WRITE_REQ_1  :
                      missfsm_pre==WRITE_REQ_1                     &&  sram_ready     ? WRITE_RESP_1 :
                      missfsm_pre==WRITE_RESP_1                    &&  sram_valid     ? WRITE_DONE_1 :
+                     missfsm_pre==WRITE_DONE_1                                       ? READ_REQ_0   :
                      missfsm_pre==READ_REQ_0                      &&  sram_ready     ? READ_RESP_0  :
                      missfsm_pre==READ_RESP_0                     &&  sram_valid     ? READ_DONE_0  :
                      missfsm_pre==READ_DONE_0                                        ? READ_REQ_1   :
@@ -203,10 +204,85 @@ assign missfsm_nxt =(missfsm_pre==IDLE||missfsm_pre==READ_DONE_1) &&  cache_miss
 
 /* verilator lint_off UNUSEDSIGNAL */
 wire [`ysyx_22041752_PC_WD-1 :0] data_addr_cs = {tag_cs, index_cs, offset_cs};
-wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0] tag = {`ysyx_22041752_DCACHE_TAG_WD{replace==0}} & tag0 |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==1}} & tag1 |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==2}} & tag2 |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==3}} & tag3 ;
+
+reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag0_r;
+always @(posedge clk) begin
+    if (reset) begin
+        tag0_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        tag0_r <= tag0;
+    end
+end
+reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag1_r;
+always @(posedge clk) begin
+    if (reset) begin
+        tag1_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        tag1_r <= tag1;
+    end
+end
+reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag2_r;
+always @(posedge clk) begin
+    if (reset) begin
+        tag2_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        tag2_r <= tag2;
+    end
+end
+reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag3_r;
+always @(posedge clk) begin
+    if (reset) begin
+        tag3_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        tag3_r <= tag3;
+    end
+end
+
+reg [127:0] data0_r;
+always @(posedge clk) begin
+    if (reset) begin
+        data0_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        data0_r <= data0;
+    end
+end
+reg [127:0] data1_r;
+always @(posedge clk) begin
+    if (reset) begin
+        data1_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        data1_r <= data1;
+    end
+end
+reg [127:0] data2_r;
+always @(posedge clk) begin
+    if (reset) begin
+        data2_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        data2_r <= data2;
+    end
+end
+reg [127:0] data3_r;
+always @(posedge clk) begin
+    if (reset) begin
+        data3_r <= 0;
+    end
+    else if(missfsm_nxt==MISS) begin
+        data3_r <= data3;
+    end
+end
+
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0] tag = {`ysyx_22041752_DCACHE_TAG_WD{replace==0}} & tag0_r |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==1}} & tag1_r |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==2}} & tag2_r |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==3}} & tag3_r ;
 wire [`ysyx_22041752_PC_WD-1 :0] replace_addr = {tag, index_cs, offset_cs};
 /* verilator lint_on UNUSEDSIGNAL */
 assign sram_req = (missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1 || 
@@ -217,7 +293,12 @@ assign sram_addr= missfsm_pre==READ_REQ_0 ? {data_addr_cs[`ysyx_22041752_DATA_AD
             /* missfsm_pre==WRITE_REQ_1? */ {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} ;
                   
 assign sram_wen   = (missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1);
-assign sram_wdata = data_wdata;
+wire [127:0] writeback = {128{replace==0}} & data0_r |
+                         {128{replace==1}} & data1_r |
+                         {128{replace==2}} & data2_r |
+                         {128{replace==3}} & data3_r ;
+assign sram_wdata = missfsm_pre==WRITE_REQ_0 ? writeback[63:0] : writeback[127:64];
+
 
 reg [`ysyx_22041752_DATA_DATA_WD-1:0] line_lower;
 always @(posedge clk) begin

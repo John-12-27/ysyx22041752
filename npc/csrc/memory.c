@@ -85,7 +85,7 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
     }
     else
     {
-        printf("write addr error : 0x%lx\n", paddr);
+        printf("pc=0x%lx, write addr error=0x%lx\n", cpu.pc, paddr);
         assert(0);
     }
 }

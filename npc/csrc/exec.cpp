@@ -239,10 +239,10 @@ static bool trace_diff_watch()
 
 #ifdef CONFIG_DIFFTEST
 
-        //if (out_of_mem_flag) 
-        //{
-            //difftest_skip_ref();
-        //}
+        if (out_of_mem_flag) 
+        {
+            difftest_skip_ref();
+        }
 
         res = difftest_step(S.pc, S.dnpc);
 #endif
