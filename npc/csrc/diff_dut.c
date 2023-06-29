@@ -23,6 +23,7 @@
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
 void (*ref_difftest_pc_cpy)(vaddr_t *pc, bool direction) = NULL;
 void (*ref_difftest_gpr_cpy)(word_t *gpr, bool direction) = NULL;
+void (*ref_difftest_csr_cpy)(word_t *csr, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc) = NULL;
 
@@ -77,6 +78,18 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
             return false;
         }
     }
+    for (int i = 1; i < NUM_CSR; i++) 
+    {
+        if(ref_r->csr[i] != cpu.csr[i])
+        {
+            printf(ANSI_BG_RED "=========================================\n");
+            printf("ERROR_PC\t0x%lx\n",cpu.pc);
+            printf("REF_CSR[%d]\t0x%lx\n",i,ref_r->csr[i]);
+            printf("NPC_CSR[%d]\t0x%lx\n",i,cpu.csr[i]);
+            printf("=========================================" ANSI_NONE "\n");
+            return false;
+        }
+    }
     return true;
 }
 
@@ -116,6 +129,9 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_gpr_cpy = (void (*)(word_t *, bool))dlsym(handle, "difftest_gpr_cpy");
     assert(ref_difftest_gpr_cpy);
 
+    ref_difftest_csr_cpy = (void (*)(word_t *, bool))dlsym(handle, "difftest_csr_cpy");
+    assert(ref_difftest_csr_cpy);
+
     ref_difftest_exec = (void (*)(uint64_t))dlsym(handle, "difftest_exec");
     assert(ref_difftest_exec);
     
@@ -131,6 +147,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_memcpy(0x80000000, mem, img_size, DIFFTEST_TO_REF);
     ref_difftest_pc_cpy(&cpu.pc, DIFFTEST_TO_REF);
     ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
+    ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);
 }
 
 bool difftest_step(vaddr_t pc, vaddr_t npc) 
@@ -141,6 +158,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
     {
         ref_difftest_pc_cpy(&ref_r.pc, DIFFTEST_TO_DUT);
         ref_difftest_gpr_cpy(ref_r.gpr, DIFFTEST_TO_DUT);
+        ref_difftest_csr_cpy(ref_r.csr,DIFFTEST_TO_DUT);
         if (ref_r.pc == npc) 
         {
             skip_dut_nr_inst = 0;
@@ -161,6 +179,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
         vaddr_t next_pc = pc+4;
         ref_difftest_pc_cpy(&next_pc, DIFFTEST_TO_REF);
         ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
+        ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);
         is_skip_ref = false;
         return false;
     }
@@ -168,6 +187,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
     ref_difftest_exec(1);
     ref_difftest_pc_cpy(&ref_r.pc, DIFFTEST_TO_DUT);
     ref_difftest_gpr_cpy(ref_r.gpr,DIFFTEST_TO_DUT);
+    ref_difftest_csr_cpy(ref_r.csr,DIFFTEST_TO_DUT);
 
     return checkregs(&ref_r, npc);
 }

@@ -76,12 +76,19 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
     }
     else if(paddr == CONFIG_GPU_SYNC_MMIO)
     {
-        vgactl_port_base[1] = (uint32_t)data;
+        vgactl_port_base[1] = (uint32_t)((word_t)data>>32);
     }
     else if((paddr >= CONFIG_GPU_FBDRAW_MMIO) && (paddr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
     {
         uint32_t offset = paddr-CONFIG_GPU_FBDRAW_MMIO;
-        *(uint32_t *)(vmem+offset) = (uint32_t)data;
+        if (paddr/4%2) 
+        {
+            *(uint32_t *)(vmem+offset) = (uint32_t)((word_t)data>>32);
+        }
+        else 
+        {
+            *(uint32_t *)(vmem+offset) = (uint32_t)data;
+        }
     }
     else
     {
