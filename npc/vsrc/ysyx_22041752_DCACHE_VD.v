@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE_VD.v
 // Author        : Cw
 // Created On    : 2023-06-17 16:46
-// Last Modified : 2023-06-28 18:31
+// Last Modified : 2023-06-29 10:37
 // ---------------------------------------------------------------------------------
 // Description   : valid/dirty table for cache
 //
@@ -32,7 +32,7 @@ generate
             if (reset) begin
                 dat[i] <= 0;
             end
-            else if(!we && (addr == i))
+            else if(!we && !en && (addr == i))
                 dat[i] <= in;
         end
     end
@@ -42,7 +42,7 @@ always @(posedge clk) begin
     if (reset) begin
         o <= 0;
     end
-    else if(!en) begin
+    else if(!en && we) begin
         o <= dat[addr];
     end
 end

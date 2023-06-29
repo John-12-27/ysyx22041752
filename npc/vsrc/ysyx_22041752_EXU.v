@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-28 16:55
+// Last Modified : 2023-06-29 12:30
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -413,10 +413,6 @@ always @(*) begin
         end
     endcase
 end
-
-/* verilator lint_off UNUSEDSIGNAL */
-wire addr_err = es_mem_bytes==2'b11 && data_addr[3:2]!=2'b00 && data_en;
-/* verilator lint_on UNUSEDSIGNAL */
 
 assign data_wdata = shift_data;
 //forward_bus

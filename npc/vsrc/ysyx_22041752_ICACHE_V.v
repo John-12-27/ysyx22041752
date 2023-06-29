@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE_V.v
 // Author        : Cw
 // Created On    : 2023-06-17 16:46
-// Last Modified : 2023-06-26 20:57
+// Last Modified : 2023-06-29 10:37
 // ---------------------------------------------------------------------------------
 // Description   : valid table for cache
 //
@@ -32,7 +32,7 @@ generate
             if (reset) begin
                 valid[i] <= 0;
             end
-            else if(!we && (addr == i))
+            else if(!we && !en && (addr == i))
                 valid[i] <= v_i;
         end
     end
@@ -42,7 +42,7 @@ always @(posedge clk) begin
     if (reset) begin
         v_o <= 0;
     end
-    else if(en) begin
+    else if(!en && we) begin
         v_o <= valid[addr];
     end
 end
