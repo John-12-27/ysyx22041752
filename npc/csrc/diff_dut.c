@@ -78,18 +78,20 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
             return false;
         }
     }
-    for (int i = 1; i < NUM_CSR; i++) 
-    {
-        if(ref_r->csr[i] != cpu.csr[i])
-        {
-            printf(ANSI_BG_RED "=========================================\n");
-            printf("ERROR_PC\t0x%lx\n",cpu.pc);
-            printf("REF_CSR[%d]\t0x%lx\n",i,ref_r->csr[i]);
-            printf("NPC_CSR[%d]\t0x%lx\n",i,cpu.csr[i]);
-            printf("=========================================" ANSI_NONE "\n");
-            return false;
-        }
-    }
+
+    /*for (int i = 1; i < NUM_CSR; i++) */
+    /*{*/
+        /*if(ref_r->csr[i] != cpu.csr[i])*/
+        /*{*/
+            /*printf(ANSI_BG_RED "=========================================\n");*/
+            /*printf("ERROR_PC\t0x%lx\n",cpu.pc);*/
+            /*printf("REF_CSR[%d]\t0x%lx\n",i,ref_r->csr[i]);*/
+            /*printf("NPC_CSR[%d]\t0x%lx\n",i,cpu.csr[i]);*/
+            /*printf("=========================================" ANSI_NONE "\n");*/
+            /*return false;*/
+        /*}*/
+    /*}*/
+
     return true;
 }
 

@@ -26,6 +26,10 @@ static inline word_t paddr_read(paddr_t paddr)
 {
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
+        if(paddr==0x83000240)
+        {
+            printf("read: paddr=%lx, data=%lx\n", paddr, *(uint64_t *)(mem + paddr - MBASEADDR));
+        }
         word_t data = *(uint64_t *)(mem + paddr - MBASEADDR);
         return data;
     }
@@ -50,6 +54,7 @@ static inline word_t paddr_read(paddr_t paddr)
 
     else
     {
+        printf("pc=0x%lx, read addr error=0x%lx\n", cpu.pc, paddr);
         printf("read addr error : %lx\n", paddr);
         /*assert(0);*/
     }
