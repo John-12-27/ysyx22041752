@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-27 21:28
+// Last Modified : 2023-06-30 17:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -30,6 +30,11 @@ module ysyx_22041752_IFU (
     input                                        flush          , 
     input  [`ysyx_22041752_PC_WD-1:0]            flush_pc       ,
     input                                        flush_pc_p4    
+`ifdef DPI_C
+    ,
+    output                                       debug_icache_miss
+`endif
+
 );
 
 reg         fs_valid;
@@ -96,7 +101,7 @@ assign nextpc  = flush_pc_r_v  ? flush_pc_r :
 
 assign to_fs_valid  = ~reset;
 
-assign fs_ready_go    = !cache_miss;//inst_valid;
+assign fs_ready_go    = !cache_miss;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
 assign fs_to_ds_valid =  fs_valid && fs_ready_go && !flush && !flush_pc_r_v;
 always @(posedge clk) begin
@@ -168,7 +173,6 @@ assign br_taken=fs_valid && ((fs_inst_beq  ||
                               fs_inst_bltu || 
                               fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr);
 
-
 wire [`ysyx_22041752_PC_WD-1:0] bt_a;
 wire [`ysyx_22041752_PC_WD-1:0] bt_b;
 wire [`ysyx_22041752_PC_WD-1:0] bt_c;
@@ -196,5 +200,8 @@ U_ASER_1(
 );
 /* verilator lint_on PINCONNECTEMPTY */
 
+`ifdef DPI_C
+    assign debug_icache_miss = cache_miss;
+`endif
 endmodule
 

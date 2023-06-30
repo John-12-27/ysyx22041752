@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-06-30 14:32
+// Last Modified : 2023-06-30 16:38
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -27,7 +27,8 @@ module ysyx_22041752_MEU (
     output [`ysyx_22041752_MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus  ,
     
     input  [`ysyx_22041752_DATA_DATA_WD    -1:0] data_rdata    ,
-    input                                        cache_miss    ,
+    input                                        rdata_valid   ,
+    //input                                        cache_miss    ,
 	
 	output [`ysyx_22041752_FORWARD_BUS_WD-1:0]   ms_forward_bus
 `ifdef DPI_C
@@ -82,7 +83,8 @@ assign ms_to_ws_bus = {ms_rf_we       ,
                        ms_pc             
                       };
 
-assign ms_ready_go    = ms_mem_we|ms_mem_re ? !cache_miss: 1'b1;
+assign ms_ready_go    = ms_mem_we|ms_mem_re ? rdata_valid : 1'b1;
+//assign ms_ready_go    = ms_mem_we|ms_mem_re ? !cache_miss: 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin
@@ -153,7 +155,8 @@ assign ms_final_result = ms_mem_re ? mem_result : alu_result;
 //forward_bus
 wire ms_forward_valid;
 assign ms_forward_valid = ms_rf_we && ms_valid;
-assign ms_forward_bus   = {cache_miss&ms_mem_re&ms_valid, ms_forward_valid,ms_final_result,rd};
+//assign ms_forward_bus   = {cache_miss&ms_mem_re&ms_valid, ms_forward_valid,ms_final_result,rd};
+assign ms_forward_bus   = {!rdata_valid&ms_mem_re&ms_valid, ms_forward_valid,ms_final_result,rd};
 
 `ifdef DPI_C
 always @(posedge clk) begin
@@ -166,7 +169,8 @@ always @(posedge clk) begin
         debug_ms_out_of_mem <= debug_es_out_of_mem;
     end
 end
-assign debug_ms_rdata_valid = ms_mem_re && !cache_miss && ms_to_ws_valid && ws_allowin;
+assign debug_ms_rdata_valid = ms_mem_re && rdata_valid && ms_to_ws_valid && ws_allowin;
+//assign debug_ms_rdata_valid = ms_mem_re && !cache_miss && ms_to_ws_valid && ws_allowin;
 assign debug_ms_data_rdata  = ms_final_result;
 `endif
 

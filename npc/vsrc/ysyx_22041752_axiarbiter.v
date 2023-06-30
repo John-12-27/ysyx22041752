@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_axiarbiter.v
 // Author        : Cw
 // Created On    : 2023-05-27 17:57
-// Last Modified : 2023-06-27 18:42
+// Last Modified : 2023-06-30 16:35
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -24,7 +24,7 @@ module ysyx_22041752_axiarbiter (
     output                                   inst_valid ,
     input                                    data_en    ,
     output                                   data_ready ,
-    input									 data_wen   ,
+    input  [`ysyx_22041752_DATA_WEN_WD -1:0] data_wen   ,
     input  [`ysyx_22041752_DATA_ADDR_WD-1:0] data_addr  ,
     input  [`ysyx_22041752_DATA_DATA_WD-1:0] data_wdata ,
     output [`ysyx_22041752_DATA_DATA_WD-1:0] data_rdata ,
@@ -132,7 +132,7 @@ always @(posedge clk) begin
     end
 end
 
-assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) &&  data_en&&data_wen      ? AW_WAIT    :
+assign awfsm_nxt = (awfsm_pre==AW_IDLE || awfsm_pre==AW_OK) &&  data_en&&|data_wen      ? AW_WAIT    :
                     awfsm_pre==AW_WAIT                      &&  awready&&wready ? AW_OK      :
                     awfsm_pre==AW_WAIT                      &&  awready         ? AW_WAIT_W  :
                     awfsm_pre==AW_WAIT                      &&  wready          ? AW_WAIT_AW :
@@ -409,7 +409,7 @@ always @(posedge clk) begin
         wstrb_r <= 0;
     end
     else if (awfsm_nxt==AW_WAIT || awfsm_nxt==AW_WAIT_W) begin
-        wstrb_r <= {8{data_wen}};
+        wstrb_r <= data_wen;
     end
 end
 

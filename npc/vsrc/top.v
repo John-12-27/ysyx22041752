@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-30 13:26
+// Last Modified : 2023-06-30 16:37
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,82 +13,18 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module top (
-    input         clk,
+    input         clk  ,
     input         reset,
 
-    output                                   inst_en   ,
-    output [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ,
-    input  [`ysyx_22041752_INST_WD-1:0]      inst_rdata,
-
-    output                                   es_data_en     ,
-    output [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen    ,
-    output [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr   ,
-    output [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata  ,
-    input  [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata  
-
-    //output                                   sram_ren   ,
-    //output [							7:0] sram_wen   ,
-    //output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_waddr ,
-    //output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_raddr ,
-    //output [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ,
-    //input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata
+    output                                   sram_ren   ,
+    output [							7:0] sram_wen   ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_waddr ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_raddr ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata
     
 );
 
-reg [`ysyx_22041752_INST_WD-1:0] inst_rdata_r;
-always @(posedge clk) begin
-    if (reset) begin
-        inst_rdata_r <= 0;
-    end
-    else begin
-        inst_rdata_r <= inst_rdata;
-    end
-end
-
-reg [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata_r;
-always @(posedge clk) begin
-    if (reset) begin
-        ms_data_rdata_r <= 0;
-    end
-    else begin
-        ms_data_rdata_r <= ms_data_rdata;
-    end
-end
-
-
-ysyx_22041752 U_YSYX_22041752_0(
-    .clock                          ( clk                           ),
-    .reset                          ( reset                         ),
-    .inst_en                        ( inst_en                       ),
-    .inst_addr                      ( inst_addr                     ),
-    .inst_rdata                     ( inst_rdata_r                  ),
-    .es_data_en                     ( es_data_en                    ),
-    .es_data_wen                    ( es_data_wen                   ),
-    .es_data_addr                   ( es_data_addr                  ),
-    .es_data_wdata                  ( es_data_wdata                 ),
-    .ms_data_rdata                  ( ms_data_rdata_r               )
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
 wire         awready ;
 wire         awvalid ;
 wire [3:0]   awid    ;
@@ -192,6 +128,6 @@ axi_ram U_RAM_0(
     .sram_wdata                     ( sram_wdata ),
     .sram_rdata                     ( sram_rdata ) 
 );
-*/
+
 endmodule
 

@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-27 18:47
+// Last Modified : 2023-06-30 17:19
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -35,14 +35,14 @@ module dpi_c (
     input  [`ysyx_22041752_INST_WD     -1:0] debug_ws_inst       ,
     input                                    debug_ws_out_of_mem ,
     input  [`ysyx_22041752_INST_WD     -1:0] debug_es_inst       ,
-
-    /* verilator lint_off UNUSEDSIGNAL */
-    input                                  debug_wb_rf_wen       ,
-    input  [`ysyx_22041752_RF_ADDR_WD-1:0] debug_wb_rf_wnum      ,
-    input  [`ysyx_22041752_RF_DATA_WD-1:0] debug_wb_rf_wdata
-    /* verilator lint_on UNUSEDSIGNAL */
+    
+    input                    debug_icache_miss
 );
 
+reg icache_miss_r;
+always @(posedge clk) begin
+    icache_miss_r <= debug_icache_miss;
+end
 
 reg [63:0] rf[31:0];
 genvar i;
@@ -138,6 +138,7 @@ function void record();
     output bit     bj_inst      ;
     output longint pc           ;
     output bit     out_of_mem   ;
+    output bit     icache_miss  ;
     output longint dnpc         ;
     output int     inst         ;
     halt        = stop_r3               ;
@@ -148,6 +149,7 @@ function void record();
     bj_inst     = debug_es_bj_inst      ;
     pc          = current_pc            ;
     out_of_mem  = current_out_of_mem    ;
+    icache_miss = !debug_icache_miss&&icache_miss_r;
     dnpc        = debug_wb_pc           ;
     inst        = current_inst          ;
 endfunction

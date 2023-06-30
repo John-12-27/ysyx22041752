@@ -36,6 +36,7 @@ Vtop* top;
 uint8_t halt_flag       = 0;
 uint8_t valid_flag      = 0;
 uint8_t out_of_mem_flag = 0;
+uint8_t icachemiss_flag = 0;
 uint8_t exp_flag        = 0;
 uint8_t mret_flag       = 0;
 uint8_t pre_err         = 0;
@@ -59,30 +60,14 @@ static void single_cycle()
 {
     top->clk = 0; 
 
-    if (top->inst_en) 
+    if(top->sram_ren)
     {
-        top->inst_rdata = vaddr_ifetch(top->inst_addr, 4);
+      top->sram_rdata = vaddr_read(top->sram_raddr);
     }
-    if (top->es_data_en)
+    if(top->sram_wen)
     {
-        if (top->es_data_wen)
-        {
-            vaddr_write(top->es_data_addr, top->es_data_wdata, top->es_data_wen);
-        }
-        else
-        {
-            top->ms_data_rdata = vaddr_read(top->es_data_addr);
-        }
+      vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
     }
-
-    //if(top->sram_ren)
-    //{
-        //top->sram_rdata = vaddr_read(top->sram_raddr);
-    //}
-    //if(top->sram_wen)
-    //{
-        //vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
-    //}
 
     top->eval();
 #ifdef DUMP_WAVE
@@ -332,6 +317,7 @@ void exec(uint64_t n, bool batch)
     static uint64_t boot_time = get_time_internal();
     static uint64_t cycle_count = 0;
     static uint64_t instr_count = 0;
+    static uint64_t imiss_count = 0;
     static uint64_t prerr_count = 0;
     static uint64_t bjinst_count = 0;
     svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
@@ -350,7 +336,11 @@ void exec(uint64_t n, bool batch)
             exec_once();
             cycle_count++;
 
-            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), &out_of_mem_flag, (long long int*)&(S.dnpc), (int*)&(S.inst));
+            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), &out_of_mem_flag, &icachemiss_flag, (long long int*)&(S.dnpc), (int*)&(S.inst));
+            if(icachemiss_flag)
+            {
+                imiss_count++;
+            }
             if (valid_flag) 
             {
                 instr_count++;
@@ -408,6 +398,7 @@ void exec(uint64_t n, bool batch)
             Log("Cycle_count = %ld, T = %ldus\n", cycle_count, spend_time/cycle_count);
             Log("Frequency = %ldHz\n", 1000000/(spend_time/cycle_count));
             Log("inst_count= %ld, IPC = %f\n", instr_count, (float)instr_count / (float)cycle_count);
+            Log("icache miss count= %ld, hit rate= %f\n", imiss_count, ((float)instr_count-(float)imiss_count) / (float)instr_count);
             Log("branch_jump_count= %ld\n", bjinst_count);
             Log("prediction_err_count= %ld, Accuracy = %f\n", prerr_count, ((float)bjinst_count- (float)prerr_count) / (float)(bjinst_count));
 
