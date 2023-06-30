@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-06-27 17:40
+// Last Modified : 2023-06-30 14:32
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -51,7 +51,9 @@ reg [`ysyx_22041752_ES_TO_MS_BUS_WD -1:0] es_to_ms_bus_r;
 wire                   res_sext    ;
 wire                   res_zext    ;
 wire [            1:0] ms_mem_bytes;
+/* verilator lint_off UNUSEDSIGNAL */
 wire [            2:0] ms_addr_offset;
+/* verilator lint_on UNUSEDSIGNAL */
 wire            	   ms_mem_re   ;  
 wire            	   ms_mem_we   ;  
 wire                   ms_rf_we    ;
@@ -137,6 +139,15 @@ assign mem_result = ms_mem_bytes==2'b00 && res_sext ? {{56{shift_data[ 7]}}, shi
                     ms_mem_bytes==2'b10 && res_sext ? {{32{shift_data[31]}}, shift_data[31:0]} :
                     ms_mem_bytes==2'b10 && res_zext ? {{32{          1'b0}}, shift_data[31:0]} :
                                                                              shift_data        ;
+
+//assign mem_result = ms_mem_bytes==2'b00 && res_sext ? {{56{data_rdata[ 7]}}, data_rdata[ 7:0]} : 
+                    //ms_mem_bytes==2'b00 && res_zext ? {{56{          1'b0}}, data_rdata[ 7:0]} :
+                    //ms_mem_bytes==2'b01 && res_sext ? {{48{data_rdata[15]}}, data_rdata[15:0]} :
+                    //ms_mem_bytes==2'b01 && res_zext ? {{48{          1'b0}}, data_rdata[15:0]} :
+                    //ms_mem_bytes==2'b10 && res_sext ? {{32{data_rdata[31]}}, data_rdata[31:0]} :
+                    //ms_mem_bytes==2'b10 && res_zext ? {{32{          1'b0}}, data_rdata[31:0]} :
+                                                                             //data_rdata        ;
+
 assign ms_final_result = ms_mem_re ? mem_result : alu_result;
 						 
 //forward_bus

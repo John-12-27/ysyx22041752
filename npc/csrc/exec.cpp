@@ -59,14 +59,30 @@ static void single_cycle()
 {
     top->clk = 0; 
 
-    if(top->sram_ren)
+    if (top->inst_en) 
     {
-        top->sram_rdata = vaddr_read(top->sram_raddr);
+        top->inst_rdata = vaddr_ifetch(top->inst_addr, 4);
     }
-    if(top->sram_wen)
+    if (top->es_data_en)
     {
-        vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
+        if (top->es_data_wen)
+        {
+            vaddr_write(top->es_data_addr, top->es_data_wdata, top->es_data_wen);
+        }
+        else
+        {
+            top->ms_data_rdata = vaddr_read(top->es_data_addr);
+        }
     }
+
+    //if(top->sram_ren)
+    //{
+        //top->sram_rdata = vaddr_read(top->sram_raddr);
+    //}
+    //if(top->sram_wen)
+    //{
+        //vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
+    //}
 
     top->eval();
 #ifdef DUMP_WAVE

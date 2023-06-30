@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-29 12:30
+// Last Modified : 2023-06-30 14:31
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -240,7 +240,7 @@ wire data_pren;
 wire cache_compete	  = write_hit && data_pren;
 assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !cache_compete;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
-assign es_to_ms_valid =  es_valid && es_ready_go &&!flush;
+assign es_to_ms_valid =  es_valid && es_ready_go ;//&&!flush;
 always @(posedge clk) begin
     if (reset) begin
         es_valid <= 1'b0;
@@ -356,34 +356,39 @@ assign data_addr= mem_addr[31:0];
 assign data_pren= (es_mem_re | es_mem_we) && es_valid && ms_allowin;
 assign data_en  = data_pren && !cache_compete;
 
-assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 64'hffff_ffff_ffff_ffff : 
+//assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
+                  //es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
+                  //es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 8'h03 :
+                  //es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 8'h01 :
+                                                                   //8'h00 ;
+
+assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff: 
                   es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 
-										   es_addr_offset[2]	 ? 64'hffff_ffff_0000_0000 :
-																   64'h0000_0000_ffff_ffff :
+										   es_addr_offset[2]	 ? 8'hf0:
+																   8'h0f:
                   es_mem_we && es_valid && es_mem_bytes == 2'b01 ? 
 
 										   es_addr_offset[2]	 ?
-									 es_addr_offset[1:0]== 2'b00 ? 64'h0000_ffff_0000_0000 :
-									 es_addr_offset[1:0]== 2'b01 ? 64'h00ff_ff00_0000_0000 :
-								/*es_addr_offset[1:0]== 2'10 ?*/   64'hffff_0000_0000_0000 
+									 es_addr_offset[1:0]== 2'b00 ? 8'h30:
+									 es_addr_offset[1:0]== 2'b01 ? 8'h60:
+								/*es_addr_offset[1:0]== 2'10 ?*/   8'hc0
 																 :
-									 es_addr_offset[1:0]== 2'b00 ? 64'h0000_0000_0000_ffff :
-									 es_addr_offset[1:0]== 2'b01 ? 64'h0000_0000_00ff_ff00 :
-									 es_addr_offset[1:0]== 2'b10 ? 64'h0000_0000_ffff_0000 :
-							    /*es_addr_offset[1:0]== 2'b11 ?*/  64'h0000_00ff_ff00_0000 :
+									 es_addr_offset[1:0]== 2'b00 ? 8'h03:
+									 es_addr_offset[1:0]== 2'b01 ? 8'h06:
+									 es_addr_offset[1:0]== 2'b10 ? 8'h0c:
+							    /*es_addr_offset[1:0]== 2'b11 ?*/  8'h18:
 
                   es_mem_we && es_valid && es_mem_bytes == 2'b00 ? 
-									es_addr_offset[2:0]== 3'b000 ? 64'h0000_0000_0000_00ff :
-									es_addr_offset[2:0]== 3'b001 ? 64'h0000_0000_0000_ff00 :
-									es_addr_offset[2:0]== 3'b010 ? 64'h0000_0000_00ff_0000 :
-									es_addr_offset[2:0]== 3'b011 ? 64'h0000_0000_ff00_0000 :
-									es_addr_offset[2:0]== 3'b100 ? 64'h0000_00ff_0000_0000 :
-									es_addr_offset[2:0]== 3'b101 ? 64'h0000_ff00_0000_0000 :
-									es_addr_offset[2:0]== 3'b110 ? 64'h00ff_0000_0000_0000 :
-							/*es_addr_offset[2:0]== 3'b111 ?*/     64'hff00_0000_0000_0000 :
+									es_addr_offset[2:0]== 3'b000 ? 8'h01:
+									es_addr_offset[2:0]== 3'b001 ? 8'h02:
+									es_addr_offset[2:0]== 3'b010 ? 8'h04:
+									es_addr_offset[2:0]== 3'b011 ? 8'h08:
+									es_addr_offset[2:0]== 3'b100 ? 8'h10:
+									es_addr_offset[2:0]== 3'b101 ? 8'h20:
+									es_addr_offset[2:0]== 3'b110 ? 8'h40:
+							/*es_addr_offset[2:0]== 3'b111 ?*/     8'h80:
 
-                                                                   64'h0000_0000_0000_0000 ;
-
+                                                                   8'h00;
 reg [`ysyx_22041752_DATA_DATA_WD-1:0] shift_data;
 always @(*) begin
     case (es_addr_offset)
@@ -415,15 +420,13 @@ always @(*) begin
 end
 
 assign data_wdata = shift_data;
+
+//assign data_wdata = rs2_value;
+
 //forward_bus
 wire es_forward_valid;
 assign es_forward_valid = es_rf_we && es_valid;
 assign es_forward_bus = {es_mem_re&es_valid,es_forward_valid,alu_result,rd};
-
-
-
-
-
 
 `ifdef DPI_C
 assign es_exp = ecall && flush;

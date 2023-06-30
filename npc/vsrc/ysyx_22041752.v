@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-28 16:26
+// Last Modified : 2023-06-30 12:51
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -16,39 +16,49 @@ module ysyx_22041752(
     input         clock,
     input         reset,
 
-    input          io_master_awready ,
-    output         io_master_awvalid ,
-    output [3:0]   io_master_awid    ,
-    output [31:0]  io_master_awaddr  ,
-    output [7:0]   io_master_awlen   ,
-    output [2:0]   io_master_awsize  ,
-    output [1:0]   io_master_awburst ,
-    input          io_master_wready  ,
-    output         io_master_wvalid  ,
-    output [63:0]  io_master_wdata   ,
-    output [7:0]   io_master_wstrb   ,
-    output         io_master_wlast   ,
-    output         io_master_bready  ,
-    input          io_master_bvalid  ,
-    input  [3:0]   io_master_bid     ,
-    input  [1:0]   io_master_bresp   ,
-    input          io_master_arready ,
-    output         io_master_arvalid ,
-    output [3:0]   io_master_arid    ,
-    output [31:0]  io_master_araddr  ,
-    output [7:0]   io_master_arlen   ,
-    output [2:0]   io_master_arsize  ,
-    output [1:0]   io_master_arburst ,
-    output         io_master_rready  ,
-    input          io_master_rvalid  ,
-    input  [3:0]   io_master_rid     ,
-    input  [63:0]  io_master_rdata   ,
-    input  [1:0]   io_master_rresp   ,
-    input          io_master_rlast   
+    output                                   inst_en   ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ,
+    input  [`ysyx_22041752_INST_WD-1:0]      inst_rdata,
+
+    output                                   es_data_en     ,
+    output [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen    ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr   ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata  ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata  
+
+    //input          io_master_awready ,
+    //output         io_master_awvalid ,
+    //output [3:0]   io_master_awid    ,
+    //output [31:0]  io_master_awaddr  ,
+    //output [7:0]   io_master_awlen   ,
+    //output [2:0]   io_master_awsize  ,
+    //output [1:0]   io_master_awburst ,
+    //input          io_master_wready  ,
+    //output         io_master_wvalid  ,
+    //output [63:0]  io_master_wdata   ,
+    //output [7:0]   io_master_wstrb   ,
+    //output         io_master_wlast   ,
+    //output         io_master_bready  ,
+    //input          io_master_bvalid  ,
+    //input  [3:0]   io_master_bid     ,
+    //input  [1:0]   io_master_bresp   ,
+    //input          io_master_arready ,
+    //output         io_master_arvalid ,
+    //output [3:0]   io_master_arid    ,
+    //output [31:0]  io_master_araddr  ,
+    //output [7:0]   io_master_arlen   ,
+    //output [2:0]   io_master_arsize  ,
+    //output [1:0]   io_master_arburst ,
+    //output         io_master_rready  ,
+    //input          io_master_rvalid  ,
+    //input  [3:0]   io_master_rid     ,
+    //input  [63:0]  io_master_rdata   ,
+    //input  [1:0]   io_master_rresp   ,
+    //input          io_master_rlast   
 
 );
    
-wire         int_t;
+wire         int_t=0;
 wire         flush;
 wire         flush_pc_p4;
 wire         pre_error;       
@@ -105,18 +115,18 @@ wire [                            0:0] stop;
 wire clk = clock;
 
 // fetch insts interface
-wire                                   inst_en   ;
-wire [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ;
-wire [`ysyx_22041752_INST_WD-1:0]      inst_rdata;
-wire                                   icache_miss;
+//wire                                   inst_en   ;
+//wire [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ;
+//wire [`ysyx_22041752_INST_WD-1:0]      inst_rdata;
+wire                                   icache_miss=0;
 // ld/store interface
-wire                                   es_data_en    ;
-wire [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen   ;
-wire [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr  ;
-wire [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata ;
-wire [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata ;
-wire                                   ms_miss       ;
-wire                                   es_write_hit  ;
+//wire                                   es_data_en    ;
+//wire [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen   ;
+//wire [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr  ;
+//wire [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata ;
+//wire [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata ;
+wire                                   ms_miss=0       ;
+wire                                   es_write_hit=0  ;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -249,6 +259,7 @@ ysyx_22041752_WBU U_WBU_0(
 `endif
 );
 
+/*
 wire                                   icache_req       ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] icache_req_addr  ;
 wire                                   icache_ready     ;
@@ -455,6 +466,7 @@ ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .bvalid                         ( io_master_bvalid              ),
     .bready                         ( io_master_bready              )
 );
+*/
 
 `ifdef DPI_C
 dpi_c u_dpi_c(

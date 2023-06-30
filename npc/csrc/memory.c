@@ -26,11 +26,8 @@ static inline word_t paddr_read(paddr_t paddr)
 {
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
-        if(paddr==0x83000240)
-        {
-            printf("read: paddr=%lx, data=%lx\n", paddr, *(uint64_t *)(mem + paddr - MBASEADDR));
-        }
-        word_t data = *(uint64_t *)(mem + paddr - MBASEADDR);
+        paddr_t entry = (paddr-MBASEADDR)/8;
+        word_t data = *(uint64_t *)(mem + 8*entry);
         return data;
     }
     else if(paddr == CONFIG_RTC_MMIO)
@@ -56,7 +53,7 @@ static inline word_t paddr_read(paddr_t paddr)
     {
         printf("pc=0x%lx, read addr error=0x%lx\n", cpu.pc, paddr);
         printf("read addr error : %lx\n", paddr);
-        /*assert(0);*/
+        assert(0);
     }
     return 0;
 }
@@ -65,12 +62,31 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 {
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
+        paddr_t entry = (paddr-MBASEADDR)/8;
+
         switch(wen)
         {
-            case 0x01: *(uint8_t  *)(mem + paddr - MBASEADDR) = data; break;
-            case 0x03: *(uint16_t *)(mem + paddr - MBASEADDR) = data; break;
-            case 0x0f: *(uint32_t *)(mem + paddr - MBASEADDR) = data; break;
-            case 0xff: *(uint64_t *)(mem + paddr - MBASEADDR) = data; break;
+            case 0xff: *(uint64_t *)(mem + 8*entry  ) = (uint64_t)data;     break;
+
+            case 0x0f: *(uint32_t *)(mem + 8*entry  ) = (uint32_t)((word_t)data    ); break;
+            case 0xf0: *(uint32_t *)(mem + 8*entry+4) = (uint32_t)((word_t)data>>32); break;
+
+            case 0x03: *(uint16_t *)(mem + 8*entry  ) = (uint16_t)((word_t)data    ); break;
+            case 0x06: *(uint16_t *)(mem + 8*entry+1) = (uint16_t)((word_t)data>>8 ); break;
+            case 0x0c: *(uint16_t *)(mem + 8*entry+2) = (uint16_t)((word_t)data>>16); break;
+            case 0x18: *(uint16_t *)(mem + 8*entry+3) = (uint16_t)((word_t)data>>24); break;
+            case 0x30: *(uint16_t *)(mem + 8*entry+4) = (uint16_t)((word_t)data>>32); break;
+            case 0x60: *(uint16_t *)(mem + 8*entry+5) = (uint16_t)((word_t)data>>40); break;
+            case 0xc0: *(uint16_t *)(mem + 8*entry+6) = (uint16_t)((word_t)data>>48); break;
+
+            case 0x01: *(uint8_t  *)(mem + 8*entry  ) = (uint8_t) ((word_t)data    ); break;
+            case 0x02: *(uint8_t  *)(mem + 8*entry+1) = (uint8_t) ((word_t)data>>8 ); break;
+            case 0x04: *(uint8_t  *)(mem + 8*entry+2) = (uint8_t) ((word_t)data>>16); break;
+            case 0x08: *(uint8_t  *)(mem + 8*entry+3) = (uint8_t) ((word_t)data>>24); break;
+            case 0x10: *(uint8_t  *)(mem + 8*entry+4) = (uint8_t) ((word_t)data>>32); break;
+            case 0x20: *(uint8_t  *)(mem + 8*entry+5) = (uint8_t) ((word_t)data>>40); break;
+            case 0x40: *(uint8_t  *)(mem + 8*entry+6) = (uint8_t) ((word_t)data>>48); break;
+            case 0x80: *(uint8_t  *)(mem + 8*entry+7) = (uint8_t) ((word_t)data>>56); break;
             default:   printf("wen err!!!\n");  
                        assert(0); break;
         }
@@ -85,14 +101,15 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
     }
     else if((paddr >= CONFIG_GPU_FBDRAW_MMIO) && (paddr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
     {
-        uint32_t offset = paddr-CONFIG_GPU_FBDRAW_MMIO;
-        if (paddr/4%2) 
+        paddr_t entry = (paddr-CONFIG_GPU_FBDRAW_MMIO)/8;
+        paddr_t offset= (paddr-CONFIG_GPU_FBDRAW_MMIO)%8;
+
+        switch(offset)
         {
-            *(uint32_t *)(vmem+offset) = (uint32_t)((word_t)data>>32);
-        }
-        else 
-        {
-            *(uint32_t *)(vmem+offset) = (uint32_t)data;
+            case 0: *(uint32_t *)(vmem+8*entry  ) = (uint32_t)data;               break;
+            case 4: *(uint32_t *)(vmem+8*entry+4) = (uint32_t)((word_t)data>>32); break;
+            default: printf("paddr=0x%lx, entry=%ld, offset=%ld\n", paddr, entry, offset);  
+                     assert(0);
         }
     }
     else
@@ -130,21 +147,21 @@ long load_img(char *img)
     return size;
 }
 
-/*word_t vaddr_ifetch(paddr_t addr, uint8_t len)*/
-/*{*/
-    /*if((addr >= MBASEADDR) && (addr < (MBASEADDR + MEMSIZE)))*/
-    /*{*/
-        /*switch(len)*/
-        /*{*/
-            /*case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);*/
-            /*case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);*/
-            /*case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);*/
-            /*case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);*/
-            /*default: assert(0);*/
-        /*}*/
-    /*}*/
-    /*return 0;*/
-/*}*/
+word_t vaddr_ifetch(paddr_t addr, uint8_t len)
+{
+    if((addr >= MBASEADDR) && (addr < (MBASEADDR + MEMSIZE)))
+    {
+        switch(len)
+        {
+            case 1:  return *(uint8_t  *)(mem + addr - MBASEADDR);
+            case 2:  return *(uint16_t *)(mem + addr - MBASEADDR);
+            case 4:  return *(uint32_t *)(mem + addr - MBASEADDR);
+            case 8:  return *(uint64_t *)(mem + addr - MBASEADDR);
+            default: assert(0);
+        }
+    }
+    return 0;
+}
 
 word_t vaddr_read(vaddr_t vaddr)
 {

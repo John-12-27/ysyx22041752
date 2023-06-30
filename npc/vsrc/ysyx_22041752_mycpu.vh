@@ -4,7 +4,7 @@
 
     `define ysyx_22041752_DATA_ADDR_WD      32
     `define ysyx_22041752_DATA_DATA_WD      64
-    `define ysyx_22041752_DATA_WEN_WD       64
+    `define ysyx_22041752_DATA_WEN_WD        8
     `define ysyx_22041752_RF_ADDR_WD         5
     `define ysyx_22041752_RF_DATA_WD        64
     `define ysyx_22041752_RF_WEN_WD          8
