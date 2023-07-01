@@ -67,24 +67,23 @@ void difftest_gpr_cpy(word_t *gpr, bool direction)
     }
 }
 
-/*word_t test_csr [NUM_CSR];*/
-/*void difftest_csr_cpy(word_t *CSR, bool direction) */
-/*{*/
-    /*if(direction == DIFFTEST_TO_REF) */
-    /*{*/
-        /*for(int i = 0; i < NUM_CSR; i++)*/
-        /*{*/
-            /*test_csr[i] = CSR[i];*/
-        /*}*/
-    /*} */
-    /*else */
-    /*{*/
-        /*for(int i = 0; i < NUM_CSR; i++)*/
-        /*{*/
-            /*CSR[i] = cpu.csr[i].val;*/
-        /*}*/
-    /*}*/
-/*}*/
+void difftest_csr_cpy(word_t *CSR, bool direction) 
+{
+    if(direction == DIFFTEST_TO_REF) 
+    {
+        for(int i = 0; i < NUM_CSR; i++)
+        {
+            cpu.csr[i].val = CSR[i];
+        }
+    } 
+    else 
+    {
+        for(int i = 0; i < NUM_CSR; i++)
+        {
+            CSR[i] = cpu.csr[i].val;
+        }
+    }
+}
 
 extern void cpu_exec(uint64_t n);
 void difftest_exec(uint64_t n) 
@@ -93,12 +92,12 @@ void difftest_exec(uint64_t n)
 }
 
 extern Decode s;
-void difftest_raise_intr(word_t NO, bool MRET) 
+void difftest_raise_intr(word_t NO, bool MRET, paddr_t pc) 
 {
     if(MRET)
         cpu.pc = isa_mret_intr();
     else
-        cpu.pc = isa_raise_intr(&s, NO, cpu.pc);
+        cpu.pc = isa_raise_intr(&s, NO, pc);
 }
 
 void difftest_init(int port) 

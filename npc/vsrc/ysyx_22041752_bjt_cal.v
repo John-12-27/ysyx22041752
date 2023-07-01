@@ -2,17 +2,17 @@
 //                 Copyright (c) 2023 
 //                       ALL RIGHTS RESERVED
 // ---------------------------------------------------------------------------------
-// Filename      : bjt_cal.v
+// Filename      : ysyx_22041752_bjt_cal.v
 // Author        : Cw
 // Created On    : 2023-06-06 09:19
-// Last Modified : 2023-06-09 20:56
+// Last Modified : 2023-06-20 16:08
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-module bjt_cal (
+module ysyx_22041752_bjt_cal (
     input                             jalr         ,
     input  [11:0]                     imm_i        ,
     input  [`ysyx_22041752_PC_WD-1:0] jalr_src1    ,

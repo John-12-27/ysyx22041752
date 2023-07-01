@@ -76,7 +76,7 @@ module axi_ram #
     output                   s_axi_rvalid,
     input                    s_axi_rready, 
 
-    output            sram_en   ,
+    output            sram_ren  ,
     output     [ 7:0] sram_wen  ,
     output     [31:0] sram_waddr,
     output     [31:0] sram_raddr,
@@ -360,7 +360,7 @@ always @(posedge clk) begin
     end
 end
 
-assign sram_en    = mem_rd_en | mem_wr_en;
+assign sram_ren   = mem_rd_en ;
 assign sram_wen   = mem_wr_en ? s_axi_wstrb : 8'b0;
 
 assign sram_wdata = s_axi_wdata;

@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-08 21:51
+// Last Modified : 2023-06-30 16:37
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -13,64 +13,18 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module top (
-    input         clk,
+    input         clk  ,
     input         reset,
 
-    output                                   inst_sram_en    ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] inst_sram_addr  ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_sram_rdata ,
-
-    output                                   data_sram_en    ,
-    output [`ysyx_22041752_SRAM_WEN_WD -1:0] data_sram_wen   ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0] data_sram_addr  ,
-    output [`ysyx_22041752_SRAM_DATA_WD-1:0] data_sram_wdata ,
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0] data_sram_rdata
+    output                                   sram_ren   ,
+    output [							7:0] sram_wen   ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_waddr ,
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_raddr ,
+    output [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ,
+    input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata
+    
 );
 
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] inst_sram_rdata_r;
-reg [`ysyx_22041752_SRAM_DATA_WD-1:0] data_sram_rdata_r;
-always @(posedge clk) begin
-    inst_sram_rdata_r <= inst_sram_rdata;
-end
-always @(posedge clk) begin
-    data_sram_rdata_r <= data_sram_rdata;
-end
-
-ysyx_22041752 U_YSYX_22041752_0(
-    .clock                          ( clk                           ),
-    .reset                          ( reset                         ),
-    .inst_en                        ( inst_sram_en                  ),
-    .inst_addr                      ( inst_sram_addr                ),
-    .inst_rdata                     ( inst_sram_rdata_r             ),
-    .data_en                        ( data_sram_en                  ),
-    .data_wen                       ( data_sram_wen                 ),
-    .data_addr                      ( data_sram_addr                ),
-    .data_wdata                     ( data_sram_wdata               ),
-    .data_rdata                     ( data_sram_rdata_r             )
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*==========================================================================================*/
-/*==========================================================================================*/
-/*==========================================================================================*/
-/*==========================================================================================*/
-/*==========================================================================================*/
-/*==========================================================================================*/
-/*   
 wire         awready ;
 wire         awvalid ;
 wire [3:0]   awid    ;
@@ -167,14 +121,13 @@ axi_ram U_RAM_0(
     .s_axi_rlast                    ( rlast   ),
     .s_axi_rvalid                   ( rvalid  ),
     .s_axi_rready                   ( rready  ),
-    .sram_en                        ( sram_en    ),
+    .sram_ren                       ( sram_ren   ),
     .sram_wen                       ( sram_wen   ),
     .sram_waddr                     ( sram_waddr ),
     .sram_raddr                     ( sram_raddr ),
     .sram_wdata                     ( sram_wdata ),
     .sram_rdata                     ( sram_rdata ) 
 );
-*/
 
 endmodule
 

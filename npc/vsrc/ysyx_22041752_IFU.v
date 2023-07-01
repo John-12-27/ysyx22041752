@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-08 22:26
+// Last Modified : 2023-06-30 17:14
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -22,10 +22,9 @@ module ysyx_22041752_IFU (
     output [`ysyx_22041752_FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
     
     output                                       inst_en        ,
-    output [`ysyx_22041752_SRAM_ADDR_WD-1:0]     inst_addr      ,
-/* verilator lint_off UNUSEDSIGNAL */
-    input  [`ysyx_22041752_SRAM_DATA_WD-1:0]     inst_rdata     ,
-/* verilator lint_on UNUSEDSIGNAL */
+    output [`ysyx_22041752_DATA_ADDR_WD-1:0]     inst_addr      ,
+    input  [`ysyx_22041752_INST_WD-1:0]          inst_rdata     ,
+    input                                        cache_miss     ,
 
     input  [`ysyx_22041752_PC_WD       -1:0]     ra_data        ,
     input                                        flush          , 
@@ -33,8 +32,9 @@ module ysyx_22041752_IFU (
     input                                        flush_pc_p4    
 `ifdef DPI_C
     ,
-    output [`ysyx_22041752_PC_WD-1:0]            debug_fs_pc
+    output                                       debug_icache_miss
 `endif
+
 );
 
 reg         fs_valid;
@@ -74,68 +74,36 @@ assign fs_to_ds_bus = {fs_inst      ,
                        imm_b        
                       };
 
-//// pre-IF stage
-//reg [2:0] ftfsm_pre;
-//reg [2:0] ftfsm_nxt;
-//parameter IDLE       =0;
-//parameter REQUEST    =1;
-//parameter RESPONSE   =2;
-//parameter GET_INST   =3;
-//parameter DROP_REQ   =4;
-//parameter DROP_RESP  =5;
-//parameter DROPED     =6;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //ftfsm_pre <= IDLE;
-    //end
-    //else begin
-        //ftfsm_pre <= ftfsm_nxt;
-    //end
-//end
-//assign ftfsm_nxt = (ftfsm_pre==IDLE || ftfsm_pre==GET_INST || ftfsm_pre==DROPED) && !reset && fs_allowin ? REQUEST    :
-                    //ftfsm_pre==REQUEST                                           && !flush && inst_ready ? RESPONSE   :
-                    //ftfsm_pre==REQUEST                                           &&  flush &&!inst_ready ? DROP_REQ   :
-                    //ftfsm_pre==REQUEST                                           &&  flush && inst_ready ? DROP_RESP  :
-                    //ftfsm_pre==RESPONSE                                          && !flush && inst_valid ? GET_INST   :
-                    //ftfsm_pre==RESPONSE                                          &&  flush &&!inst_valid ? DROP_RESP  :
-                    //ftfsm_pre==RESPONSE                                          &&  flush && inst_valid ? DROPED     :
-                    //ftfsm_pre==GET_INST                                                                  ? IDLE       :
-                    //ftfsm_pre==DROP_REQ                                          &&           inst_ready ? DROP_RESP  :
-                    //ftfsm_pre==DROP_RESP                                         &&           inst_valid ? DROPED     :
-                    //ftfsm_pre==DROPED                                                                    ? IDLE       :
-                                                                                                           //ftfsm_pre  ;
+reg [`ysyx_22041752_PC_WD-1:0] flush_pc_r;
+always @(posedge clk) begin
+    if (reset) begin
+        flush_pc_r <= 0;
+    end
+    else if (flush && !fs_ready_go) begin
+        flush_pc_r <= seq_bj_pc;
+    end
+end
+reg flush_pc_r_v;
+always @(posedge clk) begin
+    if (reset) begin
+        flush_pc_r_v <= 0;
+    end
+    else if (flush && !fs_ready_go) begin
+        flush_pc_r_v <= 1;
+    end
+    else if (inst_en) begin
+        flush_pc_r_v <= 0;
+    end
+end
 
-//reg [`ysyx_22041752_PC_WD-1:0] flush_pc_r;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //flush_pc_r <= 0;
-    //end
-    //else if(flush) begin
-        //flush_pc_r <= seq_bj_pc;
-    //end
-//end
-//reg flush_pc_rv;
-//always @(posedge clk) begin
-    //if (reset) begin
-        //flush_pc_rv <= 0;
-    //end
-    //else if (ftfsm_pre==DROPED) begin
-        //flush_pc_rv <= 1;
-    //end
-    //else if (flush_pc_rv && ftfsm_pre==GET_INST) begin
-        //flush_pc_rv <= 0;
-    //end
-//end
+assign nextpc  = flush_pc_r_v  ? flush_pc_r :
+                                 seq_bj_pc  ; 
 
-assign nextpc  = //flush       ? flush_pc   :
-                 //flush_pc_rv ? flush_pc_r :
-                               seq_bj_pc  ; 
+assign to_fs_valid  = ~reset;
 
-assign to_fs_valid  = ~reset;//ftfsm_pre==GET_INST;
-
-assign fs_ready_go    = 1;//inst_valid;
+assign fs_ready_go    = !cache_miss;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
-assign fs_to_ds_valid =  fs_valid && fs_ready_go && ~flush;
+assign fs_to_ds_valid =  fs_valid && fs_ready_go && !flush && !flush_pc_r_v;
 always @(posedge clk) begin
     if (reset) begin
         fs_valid <= 1'b0;
@@ -154,15 +122,31 @@ always @(posedge clk) begin
     end
 end
 
-assign inst_en    = to_fs_valid && fs_allowin; //(ftfsm_pre==REQUEST || ftfsm_pre==DROP_REQ) && !inst_ready;
+assign inst_en    = to_fs_valid && fs_allowin; 
 assign inst_addr  = nextpc;
-assign fs_inst    = inst_rdata[`ysyx_22041752_INST_WD-1:0];
 
-//always @(posedge clk) begin
-    //if (ftfsm_pre==GET_INST || ftfsm_pre==DROPED) begin
-        //fs_inst <= inst_rdata[31:0];
-    //end
-//end
+reg inst_rdata_r_v;
+always @(posedge clk) begin
+    if (reset) begin
+        inst_rdata_r_v <= 0;
+    end
+    else if (fs_to_ds_valid && !ds_allowin) begin
+        inst_rdata_r_v <= 1;
+    end
+    else if (fs_to_ds_valid) begin
+        inst_rdata_r_v <= 0;
+    end
+end
+reg [`ysyx_22041752_INST_WD-1:0] inst_rdata_r;
+always @(posedge clk) begin
+    if (reset) begin
+        inst_rdata_r <= 0;
+    end
+    else if (fs_to_ds_valid && !ds_allowin && !inst_rdata_r_v) begin
+        inst_rdata_r <= inst_rdata;
+    end
+end
+assign fs_inst    = inst_rdata_r_v ? inst_rdata_r : inst_rdata;
 
 /*=======================================================================================*/
 /*=======================================================================================*/
@@ -173,22 +157,21 @@ assign imm_b  = {fs_inst[31], fs_inst[7], fs_inst[30:25], fs_inst[11:8], 1'b0};
 wire [11:0] imm_i  = fs_inst[31:20]; 
 wire [20:0] imm_j  = {fs_inst[31], fs_inst[19:12], fs_inst[20], fs_inst[30:21], 1'b0}; 
 
-assign fs_inst_jal    = opcode == 7'b1101111;
-assign fs_inst_jalr   = opcode == 7'b1100111;
-assign fs_inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
-assign fs_inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
-assign fs_inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
-assign fs_inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
-assign fs_inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
-assign fs_inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+assign fs_inst_jal  = opcode == 7'b1101111;
+assign fs_inst_jalr = opcode == 7'b1100111;
+assign fs_inst_beq  = opcode == 7'b1100011 && funct3 == 3'b000;
+assign fs_inst_bne  = opcode == 7'b1100011 && funct3 == 3'b001;
+assign fs_inst_blt  = opcode == 7'b1100011 && funct3 == 3'b100;
+assign fs_inst_bge  = opcode == 7'b1100011 && funct3 == 3'b101;
+assign fs_inst_bltu = opcode == 7'b1100011 && funct3 == 3'b110;
+assign fs_inst_bgeu = opcode == 7'b1100011 && funct3 == 3'b111;
 
-assign br_taken=(fs_inst_beq  || 
-                 fs_inst_bne  || 
-                 fs_inst_blt  || 
-                 fs_inst_bge  || 
-                 fs_inst_bltu || 
-                 fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr;
-
+assign br_taken=fs_valid && ((fs_inst_beq  || 
+                              fs_inst_bne  || 
+                              fs_inst_blt  || 
+                              fs_inst_bge  || 
+                              fs_inst_bltu || 
+                              fs_inst_bgeu) && imm_b[12] || fs_inst_jal || fs_inst_jalr);
 
 wire [`ysyx_22041752_PC_WD-1:0] bt_a;
 wire [`ysyx_22041752_PC_WD-1:0] bt_b;
@@ -197,8 +180,8 @@ wire [`ysyx_22041752_PC_WD-1:0] bt_c;
 assign bt_a = flush ? flush_pc : fs_inst_jalr ? ra_data : fs_pc;
 
 assign bt_b = (fs_inst_beq || fs_inst_bne || fs_inst_blt || fs_inst_bge || fs_inst_bltu || fs_inst_bgeu) ? {{19{imm_b[12]}},imm_b} :
-               fs_inst_jalr                                                               ? {{20{imm_i[11]}},imm_i} :
-                                                                                         {{11{imm_j[20]}},imm_j} ;
+               fs_inst_jalr                                                                              ? {{20{imm_i[11]}},imm_i} :
+                                                                                                           {{11{imm_j[20]}},imm_j} ;
 
 assign bt_c = flush &&!flush_pc_p4 ? 0    : 
               flush && flush_pc_p4 ? 4    : 
@@ -217,9 +200,8 @@ U_ASER_1(
 );
 /* verilator lint_on PINCONNECTEMPTY */
 
-
 `ifdef DPI_C
-assign debug_fs_pc = fs_pc;
+    assign debug_icache_miss = cache_miss;
 `endif
 endmodule
 
