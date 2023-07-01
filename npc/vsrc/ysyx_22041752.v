@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-30 17:28
+// Last Modified : 2023-07-01 17:50
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -108,13 +108,13 @@ wire [`ysyx_22041752_DATA_ADDR_WD-1:0] inst_addr ;
 wire [`ysyx_22041752_INST_WD-1:0]      inst_rdata;
 wire                                   icache_miss;
 // ld/store interface
-//wire                                   es_data_en    ;
-//wire [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen   ;
-//wire [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr  ;
-//wire [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata ;
-//wire [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata ;
-//wire                                   ms_miss       ;
-//wire                                   es_write_hit  ;
+wire                                   es_data_en    ;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] es_data_wen   ;
+wire [`ysyx_22041752_DATA_ADDR_WD-1:0] es_data_addr  ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] es_data_wdata ;
+wire [`ysyx_22041752_DATA_DATA_WD-1:0] ms_data_rdata ;
+wire                                   ms_miss       ;
+wire                                   es_write_hit  ;
 
 // IF stage
 ysyx_22041752_IFU U_IFU_0(
@@ -166,11 +166,6 @@ ysyx_22041752_IDU U_IDU_0(
 `endif
 );
 
-wire                                         data_en    ;  
-wire                                         data_ready ;  
-wire [`ysyx_22041752_DATA_WEN_WD -1:0]       data_wen   ;  
-wire [`ysyx_22041752_DATA_ADDR_WD-1:0]       data_addr  ;  
-wire [`ysyx_22041752_DATA_DATA_WD-1:0]       data_wdata ;  
 // EXE stage
 ysyx_22041752_EXU U_EXU_0(
     .clk            ( clk             ),
@@ -182,12 +177,11 @@ ysyx_22041752_EXU U_EXU_0(
     .es_to_ms_valid ( es_to_ms_valid  ),
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .es_forward_bus ( es_forward_bus  ),
-    .data_en        ( data_en         ),
-    .data_ready     ( data_ready      ),
-    .data_wen       ( data_wen        ),
-    .data_addr      ( data_addr       ),
-    .data_wdata     ( data_wdata      ),
-    //.write_hit      ( es_write_hit    ),
+    .data_en        ( es_data_en      ),
+    .data_wen       ( es_data_wen     ),
+    .data_addr      ( es_data_addr    ),
+    .data_wdata     ( es_data_wdata   ),
+    .write_hit      ( es_write_hit    ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_t_i        ( int_t           ),
@@ -211,8 +205,6 @@ ysyx_22041752_EXU U_EXU_0(
 `endif
 );
 
-wire [`ysyx_22041752_DATA_DATA_WD-1:0]       data_rdata ;  
-wire                                         rdata_valid;
 // MEM stage
 ysyx_22041752_MEU U_MEU_0(
     .clk            ( clk             ),
@@ -223,9 +215,8 @@ ysyx_22041752_MEU U_MEU_0(
     .es_to_ms_bus   ( es_to_ms_bus    ),
     .ms_to_ws_valid ( ms_to_ws_valid  ),
     .ms_to_ws_bus   ( ms_to_ws_bus    ),
-    .data_rdata     ( data_rdata      ),
-    .rdata_valid    ( rdata_valid     ),
-    //.cache_miss     ( ms_miss         ),
+    .data_rdata     ( ms_data_rdata   ),
+    .cache_miss     ( ms_miss         ),
     .ms_forward_bus ( ms_forward_bus  )
 `ifdef DPI_C
     ,
@@ -278,54 +269,6 @@ ysyx_22041752_ICACHE U_ICACHE_0(
     .sram_valid                     ( icache_valid                  )
 );
 
-ysyx_22041752_axiarbiter U_AXIARBITER_0(
-    .clk                            ( clk                           ),
-    .reset                          ( reset                         ),
-    .inst_en                        ( icache_req                    ),
-    .inst_ready                     ( icache_ready                  ),
-    .inst_addr                      ( icache_req_addr               ),
-    .inst_rdata                     ( icache_rdata                  ),
-    .inst_valid                     ( icache_valid                  ),
-    .data_en                        ( data_en                       ),
-    .data_ready                     ( data_ready                    ),
-    .data_wen                       ( data_wen                      ),
-    .data_addr                      ( data_addr                     ),
-    .data_wdata                     ( data_wdata                    ),
-    .data_rdata                     ( data_rdata                    ),
-    .data_valid                     ( rdata_valid                   ),
-    .arid                           ( io_master_arid                ),
-    .araddr                         ( io_master_araddr              ),
-    .arlen                          ( io_master_arlen               ),
-    .arsize                         ( io_master_arsize              ),
-    .arburst                        ( io_master_arburst             ),
-    .arvalid                        ( io_master_arvalid             ),
-    .arready                        ( io_master_arready             ),
-    .rid                            ( io_master_rid                 ),
-    .rdata                          ( io_master_rdata               ),
-    .rresp                          ( io_master_rresp               ),
-    .rlast                          ( io_master_rlast               ),
-    .rvalid                         ( io_master_rvalid              ),
-    .rready                         ( io_master_rready              ),
-    .awid                           ( io_master_awid                ),
-    .awaddr                         ( io_master_awaddr              ),
-    .awlen                          ( io_master_awlen               ),
-    .awsize                         ( io_master_awsize              ),
-    .awburst                        ( io_master_awburst             ),
-    .awvalid                        ( io_master_awvalid             ),
-    .awready                        ( io_master_awready             ),
-    .wdata                          ( io_master_wdata               ),
-    .wstrb                          ( io_master_wstrb               ),
-    .wlast                          ( io_master_wlast               ),
-    .wvalid                         ( io_master_wvalid              ),
-    .wready                         ( io_master_wready              ),
-    .bid                            ( io_master_bid                 ),
-    .bresp                          ( io_master_bresp               ),
-    .bvalid                         ( io_master_bvalid              ),
-    .bready                         ( io_master_bready              )
-);
-
-
-/*
 wire                                   clint_en   ;
 wire                                   clint_wen  ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] clint_addr ;
@@ -341,21 +284,21 @@ wire                                   dcache_miss       ;
 wire                                   dcache_write_hit  ;
 wire                                   dcache_sram_req   ;
 wire                                   dcache_sram_ready ;
-wire                                   dcache_sram_wen   ;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] dcache_sram_wen   ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] dcache_sram_addr  ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] dcache_sram_wdata ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] dcache_sram_rdata ;
 wire                                   dcache_sram_valid ;
 
 wire                                   io_data_en    ;
-wire                                   io_data_wen   ;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] io_data_wen   ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] io_data_addr  ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] io_data_wdata ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] io_data_rdata ;
 wire                                   io_miss       ;
 wire                                   io_sram_req   ;
 wire                                   io_sram_ready ;
-wire                                   io_sram_wen   ;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] io_sram_wen   ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] io_sram_addr  ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] io_sram_wdata ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] io_sram_rdata ;
@@ -363,12 +306,13 @@ wire                                   io_sram_valid ;
 
 wire                                   sram_req   ;
 wire                                   sram_ready ;
-wire                                   sram_wen   ;
+wire [`ysyx_22041752_DATA_WEN_WD -1:0] sram_wen   ;
 wire [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_addr  ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ;
 wire [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata ;
 wire                                   sram_valid ;
-ysyx_22041752_mmu U_MMU_0(
+
+ysyx_22041752_memspace U_MEMSPACE_0(
     .clk                            ( clk                         ),
     .reset                          ( reset                       ),
     .es_data_en_i                   ( es_data_en                  ),
@@ -387,36 +331,15 @@ ysyx_22041752_mmu U_MMU_0(
     .dcache_wen_o                   ( dcache_data_wen             ),
     .dcache_data_addr_o             ( dcache_data_addr            ),
     .dcache_data_wdata_o            ( dcache_data_wdata           ),
-    .dcache_data_rdata_i            ( dcache_data_rdata           ),
     .dcache_miss_i                  ( dcache_miss                 ),
     .dcache_write_hit_i             ( dcache_write_hit            ),
-    .dcache_sram_req_i              ( dcache_sram_req             ),
-    .dcache_sram_ready_o            ( dcache_sram_ready           ),
-    .dcache_sram_wen_i              ( dcache_sram_wen             ),
-    .dcache_sram_addr_i             ( dcache_sram_addr            ),
-    .dcache_sram_wdata_i            ( dcache_sram_wdata           ),
-    .dcache_sram_rdata_o            ( dcache_sram_rdata           ),
-    .dcache_sram_valid_o            ( dcache_sram_valid           ),
+    .dcache_data_rdata_i            ( dcache_data_rdata           ),
+    .io_miss_i                      ( io_miss                     ),
+    .io_data_rdata_i                ( io_data_rdata               ),
     .io_en_o                        ( io_data_en                  ),
     .io_wen_o                       ( io_data_wen                 ),
     .io_data_addr_o                 ( io_data_addr                ),
-    .io_data_wdata_o                ( io_data_wdata               ),
-    .io_data_rdata_i                ( io_data_rdata               ),
-    .io_miss_i                      ( io_miss                     ),
-    .io_sram_req_i                  ( io_sram_req                 ),
-    .io_sram_ready_o                ( io_sram_ready               ),
-    .io_sram_wen_i                  ( io_sram_wen                 ),
-    .io_sram_addr_i                 ( io_sram_addr                ),
-    .io_sram_wdata_i                ( io_sram_wdata               ),
-    .io_sram_rdata_o                ( io_sram_rdata               ),
-    .io_sram_valid_o                ( io_sram_valid               ),
-    .sram_req_o                     ( sram_req                    ),
-    .sram_ready_i                   ( sram_ready                  ),
-    .sram_wen_o                     ( sram_wen                    ),
-    .sram_addr_o                    ( sram_addr                   ),
-    .sram_wdata_o                   ( sram_wdata                  ),
-    .sram_rdata_i                   ( sram_rdata                  ),
-    .sram_valid_i                   ( sram_valid                  )
+    .io_data_wdata_o                ( io_data_wdata               )
 );
 
 ysyx_22041752_clint U_CLINT_0(
@@ -467,6 +390,32 @@ ysyx_22041752_io U_IO_0(
     .sram_valid                     ( io_sram_valid                 )
 );
 
+ysyx_22041752_mmu U_YSYX_22041752_MMU_0(
+    .clk                            ( clk                         ),
+    .reset                          ( reset                       ),
+    .dcache_sram_req_i              ( dcache_sram_req             ),
+    .dcache_sram_ready_o            ( dcache_sram_ready           ),
+    .dcache_sram_wen_i              ( dcache_sram_wen             ),
+    .dcache_sram_addr_i             ( dcache_sram_addr            ),
+    .dcache_sram_wdata_i            ( dcache_sram_wdata           ),
+    .dcache_sram_rdata_o            ( dcache_sram_rdata           ),
+    .dcache_sram_valid_o            ( dcache_sram_valid           ),
+    .io_sram_req_i                  ( io_sram_req                 ),
+    .io_sram_ready_o                ( io_sram_ready               ),
+    .io_sram_wen_i                  ( io_sram_wen                 ),
+    .io_sram_addr_i                 ( io_sram_addr                ),
+    .io_sram_wdata_i                ( io_sram_wdata               ),
+    .io_sram_rdata_o                ( io_sram_rdata               ),
+    .io_sram_valid_o                ( io_sram_valid               ),
+    .sram_req_o                     ( sram_req                    ),
+    .sram_ready_i                   ( sram_ready                  ),
+    .sram_wen_o                     ( sram_wen                    ),
+    .sram_addr_o                    ( sram_addr                   ),
+    .sram_wdata_o                   ( sram_wdata                  ),
+    .sram_rdata_i                   ( sram_rdata                  ),
+    .sram_valid_i                   ( sram_valid                  )
+);
+
 ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
@@ -512,7 +461,7 @@ ysyx_22041752_axiarbiter U_AXIARBITER_0(
     .bvalid                         ( io_master_bvalid              ),
     .bready                         ( io_master_bready              )
 );
-*/
+
 
 `ifdef DPI_C
 dpi_c u_dpi_c(

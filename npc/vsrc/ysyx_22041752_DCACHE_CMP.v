@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-06-29 19:41
+// Last Modified : 2023-06-30 21:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -65,7 +65,7 @@ module ysyx_22041752_DCACHE_CMP (
 
     output                                       sram_req       ,
     input                                        sram_ready     ,
-    output                                       sram_wen       ,
+    output [`ysyx_22041752_DATA_WEN_WD    -1:0]  sram_wen       ,
     output [`ysyx_22041752_DATA_ADDR_WD   -1:0]  sram_addr      ,
     output [`ysyx_22041752_DATA_DATA_WD   -1:0]  sram_wdata     ,
     input  [`ysyx_22041752_DATA_DATA_WD   -1:0]  sram_rdata     ,
@@ -292,7 +292,7 @@ assign sram_addr= missfsm_pre==READ_REQ_0 ? {data_addr_cs[`ysyx_22041752_DATA_AD
                   missfsm_pre==WRITE_REQ_0? {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b0000} :
             /* missfsm_pre==WRITE_REQ_1? */ {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} ;
                   
-assign sram_wen   = (missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1);
+assign sram_wen   = {8{(missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1)}};
 wire [127:0] writeback = {128{replace==0}} & data0_r |
                          {128{replace==1}} & data1_r |
                          {128{replace==2}} & data2_r |
@@ -333,18 +333,36 @@ assign wen[1] = ~(missfsm_nxt==READ_DONE_1 && replace==1 || write_hit && hit_w1)
 assign wen[2] = ~(missfsm_nxt==READ_DONE_1 && replace==2 || write_hit && hit_w2) ;
 assign wen[3] = ~(missfsm_nxt==READ_DONE_1 && replace==3 || write_hit && hit_w3) ;
 
-assign bwen0  = ~(missfsm_nxt==READ_DONE_1 && replace==0 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
-assign bwen1  = ~(missfsm_nxt==READ_DONE_1 && replace==1 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
-assign bwen2  = ~(missfsm_nxt==READ_DONE_1 && replace==2 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
-assign bwen3  = ~(missfsm_nxt==READ_DONE_1 && replace==3 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen,64'b0} : {64'b0,data_wen});
+wire [7:0] data_wen_bits [`ysyx_22041752_DATA_WEN_WD-1:0];
+genvar i;
+generate
+    for (i = 0; i < `ysyx_22041752_DATA_WEN_WD; i=i+1) begin
+        : DATA_WEN_BITS
+        assign data_wen_bits[i] = {8{data_wen[i]}};
+    end
+endgenerate
+wire [63:0] data_wen_bits64 = {data_wen_bits[7],
+                               data_wen_bits[6], 
+                               data_wen_bits[5], 
+                               data_wen_bits[4], 
+                               data_wen_bits[3], 
+                               data_wen_bits[2], 
+                               data_wen_bits[1], 
+                               data_wen_bits[0]
+                              };
+
+assign bwen0  = ~(missfsm_nxt==READ_DONE_1 && replace==0 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen_bits64,64'b0} : {64'b0,data_wen_bits64});
+assign bwen1  = ~(missfsm_nxt==READ_DONE_1 && replace==1 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen_bits64,64'b0} : {64'b0,data_wen_bits64});
+assign bwen2  = ~(missfsm_nxt==READ_DONE_1 && replace==2 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen_bits64,64'b0} : {64'b0,data_wen_bits64});
+assign bwen3  = ~(missfsm_nxt==READ_DONE_1 && replace==3 ? {128{1'b1}} : offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1] ? {data_wen_bits64,64'b0} : {64'b0,data_wen_bits64});
 
 reg [127:0] write_newline; 
 always @(*) begin
     if (offset_cs[`ysyx_22041752_DCACHE_OFFSET_WD-1]) begin
-        write_newline = {(sram_rdata& ~data_wen) | (data_wen&data_wdata),line_lower};
+        write_newline = {(sram_rdata& ~data_wen_bits64) | (data_wen_bits64&data_wdata),line_lower};
     end
     else begin
-        write_newline = {sram_rdata,(line_lower& ~data_wen)|(data_wen&data_wdata)};
+        write_newline = {sram_rdata,(line_lower& ~data_wen_bits64)|(data_wen_bits64&data_wdata)};
     end
 end
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-27 18:49
+// Last Modified : 2023-06-30 22:01
 // ---------------------------------------------------------------------------------
 // Description   : 4-way set associative cache
 //
@@ -26,7 +26,7 @@ module ysyx_22041752_DCACHE(
 
     output                                   sram_req   ,
     input                                    sram_ready ,
-    output                                   sram_wen   ,
+    output [`ysyx_22041752_DATA_WEN_WD -1:0] sram_wen   ,
     output [`ysyx_22041752_DATA_ADDR_WD-1:0] sram_addr  ,
     output [`ysyx_22041752_DATA_DATA_WD-1:0] sram_wdata ,
     input  [`ysyx_22041752_DATA_DATA_WD-1:0] sram_rdata ,

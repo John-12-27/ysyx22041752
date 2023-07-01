@@ -35,23 +35,19 @@ static inline word_t paddr_read(paddr_t paddr)
         word_t data = getRTC_val();
         return data;
     }
-
     else if(paddr == CONFIG_GPU_CONFIG_MMIO)
     {
         word_t data = (word_t)vgactl_port_base[0];
         return data;
     }
-
     else if(paddr == CONFIG_KBD_ADDR_MMIO)
     {
         i8042_data_io_handler();
         word_t data = (word_t)i8042_data_port_base[0];
         return data;
     }
-
     else
     {
-        printf("pc=0x%lx, read addr error=0x%lx\n", cpu.pc, paddr);
         printf("read addr error : %lx\n", paddr);
         /*assert(0);*/
     }
@@ -104,6 +100,7 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
         paddr_t entry = (paddr-CONFIG_GPU_FBDRAW_MMIO)/8;
         paddr_t offset= (paddr-CONFIG_GPU_FBDRAW_MMIO)%8;
 
+        printf("addr=0x%lx, wdata=0x%lx\n", paddr, data);
         switch(offset)
         {
             case 0: *(uint32_t *)(vmem+8*entry  ) = (uint32_t)data;               break;

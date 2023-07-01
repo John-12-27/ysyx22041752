@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-06-30 16:56
+// Last Modified : 2023-06-30 21:44
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -29,11 +29,10 @@ module ysyx_22041752_EXU(
 	output [`ysyx_22041752_FORWARD_BUS_WD -1:0]    es_forward_bus,
 
     output                                         data_en       ,
-    input                                          data_ready    ,
     output [`ysyx_22041752_DATA_WEN_WD -1:0]       data_wen      ,
     output [`ysyx_22041752_DATA_ADDR_WD-1:0]       data_addr     ,
     output [`ysyx_22041752_DATA_DATA_WD-1:0]       data_wdata    ,
-    //input										   write_hit     ,
+    input										   write_hit     ,
 
     output                                         flush         ,
     output [`ysyx_22041752_PC_WD-1:0]              flush_pc      ,
@@ -238,10 +237,8 @@ wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
 wire div_out_valid;                                              
 wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
 wire data_pren;
-//wire cache_compete	  = write_hit && data_pren;
-//assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !cache_compete;
-wire mem_stall = data_en && !data_ready;
-assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !mem_stall;
+wire cache_compete	  = write_hit && data_pren;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !cache_compete;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go ;//&&!flush;
 always @(posedge clk) begin
@@ -357,8 +354,7 @@ ysyx_22041752_alu U_ALU_0(
 assign es_addr_offset=data_addr[2:0];
 assign data_addr= mem_addr[31:0];
 assign data_pren= (es_mem_re | es_mem_we) && es_valid && ms_allowin;
-//assign data_en  = data_pren && !cache_compete;
-assign data_en  = data_pren && !data_ready;
+assign data_en  = data_pren && !cache_compete;
 
 //assign data_wen = es_mem_we && es_valid && es_mem_bytes == 2'b11 ? 8'hff : 
                   //es_mem_we && es_valid && es_mem_bytes == 2'b10 ? 8'h0f :
@@ -448,8 +444,7 @@ assign debug_es_bj_inst     = (beq | bne | blt | bge | bgeu | bltu | jalr) && es
 assign debug_es_data_addr   = data_addr;
 assign debug_es_data_wdata  = data_wdata;
 wire access_mem = (data_addr >= `ysyx_22041752_MEM_BASEADDR) && (data_addr <= (`ysyx_22041752_MEM_BASEADDR+`ysyx_22041752_MEM_SIZE));
-//assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && data_en && !access_mem;
-assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && data_ready && !access_mem;
+assign debug_es_out_of_mem  = es_to_ms_valid && ms_allowin && data_en && !access_mem;
 `endif
 endmodule
 
