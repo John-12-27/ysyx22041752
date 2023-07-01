@@ -3,12 +3,7 @@
 #include <stdint.h>
 
 int main() {
-  /*write(1, "Hello World!\n", 13);*/
-
-  for(int i = 0; i < 3; i++)
-  {
-      printf("Hello World from Navy-apps for the %dth time!\n", i); 
-  }
+	printf("see u\n");
 
     /*for(int i=0;i<10;i++)*/
     /*{*/

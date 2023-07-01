@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_io.v
 // Author        : Cw
 // Created On    : 2023-06-28 15:14
-// Last Modified : 2023-07-01 20:15
+// Last Modified : 2023-07-01 21:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -102,16 +102,21 @@ assign sram_wen = {8{iofsm_pre==WRITE_REQ}} & io_wen_r;
 assign sram_addr     = io_data_addr_r;
 assign sram_wdata    = io_data_wdata_r;
 
-reg io_miss_r;
-always @(posedge clk) begin
-    if (reset) begin
-        io_miss_r <= 0;
-    end
-    else begin
-        io_miss_r <= !(iofsm_nxt==READ_DONE || iofsm_nxt==WRITE_DONE || iofsm_nxt==IDLE);
-    end
-end
-assign io_miss = io_miss_r;
+//reg io_miss_r;
+//always @(posedge clk) begin
+    //if (reset) begin
+        //io_miss_r <= 0;
+    //end
+    //else begin
+        //io_miss_r <= !(iofsm_nxt==READ_DONE || iofsm_nxt==WRITE_DONE || iofsm_nxt==IDLE);
+    //end
+//end
+//assign io_miss = io_miss_r;
+
+assign io_miss = iofsm_pre==WRITE_REQ || iofsm_pre==WRITE_RESP ||
+                 iofsm_pre==READ_REQ  || iofsm_pre==READ_RESP  ||
+                 iofsm_pre==IDLE      && io_en_r;
+
 reg [`ysyx_22041752_DATA_DATA_WD-1:0]   io_data_rdata_r ;
 always @(posedge clk)begin
     if (reset) begin

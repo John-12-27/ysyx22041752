@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-07-01 17:50
+// Last Modified : 2023-07-01 21:19
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -390,7 +390,7 @@ ysyx_22041752_io U_IO_0(
     .sram_valid                     ( io_sram_valid                 )
 );
 
-ysyx_22041752_mmu U_YSYX_22041752_MMU_0(
+ysyx_22041752_mmu U_MMU_0(
     .clk                            ( clk                         ),
     .reset                          ( reset                       ),
     .dcache_sram_req_i              ( dcache_sram_req             ),

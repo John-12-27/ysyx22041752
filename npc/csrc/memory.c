@@ -58,6 +58,10 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 {
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
+        if (paddr==0x830002a0) 
+        {
+            printf("paddr=0x%lx, wdata=0x%lx\n", paddr, data);
+        }
         paddr_t entry = (paddr-MBASEADDR)/8;
 
         switch(wen)
@@ -100,7 +104,6 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
         paddr_t entry = (paddr-CONFIG_GPU_FBDRAW_MMIO)/8;
         paddr_t offset= (paddr-CONFIG_GPU_FBDRAW_MMIO)%8;
 
-        printf("addr=0x%lx, wdata=0x%lx\n", paddr, data);
         switch(offset)
         {
             case 0: *(uint32_t *)(vmem+8*entry  ) = (uint32_t)data;               break;
