@@ -58,7 +58,7 @@ static inline void paddr_write(paddr_t paddr, word_t data, uint8_t wen)
 {
     if((paddr >= MBASEADDR) && (paddr < (MBASEADDR + MEMSIZE)))
     {
-        if (paddr==0x830002a0) 
+        if (paddr==0x83000230) 
         {
             printf("paddr=0x%lx, wdata=0x%lx\n", paddr, data);
         }
