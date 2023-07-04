@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_ICACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-27 18:47
+// Last Modified : 2023-07-03 13:58
 // ---------------------------------------------------------------------------------
 // Description   : 2-way set associative cache
 //
@@ -13,9 +13,10 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_ICACHE(
-    input clk  ,
-    input reset,
-    input flush,
+    input clk     ,
+    input reset   ,
+    input flush   ,
+    input fence_i ,
 
     input                                    inst_en    ,
     input  [`ysyx_22041752_PC_WD  -1:0]      inst_addr  ,
@@ -181,7 +182,7 @@ U_S011HD1P_X32Y2D128_1(
 // the first way valid 
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
     .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
+    .reset                          ( reset|fence_i             ),
     .addr                           (!wen0 ? waddr0 : raddr     ),
     .v_o                            ( v0                        ),
     .en                             ( rden[0]&wen0              ),
@@ -190,7 +191,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_0(
 );
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_1(
     .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
+    .reset                          ( reset|fence_i             ),
     .addr                           (!wen1 ? waddr1 : raddr     ),
     .v_o                            ( v1                        ),
     .en                             ( rden[1]&wen1              ),
@@ -248,7 +249,7 @@ U_S011HD1P_X32Y2D128_3(
 // the second way valid 
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
     .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
+    .reset                          ( reset|fence_i             ),
     .addr                           (!wen2 ? waddr2 : raddr     ),
     .v_o                            ( v2                        ),
     .en                             ( rden[2]&wen2              ),
@@ -257,7 +258,7 @@ ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_2(
 );
 ysyx_22041752_ICACHE_V U_YSYX_22041752_ICACHE_V_3(
     .clk                            ( clk                       ),
-    .reset                          ( reset                     ),
+    .reset                          ( reset|fence_i             ),
     .addr                           (!wen3 ? waddr3 : raddr     ),
     .v_o                            ( v3                        ),
     .en                             ( rden[3]&wen3              ),

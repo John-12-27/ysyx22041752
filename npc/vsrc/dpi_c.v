@@ -5,7 +5,7 @@
 // Filename      : dpi_c.v
 // Author        : Cw
 // Created On    : 2022-11-12 11:04
-// Last Modified : 2023-06-30 17:19
+// Last Modified : 2023-07-04 19:53
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,20 +14,20 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module dpi_c (
-    input                    clk              ,
-    input                    stop             ,
-    input                    ws_valid         ,
-    input  [`ysyx_22041752_RF_DATA_WD-1:0] dpi_regs [31:0]  ,
-    input  [63:0]            dpi_csrs [3:0]   ,
-    input  [63:0]            debug_wb_pc      ,
-    input  [63:0]            debug_es_pc      ,
-    input                    debug_es_bjpre_error,
-    input                    debug_es_bj_inst ,
-    input                    debug_es_exp     ,
-    input                    debug_es_mret    ,
-    input                    debug_es_data_ren,
-    input                    debug_es_data_wen,
-    input                    debug_ms_rdata_valid,
+    input                    clk                                 ,
+    input                    stop                                ,
+    input                    ws_valid                            ,
+    input  [`ysyx_22041752_RF_DATA_WD-1:0] dpi_regs [31:0]       ,
+    input  [63:0]            dpi_csrs [3:0]                      ,
+    input  [63:0]            debug_wb_pc                         ,
+    input  [63:0]            debug_es_pc                         ,
+    input                    debug_es_bjpre_error                ,
+    input                    debug_es_bj_inst                    ,
+    input                    debug_es_exp                        ,
+    input                    debug_es_mret                       ,
+    input                    debug_es_data_ren                   ,
+    input                    debug_es_data_wen                   ,
+    input                    debug_ms_rdata_valid                ,
 
     input  [`ysyx_22041752_DATA_DATA_WD-1:0] debug_ms_data_rdata ,
     input  [63:0]                            debug_es_data_addr  ,
@@ -36,8 +36,20 @@ module dpi_c (
     input                                    debug_ws_out_of_mem ,
     input  [`ysyx_22041752_INST_WD     -1:0] debug_es_inst       ,
     
-    input                    debug_icache_miss
+    input                                    debug_dcache_miss   ,
+    input                                    debug_dcache_en     ,
+    input                                    debug_icache_miss
 );
+
+reg dcache_en_r;
+always @(posedge clk) begin
+    dcache_en_r <= debug_dcache_en;
+end
+
+reg dcache_miss_r;
+always @(posedge clk) begin
+    dcache_miss_r <= debug_dcache_miss;
+end
 
 reg icache_miss_r;
 always @(posedge clk) begin
@@ -139,6 +151,8 @@ function void record();
     output longint pc           ;
     output bit     out_of_mem   ;
     output bit     icache_miss  ;
+    output bit     dcache_miss  ;
+    output bit     dcache_en    ;
     output longint dnpc         ;
     output int     inst         ;
     halt        = stop_r3               ;
@@ -150,6 +164,8 @@ function void record();
     pc          = current_pc            ;
     out_of_mem  = current_out_of_mem    ;
     icache_miss = !debug_icache_miss&&icache_miss_r;
+    dcache_miss = !dcache_miss_r&&debug_dcache_miss;
+    dcache_en   = !dcache_en_r&&debug_dcache_en;
     dnpc        = debug_wb_pc           ;
     inst        = current_inst          ;
 endfunction

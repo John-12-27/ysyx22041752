@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-07-01 22:44
+// Last Modified : 2023-07-04 21:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -34,6 +34,8 @@ module ysyx_22041752_EXU(
     output [`ysyx_22041752_DATA_DATA_WD-1:0]       data_wdata    ,
     input										   write_hit     ,
 
+    output                                         fence_i_o     ,
+    input                                          fence_over    ,
     output                                         flush         ,
     output [`ysyx_22041752_PC_WD-1:0]              flush_pc      ,
     input                                          int_t_i       , 
@@ -56,7 +58,6 @@ module ysyx_22041752_EXU(
     input  [`ysyx_22041752_INST_WD-1:0]      debug_ds_inst       ,
     output reg [`ysyx_22041752_INST_WD-1:0]  debug_es_inst
 `endif
-
 );
 
 reg         es_valid      ;
@@ -64,6 +65,7 @@ wire        es_ready_go   ;
 
 reg  [`ysyx_22041752_DS_TO_ES_BUS_WD -1:0] ds_to_es_bus_r;  
 
+wire fence_i  ;
 wire ecall    ;
 wire mret     ;
 wire mul_u    ;
@@ -122,7 +124,8 @@ wire [`ysyx_22041752_RF_DATA_WD-1:0]    rs1_value;
 wire [`ysyx_22041752_RF_DATA_WD-1:0]    rs2_value;
 wire [`ysyx_22041752_PC_WD     -1:0]    es_pc  ;
 
-assign {ecall         ,
+assign {fence_i       ,
+        ecall         ,
         mret          ,
         div_u         ,
         mul_u         ,
@@ -195,6 +198,8 @@ assign es_to_ms_bus = {res_sext         ,
                        es_pc               
                       };
 
+assign fence_i_o   = fence_i && es_valid && !fence_over;
+
 wire                            pre_error  ;
 wire [`ysyx_22041752_PC_WD-1:0] bj_addr    ;
 wire                            br_taken_real = alu_result[0];
@@ -236,9 +241,10 @@ wire mul_out_valid;
 wire mul_stall = op_mul && !mul_out_valid && es_valid && !flush;
 wire div_out_valid;                                              
 wire div_stall = op_rem|op_div && !div_out_valid && es_valid && !flush;
+wire fence_i_stall = fence_i && !fence_over;
 wire data_pren;
 wire cache_compete	  = write_hit && data_pren;
-assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !cache_compete;
+assign es_ready_go    = expfsm_pre != W_MEPC && !div_stall && !mul_stall && !fence_i_stall && !cache_compete;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go ;//&&!flush;
 always @(posedge clk) begin
@@ -292,8 +298,10 @@ assign csr_wdata = expfsm_pre == W_MEPC   ? {32'b0, es_pc} :
                    {64{!csrrs && !csrrc}} & rs1_value;
 
 assign flush       = (ecall||mret||int_t_o) && es_valid;
-assign flush_pc_p4 = pre_error && !(br_taken_real || jalr);
-assign flush_pc = pre_error ? br_taken_real||jalr ? bj_addr : es_pc : csr_rdata[`ysyx_22041752_PC_WD-1:0];
+assign flush_pc_p4 = pre_error && !(br_taken_real || jalr) || fence_over;
+assign flush_pc    = pre_error ? br_taken_real||jalr ? bj_addr : es_pc :
+                     fence_over?                                 es_pc : 
+                     csr_rdata[`ysyx_22041752_PC_WD-1:0];
 
 assign alu_src1 = src_pc   ? {32'b0, es_pc} : 
                   src_0    ? 64'd0          :

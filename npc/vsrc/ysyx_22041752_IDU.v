@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IDU.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:00
-// Last Modified : 2023-07-01 22:44
+// Last Modified : 2023-07-04 21:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -157,7 +157,8 @@ wire [`ysyx_22041752_RF_DATA_WD-1:0] data_r2;
 wire [`ysyx_22041752_RF_DATA_WD-1:0] rs1_value;
 wire [`ysyx_22041752_RF_DATA_WD-1:0] rs2_value;
 
-assign ds_to_es_bus = {inst_ecall    ,
+assign ds_to_es_bus = {inst_fence_i  ,
+                       inst_ecall    ,
                        inst_mret     ,
                        div_u         ,
                        mul_u         ,
@@ -219,7 +220,7 @@ assign ds_to_es_valid = ds_valid && ds_ready_go && ~flush;
 assign ds_ready_go = !(ms_mem_re && (ms_rs1_hazard || ms_rs2_hazard) ||
                        es_mem_re && (es_rs1_hazard || es_rs2_hazard));
 always @(posedge clk) begin
-	if(reset || flush)begin
+	if(reset)begin
 		ds_valid <= 1'b0;
 	end
 	else if(ds_allowin)begin
@@ -236,6 +237,7 @@ always @(posedge clk) begin
     end
 end
 
+wire inst_fence_i;
 wire inst_lui    ;
 wire inst_auipc  ;
 wire inst_lb     ;
@@ -425,14 +427,7 @@ assign inst_ebreak = funct7 == 7'b0000000 && funct3 == 3'b000 && opcode == 7'b11
 assign inst_lui    = opcode == 7'b0110111;
 assign inst_auipc  = opcode == 7'b0010111;
 
-//assign inst_jal    = opcode == 7'b1101111;
-//assign inst_jalr   = opcode == 7'b1100111;
-//assign inst_beq    = opcode == 7'b1100011 && funct3 == 3'b000;
-//assign inst_bne    = opcode == 7'b1100011 && funct3 == 3'b001;
-//assign inst_blt    = opcode == 7'b1100011 && funct3 == 3'b100;
-//assign inst_bge    = opcode == 7'b1100011 && funct3 == 3'b101;
-//assign inst_bltu   = opcode == 7'b1100011 && funct3 == 3'b110;
-//assign inst_bgeu   = opcode == 7'b1100011 && funct3 == 3'b111;
+assign inst_fence_i= opcode == 7'b0001111 && funct3 == 3'b001;
 
 assign inst_lb     = opcode == 7'b0000011 && funct3 == 3'b000;
 assign inst_lh     = opcode == 7'b0000011 && funct3 == 3'b001;

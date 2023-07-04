@@ -194,6 +194,7 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 00000 00000 000 00000 1110011", ecall  ,  I, s->dnpc = isa_raise_intr(s, 11, s->pc);); //ecall from M-mode
   INSTPAT("0011000 00010 00000 000 00000 1110011", mret   ,  I, s->dnpc = isa_mret_intr());               //return to mepc
 
+  INSTPAT("??????? ????? ????? 001 ????? 0001111", fence_i,  I, ;); // nop
   INSTPAT("0000000 00001 00000 000 00000 1110011", ebreak ,  N, NEMUTRAP(s->pc, R(10)); s->jalTag = false; s->jalrTag = false); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ???????", inv    ,  N, INV(s->pc); s->jalTag = false; s->jalrTag = false);
   INSTPAT_END();

@@ -91,7 +91,7 @@ uintptr_t do_syscall(Context *c)
 
     switch (a[0]) 
     {
-        case SYS_exit        :       halt(0);//naive_uload(NULL, "/bin/menu");break;
+        case SYS_exit        :       naive_uload(NULL, "/bin/menu");break;
         case SYS_open        :       c->GPRx = sys_open(a);         break;
         case SYS_read        :       c->GPRx = sys_read(a);         break;
         case SYS_write       :       c->GPRx = sys_write(a);        break;

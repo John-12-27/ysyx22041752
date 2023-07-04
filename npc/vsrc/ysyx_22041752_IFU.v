@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-06-30 17:14
+// Last Modified : 2023-07-04 12:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -133,7 +133,7 @@ always @(posedge clk) begin
     else if (fs_to_ds_valid && !ds_allowin) begin
         inst_rdata_r_v <= 1;
     end
-    else if (fs_to_ds_valid) begin
+    else if (fs_to_ds_valid||flush) begin
         inst_rdata_r_v <= 0;
     end
 end

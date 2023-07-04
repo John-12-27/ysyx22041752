@@ -18,7 +18,7 @@
     `define ysyx_22041752_BR_BUS_WD         33
     `define ysyx_22041752_PS_TO_FS_BUS_WD   `ysyx_22041752_PC_WD
     `define ysyx_22041752_FS_TO_DS_BUS_WD   118
-    `define ysyx_22041752_DS_TO_ES_BUS_WD   317
+    `define ysyx_22041752_DS_TO_ES_BUS_WD   318
     `define ysyx_22041752_ES_TO_MS_BUS_WD   111
     `define ysyx_22041752_MS_TO_WS_BUS_WD   102
     `define ysyx_22041752_WS_TO_RF_BUS_WD   70
@@ -55,7 +55,7 @@
     `define ysyx_22041752_DCACHE_INDEX_WD     $clog2(`ysyx_22041752_DCACHE_LINE_PERWAY)
     `define ysyx_22041752_DCACHE_OFFSET_WD    $clog2(`ysyx_22041752_DCACHE_SIZE_PERLINE)
     `define ysyx_22041752_DCACHE_TAG_WD       `ysyx_22041752_DATA_ADDR_WD - `ysyx_22041752_DCACHE_OFFSET_WD - `ysyx_22041752_DCACHE_INDEX_WD
-    `define ysyx_22041752_DRS_TO_DCS_BUS_WD   108
+    `define ysyx_22041752_DRS_TO_DCS_BUS_WD   110
 
     `define ysyx_22041752_MEM_BASEADDR        32'h80000000
     `define ysyx_22041752_MEM_SIZE            32'h08000000
