@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-06-30 22:01
+// Last Modified : 2023-07-04 10:09
 // ---------------------------------------------------------------------------------
 // Description   : 4-way set associative cache
 //
@@ -13,8 +13,10 @@
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
 module ysyx_22041752_DCACHE(
-    input clk  ,
-    input reset,
+    input  clk       ,
+    input  reset     ,
+    input  fence_i   ,
+    output fence_over,
 
     input                                    data_en    ,
     input  [`ysyx_22041752_DATA_WEN_WD -1:0] data_wen   ,
@@ -40,6 +42,9 @@ wire                                        rs_to_cs_valid ;
 wire [`ysyx_22041752_DRS_TO_DCS_BUS_WD-1:0] rs_to_cs_bus   ;
 
 ysyx_22041752_DCACHE_RDU U_DCACHE_RDU_0(
+    .clk                            ( clk                           ), 
+    .reset                          ( reset                         ), 
+    .fence_i                        ( fence_i                       ),
     .data_en                        ( data_en                       ),
     .data_wen                       ( data_wen                      ),
     .data_addr                      ( data_addr                     ),
@@ -97,8 +102,8 @@ wire [                               5:0]  waddr2;
 wire [                               5:0]  waddr3;
 
 ysyx_22041752_DCACHE_CMP U_DCACHE_CMP_0(
-    .clk            ( clk   ),
-    .reset          ( reset ),
+    .clk            ( clk                   ),
+    .reset          ( reset                 ),
 
     .cmp_allowin    ( cmp_allowin           ),
     .rs_to_cs_valid ( rs_to_cs_valid        ),
@@ -146,6 +151,7 @@ ysyx_22041752_DCACHE_CMP U_DCACHE_CMP_0(
     .data_rdata     ( data_rdata            ),
     .cache_miss     ( cache_miss            ),
     .write_hit      ( write_hit             ),
+    .fence_over     ( fence_over            ),
 
     .sram_req       ( sram_req              ),
     .sram_ready     ( sram_ready            ),

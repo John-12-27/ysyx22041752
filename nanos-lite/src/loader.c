@@ -46,6 +46,7 @@ void naive_uload(PCB *pcb, const char *filename)
 {
     uintptr_t entry = loader(pcb, filename);
     Log("Jump to entry = 0x%x", entry);
+    asm volatile("fence.i" : :);
     ((void(*)())entry) ();
 }
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-07-01 21:19
+// Last Modified : 2023-07-04 12:24
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -48,7 +48,9 @@ module ysyx_22041752(
 
 );
    
-wire         int_t=0;
+wire         int_t;
+wire         fence_i;
+wire         fence_over;
 wire         flush;
 wire         flush_pc_p4;
 wire         pre_error;       
@@ -132,7 +134,7 @@ ysyx_22041752_IFU U_IFU_0(
     .cache_miss     (icache_miss    ) ,
 
     .ra_data        (ra_data        ),
-    .flush          (flush|pre_error),
+    .flush          (flush|pre_error|fence_over),
     .flush_pc_p4    (flush_pc_p4    ),
     .flush_pc       (flush_pc       )
 
@@ -157,7 +159,7 @@ ysyx_22041752_IDU U_IDU_0(
     .ms_forward_bus ( ms_forward_bus ),
     .ws_forward_bus ( ws_forward_bus ),
     .ra_data        ( ra_data        ),
-    .flush          ( flush|pre_error)
+    .flush          ( flush|pre_error|fence_over)
 `ifdef DPI_C
     ,
     .dpi_regs       ( dpi_regs       ),
@@ -182,6 +184,8 @@ ysyx_22041752_EXU U_EXU_0(
     .data_addr      ( es_data_addr    ),
     .data_wdata     ( es_data_wdata   ),
     .write_hit      ( es_write_hit    ),
+    .fence_i_o      ( fence_i         ),
+    .fence_over     ( fence_over      ),
     .flush          ( flush           ),
     .flush_pc       ( flush_pc        ),
     .int_t_i        ( int_t           ),
@@ -258,6 +262,7 @@ ysyx_22041752_ICACHE U_ICACHE_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
     .flush                          ( flush|pre_error               ),
+    .fence_i                        ( fence_i                       ),
     .inst_en                        ( inst_en                       ),
     .inst_addr                      ( inst_addr                     ),
     .inst_rdata                     ( inst_rdata                    ),
@@ -356,6 +361,8 @@ ysyx_22041752_clint U_CLINT_0(
 ysyx_22041752_DCACHE U_DCACHE_0(
     .clk                            ( clk                           ),
     .reset                          ( reset                         ),
+    .fence_i                        ( fence_i                       ),
+    .fence_over                     ( fence_over                    ),
     .data_en                        ( dcache_data_en                ),
     .data_wen                       ( dcache_data_wen               ),
     .data_addr                      ( dcache_data_addr              ),
