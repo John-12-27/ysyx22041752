@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_memspace.v
 // Author        : Cw
 // Created On    : 2023-07-01 16:22
-// Last Modified : 2023-07-01 18:21
+// Last Modified : 2023-07-04 19:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -45,6 +45,10 @@ module ysyx_22041752_memspace (
     output [`ysyx_22041752_DATA_WEN_WD -1:0]   io_wen_o             ,
     output [`ysyx_22041752_DATA_ADDR_WD-1:0]   io_data_addr_o       ,
     output [`ysyx_22041752_DATA_DATA_WD-1:0]   io_data_wdata_o      
+`ifdef DPI_C
+    ,
+    output                                     debug_dcache_en
+`endif
 );
     
 wire access_clint= ((es_data_addr_i == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIME_OFFSET) || (es_data_addr_i == `ysyx_22041752_CLINT_BASE_ADDR+`ysyx_22041752_MTIMECMP_OFFSET));
@@ -109,5 +113,8 @@ assign ms_data_rdata_o = {`ysyx_22041752_DATA_DATA_WD{mem_r}}   & dcache_data_rd
 assign ms_miss_o       = mem_r   & dcache_miss_i ||
                          io_r    & io_miss_i     ;
 
+`ifdef DPI_C
+assign debug_dcache_en = dcache_en_o;
+`endif
 endmodule
 

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_MEU.v
 // Author        : Cw
 // Created On    : 2022-11-21 15:40
-// Last Modified : 2023-06-30 21:45
+// Last Modified : 2023-07-04 19:24
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -36,7 +36,7 @@ module ysyx_22041752_MEU (
     input  [`ysyx_22041752_INST_WD         -1:0] debug_es_inst          ,
     output reg [`ysyx_22041752_INST_WD     -1:0] debug_ms_inst          ,
     output reg                                   debug_ms_out_of_mem    ,
-
+    output                                       debug_cache_miss       ,
     output [`ysyx_22041752_DATA_DATA_WD    -1:0] debug_ms_data_rdata    ,
     output                                       debug_ms_rdata_valid   
 `endif
@@ -156,6 +156,7 @@ assign ms_forward_valid = ms_rf_we && ms_valid;
 assign ms_forward_bus   = {cache_miss&ms_mem_re&ms_valid, ms_forward_valid,ms_final_result,rd};
 
 `ifdef DPI_C
+assign debug_cache_miss = cache_miss;      
 always @(posedge clk) begin
     if (es_to_ms_valid && ms_allowin) begin
         debug_ms_inst <= debug_es_inst;

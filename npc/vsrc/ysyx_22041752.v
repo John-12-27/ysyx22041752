@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-07-04 12:24
+// Last Modified : 2023-07-04 20:07
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -100,6 +100,8 @@ wire [`ysyx_22041752_RF_DATA_WD  -1:0] dpi_regs [`ysyx_22041752_RF_NUM-1:0];
 wire [`ysyx_22041752_RF_DATA_WD  -1:0] dpi_csrs [3:0];
 wire [                            0:0] stop;
 wire                                   debug_icache_miss;
+wire                                   debug_dcache_miss;
+wire                                   debug_dcache_en;
 `endif
 
 wire clk = clock;
@@ -229,6 +231,7 @@ ysyx_22041752_MEU U_MEU_0(
     .debug_ms_data_rdata    (debug_ms_data_rdata),
     .debug_es_out_of_mem    (debug_es_out_of_mem),
     .debug_ms_out_of_mem    (debug_ms_out_of_mem),
+    .debug_cache_miss       (debug_dcache_miss  ),
     .debug_ms_rdata_valid   (debug_ms_rdata_valid)
 `endif
 );
@@ -345,6 +348,11 @@ ysyx_22041752_memspace U_MEMSPACE_0(
     .io_wen_o                       ( io_data_wen                 ),
     .io_data_addr_o                 ( io_data_addr                ),
     .io_data_wdata_o                ( io_data_wdata               )
+`ifdef DPI_C
+    ,
+    .debug_dcache_en                ( debug_dcache_en             )
+`endif
+
 );
 
 ysyx_22041752_clint U_CLINT_0(
@@ -492,7 +500,9 @@ dpi_c u_dpi_c(
     .debug_ws_inst          ( debug_ws_inst              ),
     .debug_ws_out_of_mem    ( debug_ws_out_of_mem        ),
     .debug_es_inst          ( debug_es_inst              ),
-    .debug_icache_miss      ( debug_icache_miss          )
+    .debug_icache_miss      ( debug_icache_miss          ),
+    .debug_dcache_miss      ( debug_dcache_miss          ),
+    .debug_dcache_en        ( debug_dcache_en            )
 );
 `endif
 

@@ -37,6 +37,8 @@ uint8_t halt_flag       = 0;
 uint8_t valid_flag      = 0;
 uint8_t out_of_mem_flag = 0;
 uint8_t icachemiss_flag = 0;
+uint8_t dcachemiss_flag = 0;
+uint8_t dcache_en_flag  = 0;
 uint8_t exp_flag        = 0;
 uint8_t mret_flag       = 0;
 uint8_t pre_err         = 0;
@@ -318,6 +320,8 @@ void exec(uint64_t n, bool batch)
     static uint64_t cycle_count = 0;
     static uint64_t instr_count = 0;
     static uint64_t imiss_count = 0;
+    static uint64_t dmiss_count = 0;
+    static uint64_t dc_en_count = 0;
     static uint64_t prerr_count = 0;
     static uint64_t bjinst_count = 0;
     svSetScope(svGetScopeFromName("TOP.top.U_YSYX_22041752_0.u_dpi_c"));
@@ -336,10 +340,18 @@ void exec(uint64_t n, bool batch)
             exec_once();
             cycle_count++;
 
-            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), &out_of_mem_flag, &icachemiss_flag, (long long int*)&(S.dnpc), (int*)&(S.inst));
+            record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), &out_of_mem_flag, &icachemiss_flag, &dcachemiss_flag, &dcache_en_flag, (long long int*)&(S.dnpc), (int*)&(S.inst));
             if(icachemiss_flag)
             {
                 imiss_count++;
+            }
+            if(dcachemiss_flag)
+            {
+                dmiss_count++;
+            }
+            if(dcache_en_flag)
+            {
+                dc_en_count++;
             }
             if (valid_flag) 
             {
@@ -399,6 +411,7 @@ void exec(uint64_t n, bool batch)
             Log("Frequency = %ldHz\n", 1000000/(spend_time/cycle_count));
             Log("inst_count= %ld, IPC = %f\n", instr_count, (float)instr_count / (float)cycle_count);
             Log("icache miss count= %ld, hit rate= %f\n", imiss_count, ((float)instr_count-(float)imiss_count) / (float)instr_count);
+            Log("dcache enable count= %ld, dcache miss count= %ld, hit rate= %f\n", dc_en_count, dmiss_count, ((float)dc_en_count-(float)dmiss_count) / (float)dc_en_count);
             Log("branch_jump_count= %ld\n", bjinst_count);
             Log("prediction_err_count= %ld, Accuracy = %f\n", prerr_count, ((float)bjinst_count- (float)prerr_count) / (float)(bjinst_count));
 
