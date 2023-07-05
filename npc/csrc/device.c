@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 
-#define TIMER_HZ 60
+#define TIMER_HZ 1
 uint8_t *vmem = NULL;
 uint32_t *vgactl_port_base = NULL;
 
