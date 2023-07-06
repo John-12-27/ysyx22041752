@@ -53,7 +53,7 @@ endif
 OPT_SLOW =
 
 # Fast path optimizations.  Most time is spent in these classes.
-OPT_FAST = -O
+OPT_FAST = -Os -fstrict-aliasing
 #OPT_FAST =
 
 ######################################################################

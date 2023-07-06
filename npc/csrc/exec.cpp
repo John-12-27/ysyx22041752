@@ -29,8 +29,10 @@
 #include "device.h"
 #include <sys/time.h>
 
+#ifdef DPI_C
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
+#endif
 Vtop* top;
 
 uint8_t halt_flag       = 0;
@@ -64,11 +66,11 @@ static void single_cycle()
 
     if(top->sram_ren)
     {
-      top->sram_rdata = vaddr_read(top->sram_raddr);
+      top->sram_rdata = paddr_read(top->sram_raddr);
     }
     if(top->sram_wen)
     {
-      vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
+      paddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
     }
 
     top->eval();
@@ -88,8 +90,8 @@ void sim_exit()
 {
 #ifdef DUMP_WAVE
     step_and_dump_wave();
-#endif
     tfp->close();
+#endif
 }
 
 extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc);
@@ -296,14 +298,16 @@ void reset(int n)
 
 void sim_init(int argc, char** argv)
 {
+    top      = new Vtop;
+#ifdef DPI_C
     contextp = new VerilatedContext;
     tfp      = new VerilatedVcdC;
-    top      = new Vtop;
 	contextp->debug(0);
 	contextp->traceEverOn(true);
 	contextp->commandArgs(argc, argv);
 	top->trace(tfp, 0);
 	tfp->open("logs/dump.vcd");
+#endif
 };
 
 static uint64_t get_time_internal() 

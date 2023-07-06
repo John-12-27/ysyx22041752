@@ -48,18 +48,20 @@ VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast
 # Warn abount lint issues; may not want this on less solid designs
 VERILATOR_FLAGS += -Wall
 # Make waveforms
-VERILATOR_FLAGS += --trace
+#VERILATOR_FLAGS += --trace
 # Check SystemVerilog assertions
-VERILATOR_FLAGS += --assert
+VERILATOR_FLAGS += --noassert
 # Generate coverage analysis
-VERILATOR_FLAGS += --coverage
+#VERILATOR_FLAGS += --coverage
 VERILATOR_FLAGS += -Wno-EOFNEWLINE 
 # Run Verilator in debug mode
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
 
-VERILATOR_FLAGS += --threads 6
+#VERILATOR_FLAGS += --prof-cfuncs
+#VERILATOR_FLAGS += --prof-pgo
+VERILATOR_FLAGS += --threads 4
 # Input files for Verilator
 #VERILATOR_INPUT = -f input.vc $(VSRCS) $(CXXSRCS)
 
