@@ -34,12 +34,12 @@ disasm.o: $(CCSRCS)
 #######################################################################
 # Compile flags
 # Turn on creating .d make dependency files
-CPPFLAGS := -g -O3 -MMD -MP -Wall -Werror $(CPPFLAGS)
+CPPFLAGS := -O3 -MMD -MP -Wall -Werror $(CPPFLAGS)
 
 # Compile in Verilator runtime debugging, so +verilator+debug works
 #CPPFLAGS += -DVL_DEBUG=1
 
-LDFLAGS += -g -O3 disasm.o
+LDFLAGS += -O3 disasm.o
 # Turn on some more compiler lint flags (when configured appropriately)
 # For testing inside Verilator, "configure --enable-ccwarn" will do this
 # automatically; otherwise you may want this unconditionally enabled
