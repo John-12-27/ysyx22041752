@@ -14,7 +14,7 @@
 #ifndef _KEYBOARD_H_
 #define _KEYBOARD_H_
 #include "typedef.h"
-
+#include <stdbool.h>
 #define MAP(c, f) c(f)
 
 // macro concatenation

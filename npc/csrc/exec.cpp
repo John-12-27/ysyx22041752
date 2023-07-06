@@ -66,11 +66,11 @@ static void single_cycle()
 
     if(top->sram_ren)
     {
-      top->sram_rdata = vaddr_read(top->sram_raddr);
+      top->sram_rdata = paddr_read(top->sram_raddr);
     }
     if(top->sram_wen)
     {
-      vaddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
+      paddr_write(top->sram_waddr, top->sram_wdata, top->sram_wen);
     }
 
     top->eval();

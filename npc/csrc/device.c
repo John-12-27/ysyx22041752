@@ -57,6 +57,16 @@ void vga_update_screen()
     }
 }
 
+static inline uint32_t screen_width() {
+      return SCREEN_W;
+}
+static inline uint32_t screen_height() {
+      return SCREEN_H;
+}
+static inline uint32_t screen_size() {
+      return screen_width() * screen_height() * sizeof(uint32_t);
+}
+
 static void init_vga() 
 {
     vgactl_port_base = (uint32_t *)malloc(8);
@@ -75,7 +85,6 @@ static inline word_t get_time_internal()
     gettimeofday(&now, NULL);
     return (now.tv_sec * 1000000 + now.tv_usec);
 }
-
 word_t getRTC_val()
 {
     if(boot_time == 0)
