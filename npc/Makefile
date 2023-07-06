@@ -61,7 +61,7 @@ VERILATOR_FLAGS += -Wno-EOFNEWLINE
 
 #VERILATOR_FLAGS += --prof-cfuncs
 #VERILATOR_FLAGS += --prof-pgo
-VERILATOR_FLAGS += --threads 6
+VERILATOR_FLAGS += --threads 4
 # Input files for Verilator
 #VERILATOR_INPUT = -f input.vc $(VSRCS) $(CXXSRCS)
 
