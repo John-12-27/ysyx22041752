@@ -5,7 +5,7 @@
 // Filename      : top.v
 // Author        : Cw
 // Created On    : 2022-10-17 21:44
-// Last Modified : 2023-06-30 16:37
+// Last Modified : 2023-07-07 12:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -91,7 +91,6 @@ ysyx_22041752 U_YSYX_22041752_0(
 
 axi_ram U_RAM_0(
     .clk                            ( clk     ),
-    .rst                            ( reset   ),
     .s_axi_awid                     ( awid    ),
     .s_axi_awaddr                   ( awaddr  ),
     .s_axi_awlen                    ( awlen   ),
