@@ -29,7 +29,7 @@
 #include "device.h"
 #include <sys/time.h>
 
-#ifdef DPI_C
+#ifdef DUMP_WAVE
 VerilatedContext* contextp;
 VerilatedVcdC*    tfp     ;
 #endif
@@ -98,7 +98,6 @@ extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc);
 static bool trace_diff_watch()
 {
     bool res = false;
-
 
 #if (defined(CONFIG_MTRACE) || defined(CONFIG_DTRACE))
     mem_inst((long long int*)&(M.pc), (int*)&(M.inst), &data_ren_flag, &data_wen_flag, (long long int*)&(data_addr), (long long int*)&(data_wdata), (long long int*)&(data_rdata), &rdata_v);   //结构体M记录访问存储器的pc和指令
@@ -207,7 +206,6 @@ static bool trace_diff_watch()
     }
 #endif
 
-
 //#ifdef CONFIG_DIFFTEST
     //if(exp_flag)
     //{
@@ -243,12 +241,10 @@ static bool trace_diff_watch()
 #endif
 
 #ifdef CONFIG_DIFFTEST
-
         if (out_of_mem_flag) 
         {
             difftest_skip_ref();
         }
-
         res = difftest_step(S.pc, S.dnpc);
 #endif
 #ifdef CONFIG_WATCHPOINT
@@ -298,15 +294,17 @@ void reset(int n)
 
 void sim_init(int argc, char** argv)
 {
-    top      = new Vtop;
-#ifdef DPI_C
+#ifdef DUMP_WAVE
     contextp = new VerilatedContext;
     tfp      = new VerilatedVcdC;
+    top      = new Vtop;
 	contextp->debug(0);
 	contextp->traceEverOn(true);
 	contextp->commandArgs(argc, argv);
 	top->trace(tfp, 0);
 	tfp->open("logs/dump.vcd");
+#else
+    top      = new Vtop;
 #endif
 };
 
