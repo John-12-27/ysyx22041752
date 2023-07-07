@@ -5,7 +5,7 @@
 // Filename      : axi_ram.v
 // Author        : Cw
 // Created On    : 2023-06-06 21:04
-// Last Modified : 2023-07-07 11:03
+// Last Modified : 2023-07-07 12:39
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -21,7 +21,6 @@ module axi_ram #
 )
 (
     input                    clk       ,
-    input                    rst       ,
 
     input  [ADDR_WIDTH-1:0]  s_axi_awaddr  ,
     input                    s_axi_awvalid ,
@@ -63,52 +62,37 @@ module axi_ram #
 );
 
 reg [ADDR_WIDTH-1:0] awaddr_r;
-always @(posedge clk) begin
-    if (rst) begin
-        awaddr_r <= 0;
-    end
-    else begin
-        awaddr_r <= s_axi_awaddr;
-    end
-end
-reg [STRB_WIDTH-1:0]  wstrb_r;
-always @(posedge clk) begin
-    if (rst) begin
-        wstrb_r <= 0;
-    end
-    else begin
-        wstrb_r <= s_axi_wstrb;
-    end
-end
-reg [DATA_WIDTH-1:0]  wdata_r;
-always @(posedge clk) begin
-    if (rst) begin
-        wdata_r <= 0;
-    end
-    else begin
-        wdata_r <= s_axi_wdata;
-    end
-end
-reg mem_wen;
-always @(posedge clk) begin
-    if (rst) begin
-        mem_wen <= 0;
-    end
-    else begin
-        mem_wen <= s_axi_wvalid & s_axi_awvalid;
-    end
-end
+reg [DATA_WIDTH-1:0] wdata_r;
+reg                  mem_wen = 0;
+reg [STRB_WIDTH-1:0] wstrb_r = 0;
+reg                  bvalid_r= 0;
+reg [ADDR_WIDTH-1:0] araddr_r;
+reg [ID_WIDTH-1:0]   arid_r;
+reg                  mem_rden= 0;
+reg                  rvalid_r= 0;
+reg [DATA_WIDTH-1:0] sram_rdata_r;
 
-reg bvalid_r;
 always @(posedge clk) begin
-    if (rst) begin
-        bvalid_r <= 0;
-    end
-    else if (|sram_wen) begin
+    awaddr_r     <= s_axi_awaddr;
+    wdata_r      <= s_axi_wdata;
+    mem_wen      <= s_axi_wvalid & s_axi_awvalid;
+    wstrb_r      <= s_axi_wstrb;
+    araddr_r     <= s_axi_araddr;
+    arid_r       <= s_axi_arid;
+    mem_rden     <= s_axi_arvalid;
+    sram_rdata_r <= sram_rdata;
+
+    if (|sram_wen) begin
         bvalid_r <= 1;
     end
     else if (s_axi_bready) begin
         bvalid_r <= 0;
+    end
+    if (sram_ren) begin
+        rvalid_r <= 1;
+    end
+    else if (s_axi_rready) begin
+        rvalid_r <= 0;
     end
 end
 
@@ -122,58 +106,8 @@ assign s_axi_bvalid = bvalid_r;
 assign s_axi_awready= 1;
 assign s_axi_wready = 1;
 
-reg [ADDR_WIDTH-1:0] araddr_r;
-always @(posedge clk) begin
-    if (rst) begin
-        araddr_r <= 0;
-    end
-    else begin
-        araddr_r <= s_axi_araddr;
-    end
-end
-reg [ID_WIDTH-1:0] arid_r;
-always @(posedge clk) begin
-    if (rst) begin
-        arid_r <= 0;
-    end
-    else begin
-        arid_r <= s_axi_arid;
-    end
-end
-reg mem_rden;
-always @(posedge clk) begin
-    if (rst) begin
-        mem_rden <= 0;
-    end
-    else begin
-        mem_rden <= s_axi_arvalid;
-    end
-end
-
 assign sram_ren   = mem_rden;
 assign sram_raddr = araddr_r;
-
-reg rvalid_r;
-always @(posedge clk) begin
-    if (rst) begin
-        rvalid_r <= 0;
-    end
-    else if (sram_ren) begin
-        rvalid_r <= 1;
-    end
-    else if (s_axi_rready) begin
-        rvalid_r <= 0;
-    end
-end
-reg [DATA_WIDTH-1:0] sram_rdata_r;
-always @(posedge clk) begin
-    if (rst) begin
-        sram_rdata_r <= 0;
-    end
-    else if (sram_ren) begin
-        sram_rdata_r <= sram_rdata;
-    end
-end
 
 assign s_axi_arready = 1;
 assign s_axi_rid     = arid_r;
