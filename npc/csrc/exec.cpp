@@ -60,7 +60,7 @@ static void step_and_dump_wave()
 };
 #endif
 
-static void single_cycle()
+static inline void single_cycle()
 {
     top->clk = 0; 
 
@@ -94,7 +94,8 @@ void sim_exit()
 #endif
 }
 
-extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc);
+//extern void (*ref_difftest_raise_intr)(uint64_t NO, bool MRET, paddr_t pc);
+#if (defined(CONFIG_MTRACE) || defined(CONFIG_DTRACE) || defined(CONFIG_ITRACE) || defined(CONFIG_DIFFTEST) || defined(CONFIG_WATCHPOINT))
 static bool trace_diff_watch()
 {
     bool res = false;
@@ -256,8 +257,9 @@ static bool trace_diff_watch()
     }
     return res;
 }
+#endif
 
-static bool halt()
+static inline bool halt()
 {
     bool res = false;
     if(halt_flag)
@@ -270,7 +272,7 @@ static bool halt()
     return res;
 }
 
-static void exec_once()
+static inline void exec_once()
 {
     single_cycle();
 }
@@ -343,39 +345,25 @@ void exec(uint64_t n, bool batch)
             cycle_count++;
 
             record(&halt_flag, &valid_flag, &exp_flag, &mret_flag, &pre_err, &bj_inst_flag, (long long int*)&(S.pc), &out_of_mem_flag, &icachemiss_flag, &dcachemiss_flag, &dcache_en_flag, (long long int*)&(S.dnpc), (int*)&(S.inst));
-            if(icachemiss_flag)
-            {
-                imiss_count++;
-            }
-            if(dcachemiss_flag)
-            {
-                dmiss_count++;
-            }
-            if(dcache_en_flag)
-            {
-                dc_en_count++;
-            }
-            if (valid_flag) 
-            {
-                instr_count++;
-            }
-            if (bj_inst_flag) 
-            {
-                bjinst_count++;
-                if (pre_err) 
-                {
-                    prerr_count++;
-                }
-            }
+
+            imiss_count += icachemiss_flag;
+            dmiss_count += dcachemiss_flag;
+            dc_en_count += dcache_en_flag ;
+            instr_count += valid_flag     ;
+            bjinst_count+= bj_inst_flag   ;
+            prerr_count += pre_err && bj_inst_flag;
+
             if(halt())
             {
                 break;
             }
+
+#if (defined(CONFIG_MTRACE) || defined(CONFIG_DTRACE) || defined(CONFIG_ITRACE) || defined(CONFIG_DIFFTEST) || defined(CONFIG_WATCHPOINT))
             if(trace_diff_watch())
             {
                 break;
             }
-            
+#endif
             device_update();
             if(npc_state.state == NPC_QUIT)
             {
@@ -392,10 +380,12 @@ void exec(uint64_t n, bool batch)
             {
                 break;
             }
+#if (defined(CONFIG_MTRACE) || defined(CONFIG_DTRACE) || defined(CONFIG_ITRACE) || defined(CONFIG_DIFFTEST) || defined(CONFIG_WATCHPOINT))
             if(trace_diff_watch())
             {
                 break;
             }
+#endif
         }
     }
     switch (npc_state.state) 
