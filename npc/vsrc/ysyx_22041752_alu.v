@@ -5,16 +5,15 @@
 // Filename      : ysyx_22041752_alu.v
 // Author        : Cw
 // Created On    : 2022-11-19 18:06
-// Last Modified : 2023-06-06 22:27
+// Last Modified : 2023-07-08 22:00
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
 //
 // -FHDR----------------------------------------------------------------------------
 `include "ysyx_22041752_mycpu.vh"
-
 module ysyx_22041752_alu(
-`ifndef DPI_C
+`ifdef REAL_DIV_MUL
     input         clk         ,
     input         reset       , 
     input         flush       ,
@@ -130,7 +129,7 @@ assign alu_result = res_sext ? {{32{res[31]}}, res[31:0]} : res;
 assign mem_result = adder_result;
 
 ysyx_22041752_mul U_MUL_0(
-`ifndef DPI_C
+`ifdef REAL_MUL
     .clk            ( clk        ),
     .reset          ( reset      ),
     .flush          ( flush      ),
@@ -146,7 +145,7 @@ ysyx_22041752_mul U_MUL_0(
 );
 
 ysyx_22041752_diver U_DIVER_0(
-`ifndef DPI_C
+`ifdef REAL_DIV
     .clk        ( clk        ),
     .reset      ( reset      ),
     .flush      ( flush      ),
