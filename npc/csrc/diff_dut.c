@@ -85,8 +85,14 @@ static bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
         /*{*/
             /*printf(ANSI_BG_RED "=========================================\n");*/
             /*printf("ERROR_PC\t0x%lx\n",cpu.pc);*/
-            /*printf("REF_CSR[%d]\t0x%lx\n",i,ref_r->csr[i]);*/
-            /*printf("NPC_CSR[%d]\t0x%lx\n",i,cpu.csr[i]);*/
+            /*switch(i)*/
+            /*{*/
+                /*case 1: printf("ref mtvec \t\tnpc mtvec \n"); break;*/
+                /*case 2: printf("ref mepc  \t\tnpc mepc  \n"); break;*/
+                /*case 3: printf("ref mcause\t\tnpc mcause\n"); break;*/
+                /*default: assert(0);*/
+            /*}*/
+            /*printf("0x%lx\t\t0x%lx\n",ref_r->csr[i], cpu.csr[i]);*/
             /*printf("=========================================" ANSI_NONE "\n");*/
             /*return false;*/
         /*}*/
@@ -149,7 +155,7 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_memcpy(0x80000000, mem, img_size, DIFFTEST_TO_REF);
     ref_difftest_pc_cpy(&cpu.pc, DIFFTEST_TO_REF);
     ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
-    ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);
+    /*ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);*/
 }
 
 bool difftest_step(vaddr_t pc, vaddr_t npc) 
@@ -181,7 +187,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc)
         vaddr_t next_pc = pc+4;
         ref_difftest_pc_cpy(&next_pc, DIFFTEST_TO_REF);
         ref_difftest_gpr_cpy(cpu.gpr, DIFFTEST_TO_REF);
-        ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);
+        /*ref_difftest_csr_cpy(cpu.csr,DIFFTEST_TO_REF);*/
         is_skip_ref = false;
         return false;
     }

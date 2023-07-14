@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_csr.v
 // Author        : Cw
 // Created On    : 2023-03-28 22:12
-// Last Modified : 2023-06-03 18:49
+// Last Modified : 2023-07-14 21:23
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -25,7 +25,7 @@ module ysyx_22041752_csr (
 output int_t_o
     `ifdef DPI_C
         ,
-    output wire [63:0] dpi_csrs [3:0]
+    output [63:0] dpi_csrs [3:0]
 `endif
 );
     
@@ -69,7 +69,7 @@ always @(posedge clk) begin
         mepc <= 0;
     end
     else if (wen && addr == `ysyx_22041752_CSR_ADDR_MEPC) begin
-        mepc <= wdata;
+        mepc <= {wdata[63:1], 1'b0};
     end
 end
 
@@ -103,10 +103,10 @@ end
 assign int_t_o = mip[7];
 
 `ifdef DPI_C
-assign dpi_csrs[0] = mstatus;
-assign dpi_csrs[1] = mtvec;
-assign dpi_csrs[2] = mepc;
-assign dpi_csrs[3] = mcause;
+assign dpi_csrs[0] = mstatus; 
+assign dpi_csrs[1] = mtvec;   
+assign dpi_csrs[2] = mepc;    
+assign dpi_csrs[3] = mcause;  
 `endif
 
 endmodule

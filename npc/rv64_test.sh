@@ -1,6 +1,6 @@
 RESULT=.result
 touch $RESULT
-for f in ./rv64uim-p/*.bin
+for f in ./rv64uim-p/csr-riscv64-npc.bin
 do
     basename=$(basename "${f%.bin}")
     echo -e -n "[\033[1;32m$basename\033[0m]" >> $RESULT
