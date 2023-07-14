@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_clint.v
 // Author        : Cw
 // Created On    : 2023-05-26 20:44
-// Last Modified : 2023-06-28 10:48
+// Last Modified : 2023-07-13 17:22
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -19,11 +19,11 @@ module ysyx_22041752_clint (
 
     input             en    ,
     input             wen   ,
-    input  [31:0]     addr  ,
-    input  [63:0]     wdata ,
+    input      [31:0] addr  ,
+    input      [63:0] wdata ,
     output reg [63:0] rdata ,
 
-    output            int_t_o
+    output reg        int_t_o
 );
 
 reg [63:0] mtime;
@@ -63,7 +63,14 @@ always @(posedge clk) begin
     end
 end
 
-assign int_t_o = mtime >= mtimecmp;
+always @(posedge clk) begin
+    if (reset) begin
+        int_t_o <= 0;
+    end
+    else begin
+        int_t_o <= mtime >= mtimecmp;
+    end
+end
 
 endmodule
 

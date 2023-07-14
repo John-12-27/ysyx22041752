@@ -63,5 +63,8 @@
     `define ysyx_22041752_MTIMECMP_OFFSET     32'h0000_4000
 
     `define DPI_C
+    /*`define REAL_MUL*/
+    /*`define REAL_DIV*/
+    /*`define REAL_DIV_MUL */
 `endif
 

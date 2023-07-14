@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_mul.v
 // Author        : Cw
 // Created On    : 2022-11-29 16:07
-// Last Modified : 2023-06-10 19:53
+// Last Modified : 2023-07-14 09:16
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -14,7 +14,7 @@
 `include "ysyx_22041752_mycpu.vh"
 
 module ysyx_22041752_mul(
-`ifndef DPI_C
+`ifdef REAL_MUL
     input                          clk           ,
     input                          reset         ,
     input                          flush         ,
@@ -29,7 +29,7 @@ module ysyx_22041752_mul(
     output                                       out_valid
 );
 
-`ifndef DPI_C
+`ifdef REAL_MUL
 reg [6:0] count;
 wire count_en = ~reset & ~flush & mul_valid;
 always @(posedge clk) begin

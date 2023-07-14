@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-07-04 21:00
+// Last Modified : 2023-07-14 09:15
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -323,7 +323,7 @@ assign alu_src2 = src_csr   ? csr_rdata :
 wire [63:0] mem_addr;
 /* verilator lint_on UNUSEDSIGNAL */
 ysyx_22041752_alu U_ALU_0(
-`ifndef DPI_C
+`ifdef REAL_DIV_MUL
     .clk             ( clk            ),
     .reset           ( reset          ),
     .flush           ( flush          ),

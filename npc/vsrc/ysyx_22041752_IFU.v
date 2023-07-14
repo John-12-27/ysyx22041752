@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_IFU.v
 // Author        : Cw
 // Created On    : 2022-10-17 20:50
-// Last Modified : 2023-07-04 12:39
+// Last Modified : 2023-07-13 17:27
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -55,7 +55,7 @@ wire fs_inst_bltu ;
 wire fs_inst_bgeu ;
 wire [12:0] imm_b ;
 
-reg  [`ysyx_22041752_INST_WD-1:0] fs_inst;
+wire [`ysyx_22041752_INST_WD-1:0] fs_inst;
 reg  [`ysyx_22041752_PC_WD-1:0]   fs_pc;
 wire                              br_taken;
 wire [`ysyx_22041752_PC_WD-1:0]   br_target;
@@ -146,7 +146,7 @@ always @(posedge clk) begin
         inst_rdata_r <= inst_rdata;
     end
 end
-assign fs_inst    = inst_rdata_r_v ? inst_rdata_r : inst_rdata;
+assign fs_inst = inst_rdata_r_v ? inst_rdata_r : inst_rdata;
 
 /*=======================================================================================*/
 /*=======================================================================================*/
