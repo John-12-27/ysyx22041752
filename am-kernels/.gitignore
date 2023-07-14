@@ -1,0 +1,11 @@
+./benchmarks/coremark/build/*
+./benchmarks/dhrystone/build/*
+./benchmarks/microbench/build/*
+./kernels/hello/build/*
+./kernels/litenes/build/*
+./kernels/nemu/build/*
+./kernels/slider/build/*
+./kernels/thread-os/build/*
+./kernels/typing-game/build/*
+./tests/am-tests/build/*
+./tests/cpu-tests/build/*
