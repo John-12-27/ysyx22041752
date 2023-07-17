@@ -48,7 +48,7 @@ VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast
 # Warn abount lint issues; may not want this on less solid designs
 VERILATOR_FLAGS += -Wall
 # Make waveforms
-#VERILATOR_FLAGS += --trace
+VERILATOR_FLAGS += --trace
 # Check SystemVerilog assertions
 VERILATOR_FLAGS += --noassert
 # Generate coverage analysis

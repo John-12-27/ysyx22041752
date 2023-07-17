@@ -195,7 +195,7 @@ static bool trace_diff_watch()
                 log_device(&D, "vgactl", data_wdata, false);
             }
         }
-        else if((data_addr >= CONFIG_GPU_FBDRAW_MMIO) && (data_addr < (CONFIG_GPU_FBDRAW_MMIO + screen_size())))
+        else if((data_addr >= CONFIG_GPU_FBDRAW_MMIO) && (data_addr < (CONFIG_GPU_FBDRAW_MMIO + SCREEN_H * SCREEN_W * sizeof(uint32_t))))
         {
             if(dtrace_enable("vmem"))
             {
