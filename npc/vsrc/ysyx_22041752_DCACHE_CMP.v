@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE_CMP.v
 // Author        : Cw
 // Created On    : 2023-06-17 11:07
-// Last Modified : 2023-07-04 11:52
+// Last Modified : 2023-07-17 17:40
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -290,43 +290,6 @@ assign fence_over = fence_to_mem && fence_last && fencefsm_pre==WAY3_DONE1;
 /* verilator lint_off UNUSEDSIGNAL */
 wire [`ysyx_22041752_PC_WD-1 :0] data_addr_cs = {tag_cs, index_cs, offset_cs};
 
-reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag0_r;
-always @(posedge clk) begin
-    if (reset) begin
-        tag0_r <= 0;
-    end
-    else if(missfsm_nxt==MISS || fencefsm_nxt==PRE_FENCE) begin
-        tag0_r <= tag0;
-    end
-end
-reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag1_r;
-always @(posedge clk) begin
-    if (reset) begin
-        tag1_r <= 0;
-    end
-    else if(missfsm_nxt==MISS || fencefsm_nxt==PRE_FENCE) begin
-        tag1_r <= tag1;
-    end
-end
-reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag2_r;
-always @(posedge clk) begin
-    if (reset) begin
-        tag2_r <= 0;
-    end
-    else if(missfsm_nxt==MISS || fencefsm_nxt==PRE_FENCE) begin
-        tag2_r <= tag2;
-    end
-end
-reg [`ysyx_22041752_DCACHE_TAG_WD  -1:0]  tag3_r;
-always @(posedge clk) begin
-    if (reset) begin
-        tag3_r <= 0;
-    end
-    else if(missfsm_nxt==MISS || fencefsm_nxt==PRE_FENCE) begin
-        tag3_r <= tag3;
-    end
-end
-
 reg [127:0] data0_r;
 always @(posedge clk) begin
     if (reset) begin
@@ -364,10 +327,10 @@ always @(posedge clk) begin
     end
 end
 
-wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0] tag = {`ysyx_22041752_DCACHE_TAG_WD{replace==0}} & tag0_r |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==1}} & tag1_r |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==2}} & tag2_r |
-                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==3}} & tag3_r ;
+wire [`ysyx_22041752_DCACHE_TAG_WD  -1:0] tag = {`ysyx_22041752_DCACHE_TAG_WD{replace==0}} & tag0 |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==1}} & tag1 |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==2}} & tag2 |
+                                                {`ysyx_22041752_DCACHE_TAG_WD{replace==3}} & tag3 ;
 wire [`ysyx_22041752_PC_WD-1 :0] replace_addr = {tag, index_cs, offset_cs};
 /* verilator lint_on UNUSEDSIGNAL */
 
@@ -381,14 +344,14 @@ assign sram_addr= {`ysyx_22041752_DATA_ADDR_WD{missfsm_pre ==READ_REQ_0 }} & {da
                   {`ysyx_22041752_DATA_ADDR_WD{missfsm_pre ==READ_REQ_1 }} & {data_addr_cs[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} |
                   {`ysyx_22041752_DATA_ADDR_WD{missfsm_pre ==WRITE_REQ_0}} & {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b0000} |
                   {`ysyx_22041752_DATA_ADDR_WD{missfsm_pre ==WRITE_REQ_1}} & {replace_addr[`ysyx_22041752_DATA_ADDR_WD-1:4], 4'b1000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY0_REQ0}}   & {tag0_r, index_cs, 4'b0000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY1_REQ0}}   & {tag1_r, index_cs, 4'b0000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY2_REQ0}}   & {tag2_r, index_cs, 4'b0000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY3_REQ0}}   & {tag3_r, index_cs, 4'b0000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY0_REQ1}}   & {tag0_r, index_cs, 4'b1000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY1_REQ1}}   & {tag1_r, index_cs, 4'b1000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY2_REQ1}}   & {tag2_r, index_cs, 4'b1000} |
-                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY3_REQ1}}   & {tag3_r, index_cs, 4'b1000} ;
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY0_REQ0}}   & {tag0, index_cs, 4'b0000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY1_REQ0}}   & {tag1, index_cs, 4'b0000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY2_REQ0}}   & {tag2, index_cs, 4'b0000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY3_REQ0}}   & {tag3, index_cs, 4'b0000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY0_REQ1}}   & {tag0, index_cs, 4'b1000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY1_REQ1}}   & {tag1, index_cs, 4'b1000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY2_REQ1}}   & {tag2, index_cs, 4'b1000} |
+                  {`ysyx_22041752_DATA_ADDR_WD{fencefsm_pre==WAY3_REQ1}}   & {tag3, index_cs, 4'b1000} ;
                   
 assign sram_wen   = {8{(missfsm_pre==WRITE_REQ_0 || missfsm_pre==WRITE_REQ_1 ||
                         fencefsm_pre==WAY0_REQ0  ||

@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_DCACHE.v
 // Author        : Cw
 // Created On    : 2023-06-17 10:29
-// Last Modified : 2023-07-04 10:09
+// Last Modified : 2023-07-17 18:13
 // ---------------------------------------------------------------------------------
 // Description   : 4-way set associative cache
 //
@@ -174,14 +174,14 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_0(
 );
 
 // the first way tag
-S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_DCACHE_TAG_WD))
-U_S011HD1P_X32Y2D128_0(
-    .Q                              ( tag0                  ),
-    .CLK                            ( clk                   ),
-    .CEN                            ( rden[0]&wen0          ),
-    .WEN                            ( wen0                  ),
-    .A                              (!wen0 ? waddr0 : raddr ),
-    .D                              ( wtag0                 )
+ysyx_22041752_DCACHE_TAG U_DCACHE_TAG_0(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .addr                           (!wen0 ? waddr0 : raddr         ),
+    .en                             ( rden[0]&wen0                  ),
+    .wen                            ( wen0                          ),
+    .in                             ( wtag0                         ),
+    .out                            ( tag0                          )
 );
 
 // the first way valid 
@@ -218,14 +218,14 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_1(
 );
 
 // the second way tag
-S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_DCACHE_TAG_WD))
-U_S011HD1P_X32Y2D128_1(
-    .Q                              ( tag1                  ),
-    .CLK                            ( clk                   ),
-    .CEN                            ( rden[1]&wen1          ),
-    .WEN                            ( wen1                  ),
-    .A                              (!wen1 ? waddr1 : raddr ),
-    .D                              ( wtag1                 )
+ysyx_22041752_DCACHE_TAG U_DCACHE_TAG_1(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .addr                           (!wen1 ? waddr1 : raddr         ),
+    .en                             ( rden[1]&wen1                  ),
+    .wen                            ( wen1                          ),
+    .in                             ( wtag1                         ),
+    .out                            ( tag1                          )
 );
 
 // the second way valid
@@ -262,14 +262,14 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_2(
 );
 
 // the third way tag
-S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_DCACHE_TAG_WD))
-U_S011HD1P_X32Y2D128_2(
-    .Q                              ( tag2                      ),
-    .CLK                            ( clk                       ),
-    .CEN                            ( rden[2]&wen2              ),
-    .WEN                            ( wen2                      ),
-    .A                              (!wen2 ? waddr2 : raddr     ),
-    .D                              ( wtag2                     )
+ysyx_22041752_DCACHE_TAG U_DCACHE_TAG_2(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .addr                           (!wen2 ? waddr2 : raddr         ),
+    .en                             ( rden[2]&wen2                  ),
+    .wen                            ( wen2                          ),
+    .in                             ( wtag2                         ),
+    .out                            ( tag2                          )
 );
 
 // the third way valid 
@@ -306,14 +306,14 @@ S011HD1P_X32Y2D128_BW U_S011HD1P_X32Y2D128_BW_3(
 );
 
 // the fourth way tag
-S011HD1P_X32Y2D128 #(.Bits(`ysyx_22041752_DCACHE_TAG_WD))
-U_S011HD1P_X32Y2D128_3(
-    .Q                              ( tag3                      ),
-    .CLK                            ( clk                       ),
-    .CEN                            ( rden[3]&wen3              ),
-    .WEN                            ( wen3                      ),
-    .A                              (!wen3 ? waddr3 : raddr     ),
-    .D                              ( wtag3                     )
+ysyx_22041752_DCACHE_TAG U_DCACHE_TAG_3(
+    .clk                            ( clk                           ),
+    .reset                          ( reset                         ),
+    .addr                           (!wen3 ? waddr3 : raddr         ),
+    .en                             ( rden[3]&wen3                  ),
+    .wen                            ( wen3                          ),
+    .in                             ( wtag3                         ),
+    .out                            ( tag3                          )
 );
 
 // the fourth way valid 
