@@ -1,0 +1,10 @@
+*.*
+!*.c
+!*.pcm
+!*.S
+!*.cc
+!*.h
+!Makefile
+!.gitignore
+!init.sh
+!README.md

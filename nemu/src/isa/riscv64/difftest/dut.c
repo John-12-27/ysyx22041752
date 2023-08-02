@@ -18,31 +18,29 @@
 #include "../local-include/reg.h"
 
 extern CPU_state cpu;
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
+bool isa_difftest_checkregs(vaddr_t pc, CPU_state *ref_r, vaddr_t npc)
 {
-
-    if((ref_r->pc != pc))// && cpu.pc != pc)                                                                           
-    {                                                                                                               
-        printf(ANSI_BG_RED "=========================================\n");                                          
-        printf("ERROR_PC\t0x%lx\n",cpu.pc);                                                                         
-        printf("REF_NEXT_PC\t0x%lx\n",ref_r->pc);                                                                        
-        printf("NEMU_NEXT_PC\t0x%lx\n",pc);                                                                               
-        printf("=========================================" ANSI_NONE "\n");                                         
-        /*assert(0);*/                                                                                              
-        return false;                                                                                               
-    }                                                                                                               
-    for(int i = 0; i < 32; i++)                                                                                     
-    {                                                                                                               
-        if(ref_r->gpr[i] != cpu.gpr[i])                                                                             
-        {                                                                                                           
-            printf(ANSI_BG_RED "=========================================\n");                                      
-            printf("ERROR_PC\t0x%lx\n",cpu.pc);                                                                     
-            printf("REF_GPR[%d]\t0x%lx\n",i,ref_r->gpr[i]);                                                         
-            printf("NEMU_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);                                                            
-            printf("=========================================" ANSI_NONE "\n");                                     
-            return false;                                                                                           
-        }                                                                                                           
-    }                                                                                                               
+    if((ref_r->pc != npc))
+    {  
+        printf(ANSI_BG_RED "=========================================\n");
+        printf("ERROR_PC\t0x%lx\n",pc);
+        printf("REF_NEXT_PC\t0x%lx\n",ref_r->pc);
+        printf("NEMU_NEXT_PC\t0x%lx\n",npc);
+        printf("=========================================" ANSI_NONE "\n");
+        return false;
+    }
+    for(int i = 0; i < 32; i++)
+    {                         
+        if(ref_r->gpr[i] != cpu.gpr[i])
+        {                             
+            printf(ANSI_BG_RED "=========================================\n"); 
+            printf("ERROR_PC\t0x%lx\n",pc);                               
+            printf("REF_GPR[%d]\t0x%lx\n",i,ref_r->gpr[i]);                  
+            printf("NEMU_GPR[%d]\t0x%lx\n",i,cpu.gpr[i]);                   
+            printf("=========================================" ANSI_NONE "\n");
+            return false;                                                     
+        }                                                                    
+    }                                                                       
     return true;   
 }
 

@@ -2,6 +2,7 @@
 *
 !*/
 !/nemu/*
+!/am-kernels/*
 !/nexus-am/*
 !/nanos-lite/*
 !/navy-apps/*
@@ -10,5 +11,5 @@
 !README.md
 !.gitignore
 !init.sh
+!/doc/*
 /fceux-am
-/am-kernels

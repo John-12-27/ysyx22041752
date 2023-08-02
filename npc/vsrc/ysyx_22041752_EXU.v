@@ -5,7 +5,7 @@
 // Filename      : ysyx_22041752_EXU.v
 // Author        : Cw
 // Created On    : 2022-11-19 16:16
-// Last Modified : 2023-07-08 22:01
+// Last Modified : 2023-07-14 09:15
 // ---------------------------------------------------------------------------------
 // Description   : 
 //
@@ -255,6 +255,7 @@ always @(posedge clk) begin
         es_valid <= ds_to_es_valid;
     end
 end
+
 always @(posedge clk) begin
     if (reset) begin
         ds_to_es_bus_r <= 0;
