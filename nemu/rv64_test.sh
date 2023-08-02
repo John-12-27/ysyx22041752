@@ -1,3 +1,12 @@
+echo $NEMU_HOME
+if [[ $NEMU_HOME -ef ~/ysyx-workbench/nemu ]]
+then
+    echo "Don't need to copy tools"
+else
+    cp -rf ~/ysyx-workbench/nemu/tools .  # diff tools sync 
+    echo "copied tools !!!"
+fi
+
 RESULT=.result
 touch $RESULT
 for f in ./rv64uim-p/*.bin
