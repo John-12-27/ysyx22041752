@@ -53,7 +53,7 @@ word_t isa_mret_intr();
 word_t isa_query_intr();
 
 // difftest
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc);
+bool isa_difftest_checkregs(vaddr_t pc, CPU_state *ref_r, vaddr_t npc);
 void isa_difftest_attach();
 
 #endif

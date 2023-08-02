@@ -88,6 +88,8 @@ commit: build
 	@echo "---- COMMITED ----"	
 include ../Makefile
 
+OPTIONS ?= -b -e $(NPC_HOME)/build/npc-dtrace.txt -m $(NPC_HOME)/build/npc-mtrace.txt -i $(NPC_HOME)/build/npc-itrace.txt -d $(NEMU_HOME)/build/riscv64-nemu-interpreter-so
+
 sim: build
 	@echo
 	@echo "---- simulating ----"
